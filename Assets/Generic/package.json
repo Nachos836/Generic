@@ -1,0 +1,42 @@
+{
+	"name": "com.nachos836.generic",
+	"displayName": "Unity Code Snippets",
+	"version": "0.0.1",
+	"unity": "2022.3",
+	"description": "Function style helpers and misc stuff",
+	"keywords": ["Code", "Patterns"],
+	"license": "MIT",
+	"documentationUrl": "https://github.com/Nachos836/Generic",
+	"changelogUrl": "https://github.com/Nachos836/Generic/releases",
+	"licensesUrl": "https://github.com/Nachos836/Generic/blob/master/LICENSE",
+	"author": {
+		"name": "Sergey Shevchuk",
+		"email": "DEV_SergeyShevchuk@proton.me",
+		"url": "https://github.com/Nachos836"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Nachos836/Generic.git",
+		"revision": "master"
+	},
+	"dependencies": {
+		"com.cysharp.unitask": "2.5.10",
+		"org.nuget.system.collections.immutable": "9.0.0",
+		"com.nachos836.functional": "https://github.com/Nachos836/Functional.git?path=Assets/Functional#0.3.1"
+	},
+	"scopedRegistries": [
+		{
+			"name": "OpenUPM",
+			"url": "https://package.openupm.com",
+			"scopes": [
+				"package.openupm.com",
+				"com.cysharp.unitask",
+				"org.nuget.system.buffers",
+				"org.nuget.system.collections.immutable",
+				"org.nuget.system.memory",
+				"org.nuget.system.numerics.vectors",
+				"org.nuget.system.runtime.compilerservices.unsafe"
+			]
+		}
+	]
+}

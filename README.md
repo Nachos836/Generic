@@ -15,3 +15,9 @@ https://github.com/Nachos836/Generic.git?path=Assets/Generic
 ```
 https://github.com/Nachos836/Generic.git?path=Assets/EditorUtils
 ```
+
+5. (OPTIONAL) If you want to install debug flow snippets add the following URL:
+
+```
+https://github.com/Nachos836/Generic.git?path=Assets/Debug
+```

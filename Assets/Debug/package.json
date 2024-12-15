@@ -1,10 +1,10 @@
 {
-	"name": "com.nachos836.editor-utils",
-	"displayName": "Unity Editor Utils",
+	"name": "com.nachos836.debug",
+	"displayName": "Unity Debug flow Snippets",
 	"version": "0.2.0",
 	"unity": "2022.3",
-	"description": "Set of useful Editor Utils and Extensions",
-	"keywords": ["Editor"],
+	"description": "Set of scripts for debugging without side effect on the Release build",
+	"keywords": ["Debug"],
 	"license": "MIT",
 	"documentationUrl": "https://github.com/Nachos836/Generic",
 	"changelogUrl": "https://github.com/Nachos836/Generic/releases",
@@ -19,6 +19,17 @@
 		"url": "https://github.com/Nachos836/Generic.git",
 		"revision": "master"
 	},
-	"dependencies": {},
-	"scopedRegistries": []
+	"dependencies": {
+		"com.cysharp.unitask": "2.5.10",
+		"com.unity.addressables": "2.2.2"
+	},
+	"scopedRegistries": [
+		{
+			"name": "OpenUPM",
+			"url": "https://package.openupm.com",
+			"scopes": [
+				"com.cysharp.unitask"
+			]
+		}
+	]
 }

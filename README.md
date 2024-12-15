@@ -9,3 +9,9 @@ Collection of Unity code snippets in the form of a package
 ```
 https://github.com/Nachos836/Generic.git?path=Assets/Generic
 ```
+
+4. (OPTIONAL) If you want to install editor extensions add the following URL:
+
+```
+https://github.com/Nachos836/Generic.git?path=Assets/EditorUtils
+```

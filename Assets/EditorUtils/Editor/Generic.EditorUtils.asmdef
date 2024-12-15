@@ -1,5 +1,5 @@
 {
-    "name": "Generic.Editor",
+    "name": "Generic.EditorUtils",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [

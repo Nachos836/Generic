@@ -1,6 +1,6 @@
 ﻿using UnityEditor;
 
-namespace Generic.Editor
+namespace EditorUtils.Editor
 {
     internal static class AssetsReserialize
     {

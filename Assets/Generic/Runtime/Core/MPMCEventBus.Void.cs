@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -9,17 +11,18 @@ namespace Generic.Core
     public sealed class MPMCEventBus : IDisposable
     {
         private readonly ConcurrentQueue<None> _eventQueue = new ();
-        private readonly List<Action> _subscribers = new ();
+        private readonly List<Action?> _subscribers = new ();
 
         [Pure] // Prevent value negligence
         public IDisposable Subscribe(Action whenHappened)
         {
             _subscribers.Add(whenHappened);
+            var index = _subscribers.Count - 1;
 
             return Disposable.CreateWithState
             (
-                state: new Subscription(whenHappened, _subscribers),
-                disposeAction: subscription => subscription.List.Remove(subscription.Current)
+                state: new Subscription(index, _subscribers),
+                disposeAction: subscription => subscription.List[subscription.Index] = null
             );
         }
 
@@ -31,7 +34,7 @@ namespace Generic.Core
             {
                 foreach (var subscriber in _subscribers)
                 {
-                    subscriber.Invoke();
+                    subscriber?.Invoke();
                 }
             }
         }
@@ -44,12 +47,12 @@ namespace Generic.Core
 
         private readonly struct Subscription
         {
-            public readonly Action Current;
-            public readonly List<Action> List;
+            public readonly int Index;
+            public readonly List<Action?> List;
 
-            public Subscription(Action current, List<Action> list)
+            public Subscription(int index, List<Action?> list)
             {
-                Current = current;
+                Index = index;
                 List = list;
             }
         }

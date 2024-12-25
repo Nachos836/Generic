@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.editor-utils",
 	"displayName": "Unity Editor Utils",
-	"version": "0.2.0",
+	"version": "0.3.1",
 	"unity": "2022.3",
 	"description": "Set of useful Editor Utils and Extensions",
 	"keywords": ["Editor"],

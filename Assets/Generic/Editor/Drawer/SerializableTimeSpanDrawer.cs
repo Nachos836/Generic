@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
+using JetBrains.Annotations;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 using static Generic.SerializableValueObjects.SerializableTimeSpan.Unit;
@@ -12,75 +14,32 @@ namespace Generic.Editor.Drawer
     [CustomPropertyDrawer(typeof(SerializableTimeSpan))]
     internal sealed class SerializableTimeSpanDrawer : PropertyDrawer
     {
+        [SerializeField] [UsedImplicitly] private VisualTreeAsset _propertyGUI = default!;
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var ticksProperty = property.FindPropertyRelative(nameof(SerializableTimeSpan._ticks));
             var unitProperty = property.FindPropertyRelative(nameof(SerializableTimeSpan._displayUnit));
 
-            var mainRowContainer = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    justifyContent = Justify.SpaceEvenly
-                }
-            };
-            var labelContainer = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    justifyContent = Justify.FlexStart,
-                    minWidth = Length.Percent(50),
-                    marginLeft = 4,
-                    flexShrink = 0
-                }
-            };
-            var inputContainer = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    justifyContent = Justify.FlexEnd,
-                    minWidth = Length.Percent(50),
-                    flexShrink = 0
-                }
-            };
-
-            var propertyLabel = new Label(property.displayName);
-            var currentTypeLabel = new Label(text: $"in {(SerializableTimeSpan.Unit) unitProperty.enumValueIndex}");
-
-            labelContainer.Add(propertyLabel);
-            labelContainer.Add(currentTypeLabel);
-            mainRowContainer.Add(labelContainer);
-
-            var inputField = new TextField
-            {
-                label = null,
-                style = { flexGrow = 1, marginRight = 8 }
-            };
-
-            var unitDropdown = new EnumField((SerializableTimeSpan.Unit) unitProperty.enumValueIndex)
-            {
-                style = { flexShrink = 1 }
-            };
+            var container = _propertyGUI.CloneTree();
+            var mainRowContainer = container.Q("Root");
+            var propertyLabel = container.Q<Label>("BaseName");
+            var currentTypeLabel = container.Q<Label>("TypeName");
+            var inputField = container.Q<TextField>("InputField");
+            var unitDropdown = container.Q<EnumField>("InputType");
 
             mainRowContainer.RegisterCallbackOnce<AttachToPanelEvent>(_ =>
             {
-                currentTypeLabel.text = $"in {(SerializableTimeSpan.Unit) unitProperty.enumValueIndex}";
+                propertyLabel.text = property.displayName;
+                var currentUnit = (SerializableTimeSpan.Unit) unitProperty.enumValueIndex;
+                unitDropdown.Init(currentUnit);
+                currentTypeLabel.text = $"in {currentUnit}";
                 inputField.value = TimeSpan.FromTicks(ticksProperty.longValue)
-                    .ToUnitString((SerializableTimeSpan.Unit) unitProperty.enumValueIndex);
+                    .ToUnitString((SerializableTimeSpan.Unit)unitProperty.enumValueIndex);
             });
 
             unitDropdown.RegisterValueChangedCallback(OnDropdownUnitChanged);
             inputField.RegisterValueChangedCallback(OnInputChanged);
-
-            inputContainer.Add(inputField);
-            inputContainer.Add(unitDropdown);
-            mainRowContainer.Add(inputContainer);
 
             mainRowContainer.RegisterCallbackOnce<DetachFromPanelEvent>(_ =>
             {
@@ -180,8 +139,6 @@ namespace Generic.Editor.Drawer
                 _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null)
             };
         }
-
-
     }
 
     internal static class SerializableTimeSpanExtensions

@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace Generic.Core
 {
@@ -12,7 +12,7 @@ namespace Generic.Core
         private readonly ConcurrentQueue<T> _eventQueue = new ();
         private readonly List<Action<T>?> _subscribers = new ();
 
-        [Pure] // Prevent value negligence
+        [MustUseReturnValue]
         public IDisposable Subscribe(Action<T> whenHappened)
         {
             _subscribers.Add(whenHappened);
@@ -29,19 +29,35 @@ namespace Generic.Core
         {
             _eventQueue.Enqueue(income);
 
-            while (_eventQueue.TryDequeue(out var payload))
+            if (_eventQueue.TryDequeue(out var candidate))
             {
+                foreach (var subscriber in _subscribers)
+                {
+                    subscriber?.Invoke(candidate);
+                }
+            }
+            else
+            {
+                T payload;
+
+                while (_eventQueue.TryDequeue(out payload) is not true) { }
+
                 foreach (var subscriber in _subscribers)
                 {
                     subscriber?.Invoke(payload);
                 }
             }
+
+            _subscribers.RemoveAll(static subscriber => subscriber is null);
         }
 
         public void Dispose()
         {
             _subscribers.Clear();
-            _eventQueue.Clear();
+            while (_eventQueue.Count != 0)
+            {
+                _eventQueue.TryDequeue(out _);
+            }
         }
 
         private readonly struct Subscription

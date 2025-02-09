@@ -69,5 +69,28 @@ namespace Generic.Core
                 _onDispose.Invoke(_state);
             }
         }
+
+        public sealed class Bag : IDisposable
+        {
+            private readonly IDisposable[] _disposables;
+
+            private bool _isDisposed;
+
+            private Bag(IDisposable[] disposables) => _disposables = disposables;
+
+            public static IDisposable Create(params IDisposable[] disposables) => new Bag(disposables);
+
+            void IDisposable.Dispose()
+            {
+                if (_isDisposed) return;
+
+                _isDisposed = true;
+
+                foreach (ref var disposable in _disposables.AsSpan())
+                {
+                    disposable.Dispose();
+                }
+            }
+        }
     }
 }

@@ -164,7 +164,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dictionary:
-    _entries: []
+    _entries:
+    - _duplicated: 0
+      _key: 3
+      _value: 3
+    - _duplicated: 0
+      _key: 4
+      _value: 4
+    - _duplicated: 0
+      _key: 5
+      _value: 2
+    - _duplicated: 0
+      _key: 9
+      _value: 2
+    - _duplicated: 0
+      _key: 0
+      _value: 2
+    - _duplicated: 0
+      _key: 11
+      _value: 1
+    - _duplicated: 0
+      _key: 2
+      _value: 2
 --- !u!1 &1711494908
 GameObject:
   m_ObjectHideFlags: 0

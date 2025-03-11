@@ -1,5 +1,8 @@
-﻿using UnityEditor;
-using UnityEngine;
+﻿#nullable enable
+
+using UnityEditor;
+using UnityEditor.UIElements;
+using UnityEngine.UIElements;
 
 namespace Generic.Editor.Drawer
 {
@@ -8,16 +11,12 @@ namespace Generic.Editor.Drawer
     [CustomPropertyDrawer(typeof(SerializableDictionary<,>), true)]
     internal sealed class SerializableDictionaryDrawer : PropertyDrawer
     {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var prop = property.FindPropertyRelative(nameof(SerializableDictionary<int,int>._entries));
-            EditorGUI.PropertyField(position, prop, label);
-        }
+            var entriesProperty = property.FindPropertyRelative(nameof(SerializableDictionary<int,int>._entries));
+            var entriesField = new PropertyField(entriesProperty, property.displayName);
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            var prop = property.FindPropertyRelative(nameof(SerializableDictionary<int,int>._entries));
-            return EditorGUI.GetPropertyHeight(prop);
+            return entriesField;
         }
     }
 }

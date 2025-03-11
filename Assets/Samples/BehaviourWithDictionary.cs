@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Generic.Samples
 {
@@ -9,6 +10,10 @@ namespace Generic.Samples
     {
         [UsedImplicitly]
         [SerializeField] private SerializableDictionary<string, string> _dictionary = SerializableDictionary<string, string>.Empty();
+
+        [UsedImplicitly]
+        [SerializeField] private SerializableDictionary<GameObject, UnityEvent> _anotherDictionary = SerializableDictionary<GameObject, UnityEvent>.Empty();
+
 
         [ContextMenu(nameof(Test))]
         private void Test()

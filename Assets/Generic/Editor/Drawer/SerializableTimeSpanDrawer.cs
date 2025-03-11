@@ -1,4 +1,7 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
 using UnityEditor;
@@ -12,6 +15,7 @@ namespace Generic.Editor.Drawer
     using SerializableValueObjects;
 
     [CustomPropertyDrawer(typeof(SerializableTimeSpan))]
+    [SuppressMessage("ReSharper", "Unity.RedundantSerializeFieldAttribute")]
     internal sealed class SerializableTimeSpanDrawer : PropertyDrawer
     {
         [SerializeField] [UsedImplicitly] private VisualTreeAsset _propertyGUI = default!;

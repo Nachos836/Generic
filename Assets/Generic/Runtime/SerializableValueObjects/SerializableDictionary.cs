@@ -7,7 +7,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -20,25 +19,31 @@ namespace Generic.SerializableValueObjects
     {
         [SerializeField] internal List<Entry> _entries;
 
-        private FrozenDictionary<TKey, TValue> _dictionary;
+        private FrozenDictionary<TKey, TValue> _backingDictionary;
+        private List<KeyValuePair<TKey, TValue>> _orderedEntries;
 
-        public readonly int Count => _dictionary.Count;
-        public readonly ImmutableArray<TKey> Keys => _dictionary.Keys;
-        public readonly ImmutableArray<TValue> Values => _dictionary.Values;
+        public readonly int Count => _backingDictionary.Count;
+        public readonly ImmutableArray<TKey> Keys => _backingDictionary.Keys;
+        public readonly ImmutableArray<TValue> Values => _backingDictionary.Values;
 
         public static SerializableDictionary<TKey, TValue> Empty() => new ()
         {
             _entries = new (),
-            _dictionary = FrozenDictionary<TKey, TValue>.Empty
+            _backingDictionary = FrozenDictionary<TKey, TValue>.Empty,
+            _orderedEntries = new ()
         };
 
-        public static SerializableDictionary<TKey, TValue> Create(IReadOnlyCollection<KeyValuePair<TKey, TValue>> entries) => new ()
+        public static SerializableDictionary<TKey, TValue> Create(IEnumerable<KeyValuePair<TKey, TValue>> entries)
         {
-            _entries = entries.Select(static keyValue => (Entry) keyValue)
-                .ToList(),
-            _dictionary = new Dictionary<TKey, TValue>(entries)
-                .ToFrozenDictionary()
-        };
+            var candidates = entries.ToFrozenDictionary();
+
+            return new SerializableDictionary<TKey, TValue>
+            {
+                _entries = candidates.Select(static keyValue => (Entry) keyValue).ToList(),
+                _backingDictionary = candidates,
+                _orderedEntries = new (candidates.Count)
+            };
+        }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
@@ -50,7 +55,7 @@ namespace Generic.SerializableValueObjects
         #endif
 
             _entries.Clear();
-            _entries.AddRange(_dictionary.Select(static value => (Entry) value));
+            _entries.AddRange(_orderedEntries.Select(static value => (Entry) value));
 
         #if UNITY_EDITOR
             foreach (var (index, entry) in duplicates)
@@ -62,22 +67,22 @@ namespace Generic.SerializableValueObjects
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            var temp = new Dictionary<TKey, TValue>();
+            _orderedEntries.Clear();
             for (var index = 0; index < _entries.Count; index++)
             {
                 var entry = _entries[index];
                 var key = entry._key;
-                var canAddKey = temp.ContainsKey(key) is false;
+                var canAddKey = _orderedEntries.Any(candidate => candidate.Key.Equals(key)) is false;
                 if (canAddKey)
                 {
-                    temp.Add(key, entry._value);
+                    _orderedEntries.Add(entry);
                 }
 
                 entry._duplicated = !canAddKey;
                 _entries[index] = entry;
             }
 
-            _dictionary = temp.ToFrozenDictionary();
+            _backingDictionary = _orderedEntries.ToFrozenDictionary();
 
         #if !UNITY_EDITOR
             _entries.Clear();
@@ -85,12 +90,12 @@ namespace Generic.SerializableValueObjects
         }
 
         [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        public readonly bool ContainsKey(TKey key) => _dictionary.ContainsKey(key);
+        public readonly bool ContainsKey(TKey key) => _backingDictionary.ContainsKey(key);
 
         [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
         public readonly bool TryGetValue(TKey key, [NotNullWhen(returnValue: true)] out TValue? value)
         {
-            if (_dictionary.TryGetValue(key, out value!))
+            if (_backingDictionary.TryGetValue(key, out value!))
             {
                 return true;
             }
@@ -99,17 +104,22 @@ namespace Generic.SerializableValueObjects
             return false;
         }
 
-        public readonly ref readonly TValue this[TKey key] => ref _dictionary[key];
+        [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
+        public readonly FrozenDictionary<TKey, TValue> AsFrozenDictionary() => _backingDictionary;
+
+        public readonly ref readonly TValue this[TKey key]
+        {
+            [MustUseReturnValue] [MethodImpl(AggressiveInlining)] get => ref _backingDictionary[key];
+        }
 
         [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        public readonly FrozenDictionary<TKey, TValue>.Enumerator GetEnumerator() => _dictionary.GetEnumerator();
+        public readonly FrozenDictionary<TKey, TValue>.Enumerator GetEnumerator() => _backingDictionary.GetEnumerator();
 
         [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        public static implicit operator FrozenDictionary<TKey, TValue>(SerializableDictionary<TKey, TValue> source) => source._dictionary;
+        public static implicit operator FrozenDictionary<TKey, TValue>(SerializableDictionary<TKey, TValue> source) => source._backingDictionary;
 
         [Serializable]
-        [StructLayout(LayoutKind.Auto)]
-        public struct Entry
+        internal struct Entry
         {
         #if UNITY_EDITOR
             [SerializeField] internal bool _duplicated;
@@ -130,8 +140,6 @@ namespace Generic.SerializableValueObjects
 
             public static implicit operator KeyValuePair<TKey, TValue>(Entry entry) => new (entry._key, entry._value);
             public static implicit operator Entry(KeyValuePair<TKey, TValue> entry) => new (entry.Key, entry.Value);
-
-            public KeyValuePair<TKey, TValue> AsKeyValuePair() => this;
         }
     }
 }

@@ -166,14 +166,14 @@ MonoBehaviour:
   _dictionary:
     _entries:
     - _duplicated: 0
-      _key: 4111111111111111111
-      _value: 4
-    - _duplicated: 0
       _key: 5
       _value: 2
     - _duplicated: 0
       _key: 41111111111111111111111111
       _value: 2
+    - _duplicated: 0
+      _key: 4111111111111111111
+      _value: 4
     - _duplicated: 0
       _key: 9
       _value: 3
@@ -187,14 +187,11 @@ MonoBehaviour:
       _key: 0
       _value: 2
     - _duplicated: 0
+      _key: 4111111111111111111111111111111111111111111111111111111111111111111111111111111111
+      _value: 2
+    - _duplicated: 0
       _key: 3
       _value: 3
-    - _duplicated: 0
-      _key: 4111111111111111111111111111111111111111111111111111111111111111
-      _value: 2
-    - _duplicated: 0
-      _key: 411111111111111111111111111111
-      _value: 2
   _anotherDictionary:
     _entries:
     - _duplicated: 0
@@ -209,6 +206,18 @@ MonoBehaviour:
           m_Calls: []
     - _duplicated: 1
       _key: {fileID: 1213465285}
+      _value:
+        m_PersistentCalls:
+          m_Calls: []
+  _yetAnotherDictionary:
+    _entries:
+    - _duplicated: 0
+      _key: 333333333333333333333333333
+      _value:
+        m_PersistentCalls:
+          m_Calls: []
+    - _duplicated: 1
+      _key: 333333333333333333333333333
       _value:
         m_PersistentCalls:
           m_Calls: []

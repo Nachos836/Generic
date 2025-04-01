@@ -28,8 +28,7 @@ namespace Generic.Core.FinalStateMachine.Tests
                 .WithTransition<Unload, Deactivated, Unloaded>()
                 .WithTransition<Unload, Activated, Unloaded>()
                 .WithTransition<Unload, Prefetched, Unloaded>()
-                .Build()
-                .ToFrozen();
+                .Build();
 
             var result = AsyncRichResult.Success;
             { sharedState.TryGetValue(out var state); Assert.AreEqual(RawState.Initial, state); }
@@ -73,7 +72,7 @@ namespace Generic.Core.FinalStateMachine.Tests
             var activated = new Activated(sharedState);
             var deactivated = new Deactivated(sharedState);
 
-            var stateMachineFrozen = StateMachine.Mutable.Create<Bootstrap>(unloaded)
+            var stateMachineMutable = StateMachine.Mutable.Create<Bootstrap>(unloaded)
                 .AddTransition<Prefetch>(from: unloaded, to: prefetched)
                 .AddTransition<Unload>(from: prefetched, to: unloaded);
 
@@ -81,15 +80,15 @@ namespace Generic.Core.FinalStateMachine.Tests
 
             { sharedState.TryGetValue(out var state); Assert.AreEqual(RawState.Initial, state); }
 
-            result = result.Combine(await stateMachineFrozen.TransitAsync<Bootstrap>());
+            result = result.Combine(await stateMachineMutable.TransitAsync<Bootstrap>());
             Assert.IsTrue(result.IsSuccessful);
             { sharedState.TryGetValue(out var state); Assert.AreEqual(RawState.Unloaded, state); }
 
-            result = result.Combine(await stateMachineFrozen.TransitAsync<Prefetch>());
+            result = result.Combine(await stateMachineMutable.TransitAsync<Prefetch>());
             Assert.IsTrue(result.IsSuccessful);
             { sharedState.TryGetValue(out var state); Assert.AreEqual(RawState.Prefetched, state); }
 
-            stateMachineFrozen
+            var stateMachineFrozen = stateMachineMutable
                 .AddTransition<Activate>(from: prefetched, to: activated)
                 .AddTransition<Deactivate>(from: activated, to: deactivated)
                 .AddTransition<Unload>(from: deactivated, to: unloaded)

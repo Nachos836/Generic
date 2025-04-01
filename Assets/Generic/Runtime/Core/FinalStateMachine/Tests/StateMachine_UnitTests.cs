@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Functional.Async;
 using NUnit.Framework;
 
@@ -19,8 +20,26 @@ namespace Generic.Core.FinalStateMachine.Tests
         private sealed record SecondState : IState;
         private sealed record ThirdState : IState;
 
+        private sealed record EnterActionState : IState, IState.IWithEnterAction
+        {
+            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+        }
+        private sealed record ExitActionState : IState, IState.IWithExitAction
+        {
+            UniTask<AsyncRichResult> IState.IWithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+        }
+        private sealed record FailedExitActionState : IState, IState.IWithExitAction
+        {
+            UniTask<AsyncRichResult> IState.IWithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Failure);
+        }
+        private sealed record EnterAndExitActionState : IState, IState.IWithEnterAction, IState.IWithExitAction
+        {
+            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+            UniTask<AsyncRichResult> IState.IWithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+        }
+
         [Test]
-        public async Task StateMachine_CancelledTransition_ShouldReturnCancellation()
+        public async Task StateMachineImmutable_CancelledTransition_ReturnsCancellation()
         {
             // Arrange
             var builder = StateMachine.Immutable.CreateBuilder();
@@ -36,7 +55,7 @@ namespace Generic.Core.FinalStateMachine.Tests
         }
 
         [Test]
-        public async Task StateMachine_InvalidTrigger_ShouldReturnError()
+        public async Task StateMachineImmutable_InvalidTrigger_ReturnsError()
         {
             // Arrange
             var builder = StateMachine.Immutable.CreateBuilder();
@@ -50,7 +69,23 @@ namespace Generic.Core.FinalStateMachine.Tests
         }
 
         [Test]
-        public async Task StateMachine_TransitionWithWrongInitial_ShouldReturnError()
+        public async Task StateMachineImmutable_TransitionWithWrongInitial_ReturnsError()
+        {
+            // Arrange
+            var builder = StateMachine.Immutable.CreateBuilder();
+            var stateMachine = builder
+                .WithInitialTransition<ValidTrigger>(new ValidState())
+                .Build();
+
+            // Act
+            var result = await stateMachine.TransitAsync<InvalidTrigger>(CancellationToken.None);
+
+            // Assert
+            Assert.IsTrue(result.IsError);
+        }
+
+        [Test]
+        public async Task StateMachineImmutable_TransitionWithInvalidTransitionTo_ReturnsError()
         {
             // Arrange
             var builder = StateMachine.Immutable.CreateBuilder();
@@ -64,21 +99,7 @@ namespace Generic.Core.FinalStateMachine.Tests
         }
 
         [Test]
-        public async Task StateMachine_TransitionWithInvalidTransitionTo_ShouldReturnError()
-        {
-            // Arrange
-            var builder = StateMachine.Immutable.CreateBuilder();
-            var stateMachine = builder.Build();
-
-            // Act
-            var result = await stateMachine.TransitAsync<ValidTrigger>(CancellationToken.None);
-
-            // Assert
-            Assert.IsTrue(result.IsError);
-        }
-
-        [Test]
-        public async Task StateMachineImmutable_InitialValidTrigger_ShouldReturnSuccess()
+        public async Task StateMachineImmutable_InitialValidTrigger_ReturnsSuccess()
         {
             // Arrange
             var stateMachine = StateMachine.Immutable.CreateBuilder()
@@ -93,30 +114,41 @@ namespace Generic.Core.FinalStateMachine.Tests
         }
 
         [Test]
-        public async Task StateMachineMutable_InitialValidTrigger_ShouldReturnSuccess()
+        public void StateMachineImmutable_AddingDuplicatedGenericReferenceStates_ThrowsArgumentException()
         {
             // Arrange
-            var stateMachine = StateMachine.Mutable.Create<ValidTrigger>(new ValidState());
+            var first = new FirstState();
+            var second = new SecondState();
+            var third = new FirstState();
 
-            // Act
-            var result = await stateMachine.TransitAsync<ValidTrigger>();
-
-            // Assert
-            Assert.IsTrue(result.IsSuccessful);
+            // Act & Assert
+            Assert.Throws<ArgumentException>
+            (
+                () => _ = StateMachine.Immutable.CreateBuilder()
+                    .WithInitialTransition<FirstTrigger>(first)
+                    .WithTransition<SecondTrigger>(from: first, to: second)
+                    .WithTransition<ThirdTrigger, SecondState>(to: third)
+                    .Build()
+            );
         }
 
         [Test]
-        public async Task StateMachineFrozen_InitialValidTrigger_ShouldReturnSuccess()
+        public void StateMachineImmutable_AddingDuplicatedConcreteReferenceStates_ThrowsArgumentException()
         {
             // Arrange
-            var stateMachine = StateMachine.Mutable.Create<ValidTrigger>(new ValidState())
-                .ToFrozen();
+            var first = new FirstState();
+            var second = new SecondState();
+            var third = new FirstState();
 
-            // Act
-            var result = await stateMachine.TransitAsync<ValidTrigger>();
-
-            // Assert
-            Assert.IsTrue(result.IsSuccessful);
+            // Act & Assert
+            Assert.Throws<ArgumentException>
+            (
+                () => _ = StateMachine.Immutable.CreateBuilder()
+                    .WithInitialTransition<FirstTrigger>(first)
+                    .WithTransition<SecondTrigger>(from: first, to: second)
+                    .WithTransition<ThirdTrigger>(from: third, to: second)
+                    .Build()
+            );
         }
 
         [Test]
@@ -129,7 +161,7 @@ namespace Generic.Core.FinalStateMachine.Tests
             // Act & Assert
             Assert.Throws<ArgumentException>
             (
-                () => StateMachine.Immutable.CreateBuilder()
+                () => _ = StateMachine.Immutable.CreateBuilder()
                     .WithInitialTransition<FirstTrigger>(first)
                     .WithTransition<FirstTrigger>(from: first, to: second)
                     .Build()
@@ -137,7 +169,45 @@ namespace Generic.Core.FinalStateMachine.Tests
         }
 
         [Test]
-        public async Task StateMachineImmutable_InstanceAndTypeStatesCreation_ShouldReturnSuccess()
+        public async Task StateMachineImmutable_OneTransitionToUnreachableState_ReturnsFailure()
+        {
+            // Arrange
+            var stateMachine = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<FirstTrigger>(new FirstState())
+                .WithTransition<SecondTrigger, FirstState>(new SecondState())
+                .Build();
+
+            var result = AsyncRichResult.Success;
+
+            // Act
+            result = result.Combine(await stateMachine.TransitAsync<SecondTrigger>());
+
+            // Assert
+            Assert.IsTrue(result.IsFailure);
+        }
+
+        [Test]
+        public async Task StateMachineImmutable_ThreeTransitionsToUnreachableState_ReturnsFailure()
+        {
+            // Arrange
+            var stateMachine = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<FirstTrigger>(new FirstState())
+                .WithTransition<SecondTrigger, FirstState>(new SecondState())
+                .WithTransition<ThirdTrigger, SecondState>(new ThirdState())
+                .Build();
+
+            var result = AsyncRichResult.Success;
+
+            // Act
+            result = result.Combine(await stateMachine.TransitAsync<FirstTrigger>());
+            result = result.Combine(await stateMachine.TransitAsync<ThirdTrigger>());
+
+            // Assert
+            Assert.IsTrue(result.IsFailure);
+        }
+
+        [Test]
+        public async Task StateMachineImmutable_InstanceAndTypeStatesCreation_ReturnsSuccess()
         {
             {
                 // Arrange
@@ -184,6 +254,134 @@ namespace Generic.Core.FinalStateMachine.Tests
                 // Assert
                 Assert.IsTrue(result.IsSuccessful);
             }
+        }
+
+        [Test]
+        public async Task StateMachineFrozen_InitialValidTrigger_ReturnsSuccess()
+        {
+            // Arrange
+            var stateMachine = StateMachine.Mutable.Create<ValidTrigger>(new ValidState())
+                .ToFrozen();
+
+            // Act
+            var result = await stateMachine.TransitAsync<ValidTrigger>();
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [Test]
+        public async Task StateMachineFrozen_ToMutableAndTrigger_ReturnsSuccess()
+        {
+            // Arrange
+            var frozen = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<ValidTrigger>(new ValidState())
+                .Build()
+                .ToFrozen();
+            var mutable = frozen.ToMutable();
+
+            // Act
+            var resultFrozen = await frozen.TransitAsync<ValidTrigger>();
+            var resultMutable = await mutable.TransitAsync<ValidTrigger>();
+
+            // Assert
+            Assert.IsTrue(resultFrozen.Combine(resultMutable).IsSuccessful);
+        }
+
+        [Test]
+        public async Task StateMachineMutable_InitialValidTrigger_ReturnsSuccess()
+        {
+            // Arrange
+            var stateMachine = StateMachine.Mutable.Create<ValidTrigger>(new ValidState());
+
+            // Act
+            var result = await stateMachine.TransitAsync<ValidTrigger>();
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [Test]
+        public void StateMachineMutable_AddDuplicatedTrigger_ThrowsArgumentException()
+        {
+            // Arrange
+            var first = new FirstState();
+            var second = new SecondState();
+            var third = new ThirdState();
+
+            // Act & Assert
+            Assert.Throws<ArgumentException>
+            (
+                () => _ = StateMachine.Mutable.Create<FirstTrigger>(first)
+                    .AddTransition<SecondTrigger>(from: first, to: second)
+                    .AddTransition<SecondTrigger>(from: first, to: third)
+            );
+        }
+
+        [Test]
+        public async Task StateMachine_EnterActionValidTrigger_ReturnsSuccess()
+        {
+            // Arrange
+            StateMachine stateMachine = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<ValidTrigger>(new EnterActionState())
+                .Build();
+
+            // Act
+            var result = await stateMachine.TransitAsync<ValidTrigger>();
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [Test]
+        public async Task StateMachine_ExitActionValidTrigger_ReturnsSuccess()
+        {
+            // Arrange
+            StateMachine stateMachine = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<FirstTrigger>(new ExitActionState())
+                .WithTransition<SecondTrigger, ExitActionState>(new ValidState())
+                .Build();
+
+            // Act
+            var result = await stateMachine.TransitAsync<FirstTrigger>();
+            result = result.Combine(await stateMachine.TransitAsync<SecondTrigger>());
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [Test]
+        public async Task StateMachine_EnterAndExitActionValidTrigger_ReturnsSuccess()
+        {
+            // Arrange
+            StateMachine stateMachine = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<FirstTrigger>(new EnterAndExitActionState())
+                .WithTransition<SecondTrigger, EnterAndExitActionState>(new ValidState())
+                .Build();
+
+            // Act
+            var result = await stateMachine.TransitAsync<FirstTrigger>();
+            result = result.Combine(await stateMachine.TransitAsync<SecondTrigger>());
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [Test]
+        public async Task StateMachine_FailedExitActionValidTrigger_ReturnsFailure()
+        {
+            // Arrange
+            StateMachine stateMachine = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<FirstTrigger>(new FailedExitActionState())
+                .WithTransition<SecondTrigger, FailedExitActionState>(new ValidState())
+                .Build();
+
+            // Act
+            var result = await stateMachine.TransitAsync<FirstTrigger>();
+            result = result.Combine(await stateMachine.TransitAsync<SecondTrigger>());
+
+            // Assert
+            Assert.IsTrue(result.IsFailure);
         }
     }
 }

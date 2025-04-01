@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace Generic.Core.FinalStateMachine
 {
@@ -12,14 +12,14 @@ namespace Generic.Core.FinalStateMachine
     {
         public sealed class Mutable : StateMachine
         {
-            private readonly ConcurrentDictionary<Key, Transition> _transitions = new ();
+            private readonly ConcurrentDictionary<Key, IState> _transitions = new ();
 
             private Mutable()
             {
                 Transitions = _transitions;
             }
 
-            internal Mutable(IState current, IReadOnlyDictionary<Key, Transition> transitions)
+            internal Mutable(IState current, IReadOnlyDictionary<Key, IState> transitions)
             {
                 _current = current;
                 _transitions = new (transitions.AsEnumerable());
@@ -27,9 +27,9 @@ namespace Generic.Core.FinalStateMachine
                 Transitions = _transitions;
             }
 
-            private protected override IReadOnlyDictionary<Key, Transition> Transitions { get; }
+            private protected override IReadOnlyDictionary<Key, IState> Transitions { get; }
 
-            [Pure] // Prevent value negligence
+            [MustUseReturnValue]
             public static Mutable Create<TBootstrap>(IState startingWith)
             {
                 return new Mutable()
@@ -39,7 +39,7 @@ namespace Generic.Core.FinalStateMachine
             public Mutable AddTransition<TTrigger>(IState from, IState to)
             {
                 var key = Key.Create<TTrigger>(from);
-                if (_transitions.TryAdd(key, new Transition(from, to)) is false) throw new ArgumentException($"Transition {typeof(TTrigger).Name} is already added!");
+                if (_transitions.TryAdd(key, to) is false) throw new ArgumentException($"Transition {typeof(TTrigger).Name} is already added!");
 
                 return this;
             }

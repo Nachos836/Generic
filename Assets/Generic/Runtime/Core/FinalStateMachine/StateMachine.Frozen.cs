@@ -1,6 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace Generic.Core.FinalStateMachine
 {
@@ -8,15 +8,15 @@ namespace Generic.Core.FinalStateMachine
     {
         public sealed class Frozen : StateMachine
         {
-            internal Frozen(IState current, IReadOnlyDictionary<Key, Transition> transitions)
+            internal Frozen(IState current, IReadOnlyDictionary<Key, IState> transitions)
             {
                 _current = current;
                 Transitions = transitions.ToFrozenDictionary();
             }
 
-            private protected override IReadOnlyDictionary<Key, Transition> Transitions { get; }
+            private protected override IReadOnlyDictionary<Key, IState> Transitions { get; }
 
-            [Pure] // Prevent value negligence
+            [MustUseReturnValue]
             public Mutable ToMutable() => new (_current, Transitions);
         }
     }

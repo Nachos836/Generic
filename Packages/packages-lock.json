@@ -14,19 +14,20 @@
       "dependencies": {
         "com.cysharp.unitask": "2.5.10"
       },
-      "hash": "e46db4326677c268ab3750a3657a63b3cfdc1917"
+      "hash": "65d8d1b3d5a73ec9adb33921d2b462482cc3f964"
     },
     "com.unity.addressables": {
-      "version": "2.2.2",
+      "version": "2.3.16",
       "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.profiling.core": "1.0.2",
+        "com.unity.test-framework": "1.4.5",
         "com.unity.modules.assetbundle": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0",
         "com.unity.modules.imageconversion": "1.0.0",
         "com.unity.modules.unitywebrequest": "1.0.0",
-        "com.unity.scriptablebuildpipeline": "2.1.4",
+        "com.unity.scriptablebuildpipeline": "2.2.11",
         "com.unity.modules.unitywebrequestassetbundle": "1.0.0"
       },
       "url": "https://packages.unity.com"
@@ -34,12 +35,11 @@
     "com.unity.ext.nunit": {
       "version": "2.0.5",
       "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
+      "source": "builtin",
+      "dependencies": {}
     },
     "com.unity.ide.rider": {
-      "version": "3.0.34",
+      "version": "3.0.35",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -48,7 +48,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.22",
+      "version": "2.0.23",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -64,22 +64,24 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.scriptablebuildpipeline": {
-      "version": "2.1.4",
+      "version": "2.2.11",
       "depth": 1,
       "source": "registry",
-      "dependencies": {},
+      "dependencies": {
+        "com.unity.test-framework": "1.4.5",
+        "com.unity.modules.assetbundle": "1.0.0"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
-      "version": "1.4.6",
+      "version": "1.5.1",
       "depth": 0,
-      "source": "registry",
+      "source": "builtin",
       "dependencies": {
         "com.unity.ext.nunit": "2.0.3",
         "com.unity.modules.imgui": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
+      }
     },
     "org.nuget.system.buffers": {
       "version": "4.5.1",
@@ -89,7 +91,7 @@
       "url": "https://package.openupm.com"
     },
     "org.nuget.system.collections.immutable": {
-      "version": "9.0.2",
+      "version": "9.0.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {

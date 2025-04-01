@@ -1,9 +1,9 @@
 ﻿#nullable enable
 
-using System.Diagnostics.Contracts;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Functional.Async;
+using JetBrains.Annotations;
 
 namespace Generic.Core.FinalStateMachine
 {
@@ -11,14 +11,14 @@ namespace Generic.Core.FinalStateMachine
     {
         public interface IWithEnterAction
         {
-            /// Marked as pure to prevent value negligence
-            [Pure] UniTask<AsyncRichResult> OnEnterAsync(CancellationToken cancellation = default);
+            [MustUseReturnValue]
+            UniTask<AsyncRichResult> OnEnterAsync(CancellationToken cancellation = default);
         }
 
         public interface IWithExitAction
         {
-            /// Marked as pure to prevent value negligence
-            [Pure] UniTask<AsyncRichResult> OnExitAsync(CancellationToken cancellation = default);
+            [MustUseReturnValue]
+            UniTask<AsyncRichResult> OnExitAsync(CancellationToken cancellation = default);
         }
     }
 }

@@ -14,6 +14,9 @@ namespace Generic.Samples
         [UsedImplicitly]
         [SerializeField] private SerializableDictionary<GameObject, UnityEvent> _anotherDictionary = SerializableDictionary<GameObject, UnityEvent>.Empty();
 
+        [UsedImplicitly]
+        [SerializeField] private SerializableDictionary<string, UnityEvent> _yetAnotherDictionary = SerializableDictionary<string, UnityEvent>.Empty();
+
 
         [ContextMenu(nameof(Test))]
         private void Test()

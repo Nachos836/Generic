@@ -78,8 +78,10 @@ namespace Generic.SerializableValueObjects
                     _orderedEntries.Add(entry);
                 }
 
+            #if UNITY_EDITOR
                 entry._duplicated = !canAddKey;
                 _entries[index] = entry;
+            #endif
             }
 
             _backingDictionary = _orderedEntries.ToFrozenDictionary();

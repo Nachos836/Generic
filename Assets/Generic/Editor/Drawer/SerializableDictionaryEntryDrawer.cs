@@ -53,14 +53,14 @@ namespace Generic.Editor.Drawer
                 {
                     minWidth = Length.Percent(25),
                     maxWidth = Length.Percent(50),
-                    marginRight = 4,
-                    paddingRight = 4
+                    marginRight = 4
                 }
             };
             var valueField = new PropertyField(valueProperty, string.Empty)
             {
                 style =
                 {
+                    paddingLeft = 16,
                     flexGrow = 1
                 }
             };

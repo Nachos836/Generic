@@ -14,6 +14,15 @@ using static System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace Generic.SerializableValueObjects
 {
+    public static class SerializableDictionary
+    {
+        public static SerializableDictionary<TKey, TValue> Empty<TKey, TValue>()
+            where TKey : notnull => SerializableDictionary<TKey, TValue>.Empty();
+
+        public static SerializableDictionary<TKey, TValue> Create<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> entries)
+            where TKey : notnull => SerializableDictionary<TKey, TValue>.Create(entries);
+    }
+
     [Serializable]
     public struct SerializableDictionary<TKey, TValue> : ISerializationCallbackReceiver where TKey : notnull
     {
@@ -41,7 +50,7 @@ namespace Generic.SerializableValueObjects
             {
                 _entries = candidates.Select(static keyValue => (Entry) keyValue).ToList(),
                 _backingDictionary = candidates,
-                _orderedEntries = new (candidates.Count)
+                _orderedEntries = candidates.ToList()
             };
         }
 

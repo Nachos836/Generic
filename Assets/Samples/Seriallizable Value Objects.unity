@@ -233,6 +233,11 @@ MonoBehaviour:
       _value:
         _a: 0
         _b: 0
+    - _duplicated: 0
+      _key: 2
+      _value:
+        _a: 0
+        _b: 0
 --- !u!1 &1711494908
 GameObject:
   m_ObjectHideFlags: 0

@@ -32,8 +32,8 @@ namespace Generic.Samples
         [Serializable]
         private struct Custom
         {
-            [SerializeField] private int _a;
-            [SerializeField] private int _b;
+            [SerializeField] [UsedImplicitly] private int _a;
+            [SerializeField] [UsedImplicitly] private int _b;
         }
     }
 }

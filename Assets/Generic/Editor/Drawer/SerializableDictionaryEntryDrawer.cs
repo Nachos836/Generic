@@ -53,14 +53,17 @@ namespace Generic.Editor.Drawer
                 {
                     minWidth = Length.Percent(25),
                     maxWidth = Length.Percent(50),
-                    marginRight = 4
+                    marginRight = 4,
+                    backgroundColor = duplicateProp.boolValue
+                        ? new StyleColor { value = WarningColor }
+                        : new StyleColor { keyword = StyleKeyword.Initial }
                 }
             };
             var valueField = new PropertyField(valueProperty, string.Empty)
             {
                 style =
                 {
-                    paddingLeft = 16,
+                    marginLeft = 4,
                     flexGrow = 1
                 }
             };
@@ -69,22 +72,46 @@ namespace Generic.Editor.Drawer
             container.Add(keyField);
             container.Add(valueField);
 
-            SetPotentialWarningColor();
-
-            keyField.RegisterValueChangeCallback(_ =>
+            keyField.RegisterCallback<SerializedPropertyChangeEvent, KeyFieldState>(static (_, state) =>
             {
-                property.serializedObject.Update();
-                duplicateIndicator.visible = duplicateProp.boolValue;
-                SetPotentialWarningColor();
-            });
+                state.Property.serializedObject.Update();
+                state.DuplicateIndicator.visible = state.DuplicateProp.boolValue;
 
-            return container;
-
-            void SetPotentialWarningColor()
-            {
-                keyField.style.backgroundColor = duplicateProp.boolValue
+                state.KeyField.style.backgroundColor = state.DuplicateProp.boolValue
                     ? new StyleColor { value = WarningColor }
                     : new StyleColor { keyword = StyleKeyword.Initial };
+
+            }, new (property, duplicateIndicator, duplicateProp, keyField));
+
+            valueField.RegisterCallback<GeometryChangedEvent, PropertyField>(static (_, field) =>
+            {
+                if (field.Q<Foldout>(className: "unity-foldout") is not { } foldout) return;
+                if (foldout.Q<Toggle>(className: "unity-toggle") is not { } toggle) return;
+
+                field.style.paddingLeft = -toggle.resolvedStyle.left;
+            }, valueField);
+
+            return container;
+        }
+
+        private readonly struct KeyFieldState
+        {
+            public readonly SerializedProperty Property;
+            public readonly Image DuplicateIndicator;
+            public readonly SerializedProperty DuplicateProp;
+            public readonly PropertyField KeyField;
+
+            public KeyFieldState
+            (
+                SerializedProperty property,
+                Image duplicateIndicator,
+                SerializedProperty duplicateProp,
+                PropertyField keyField
+            ) {
+                Property = property;
+                DuplicateIndicator = duplicateIndicator;
+                DuplicateProp = duplicateProp;
+                KeyField = keyField;
             }
         }
     }

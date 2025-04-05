@@ -4,10 +4,8 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace Generic.Editor.Drawer
+namespace SerializableValueObjects.Editor
 {
-    using SerializableValueObjects;
-
     [CustomPropertyDrawer(typeof(SerializableDictionary<,>), true)]
     internal sealed class SerializableDictionaryDrawer : PropertyDrawer
     {

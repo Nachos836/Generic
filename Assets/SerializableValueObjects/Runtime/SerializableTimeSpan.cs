@@ -2,7 +2,7 @@
 using System.Diagnostics.Contracts;
 using UnityEngine;
 
-namespace Generic.SerializableValueObjects
+namespace SerializableValueObjects
 {
     using static SerializableTimeSpan.Unit;
 

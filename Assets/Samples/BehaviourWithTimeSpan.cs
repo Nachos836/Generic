@@ -1,4 +1,4 @@
-using Generic.SerializableValueObjects;
+using SerializableValueObjects;
 using JetBrains.Annotations;
 using UnityEngine;
 

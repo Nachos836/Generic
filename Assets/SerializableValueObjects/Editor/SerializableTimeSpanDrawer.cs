@@ -8,11 +8,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-using static Generic.SerializableValueObjects.SerializableTimeSpan.Unit;
-
-namespace Generic.Editor.Drawer
+namespace SerializableValueObjects.Editor
 {
-    using SerializableValueObjects;
+    using static SerializableTimeSpan.Unit;
 
     [CustomPropertyDrawer(typeof(SerializableTimeSpan))]
     [SuppressMessage("ReSharper", "Unity.RedundantSerializeFieldAttribute")]

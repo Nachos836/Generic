@@ -1,14 +1,12 @@
 {
-    "name": "Generic.SerializedValueObjects",
-    "rootNamespace": "Generic",
+    "name": "InspectorAttributes",
+    "rootNamespace": "",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": true,
-    "precompiledReferences": [
-        "System.Collections.Immutable.dll"
-    ],
+    "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],

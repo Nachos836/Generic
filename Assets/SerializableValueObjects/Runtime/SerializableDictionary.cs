@@ -12,7 +12,7 @@ using UnityEngine;
 
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
-namespace Generic.SerializableValueObjects
+namespace SerializableValueObjects
 {
     public static class SerializableDictionary
     {

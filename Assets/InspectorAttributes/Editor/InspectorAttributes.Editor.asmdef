@@ -1,8 +1,8 @@
 {
-    "name": "Generic.Editor",
-    "rootNamespace": "Generic",
+    "name": "InspectorAttributes.Editor",
+    "rootNamespace": "",
     "references": [
-        "GUID:3b57db1126e81b143bc2686c4d6be5ad"
+        "GUID:d2b4a9c458a8406fa5b3c96f7fccbb80"
     ],
     "includePlatforms": [
         "Editor"

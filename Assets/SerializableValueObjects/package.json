@@ -1,10 +1,10 @@
 {
-	"name": "com.nachos836.generic",
-	"displayName": "Unity Code Snippets",
+	"name": "com.nachos836.serializable-value-objects",
+	"displayName": "Serializable Value Objects",
 	"version": "0.5.0",
 	"unity": "2022.3",
-	"description": "Function style helpers and misc stuff",
-	"keywords": ["Code", "Patterns"],
+	"description": "Set of Serializable Value Objects with UI Toolkit in mind",
+	"keywords": ["Editor", "Serialization", "UIToolkit"],
 	"license": "MIT",
 	"documentationUrl": "https://github.com/Nachos836/Generic",
 	"changelogUrl": "https://github.com/Nachos836/Generic/releases",
@@ -20,9 +20,7 @@
 		"revision": "master"
 	},
 	"dependencies": {
-		"com.cysharp.unitask": "2.5.10",
-		"org.nuget.system.collections.immutable": "9.0.3",
-		"com.nachos836.functional": "https://github.com/Nachos836/Functional.git?path=Assets/Functional#0.4.0"
+		"org.nuget.system.collections.immutable": "9.0.3"
 	},
 	"scopedRegistries": [
 		{
@@ -30,7 +28,6 @@
 			"url": "https://package.openupm.com",
 			"scopes": [
 				"package.openupm.com",
-				"com.cysharp.unitask",
 				"org.nuget.system.buffers",
 				"org.nuget.system.collections.immutable",
 				"org.nuget.system.memory",

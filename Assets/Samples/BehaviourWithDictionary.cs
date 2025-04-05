@@ -1,14 +1,13 @@
-﻿using System;
+﻿using SerializableValueObjects;
+using System;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Events;
 
-using static Generic.SerializableValueObjects.SerializableDictionary;
+using static SerializableValueObjects.SerializableDictionary;
 
 namespace Generic.Samples
 {
-    using SerializableValueObjects;
-
     internal sealed class BehaviourWithDictionary : MonoBehaviour
     {
         [UsedImplicitly]
@@ -34,6 +33,16 @@ namespace Generic.Samples
         {
             [SerializeField] [UsedImplicitly] private int _a;
             [SerializeField] [UsedImplicitly] private int _b;
+
+            [UsedImplicitly]
+            private void Dummy()
+            {
+                _a = 24;
+                _b = 42;
+
+                _ = _a;
+                _ = _b;
+            }
         }
     }
 }

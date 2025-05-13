@@ -5,15 +5,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using Functional.Core.Outcome;
+using JetBrains.Annotations;
 
 namespace Generic.Core
 {
+    [Obsolete("WIP: Use on your own risk!")]
     public sealed class MPMCEventBus : IDisposable
     {
         private readonly ConcurrentQueue<None> _eventQueue = new ();
         private readonly List<Action?> _subscribers = new ();
 
-        [Pure] // Prevent value negligence
+        [MustDisposeResource]
         public IDisposable Subscribe(Action whenHappened)
         {
             _subscribers.Add(whenHappened);

@@ -1,15 +1,18 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
+using JetBrains.Annotations;
 
 namespace Generic.Core
 {
-    public class SwapbackArray<T>
+    [Obsolete("WIP: Use on your own risk!")]
+    public struct SwapbackArray<T>
     {
-        private ImmutableArray<T?> _readOnlyView;
-        private T?[] _items;
+        private ImmutableArray<T> _readOnlyView;
+        private T[] _items;
 
         public int Count { get; private set; }
 
@@ -20,6 +23,25 @@ namespace Generic.Core
             Count = 0;
         }
 
+        public SwapbackArray(ReadOnlySpan<T> items)
+        {
+            _items = new T[items.Length];
+            _readOnlyView = ImmutableCollectionsMarshal.AsImmutableArray(_items);
+            Count = items.Length;
+
+            items.CopyTo(_items);
+        }
+
+        public SwapbackArray(ICollection<T> items)
+        {
+            _items = new T[items.Count];
+            _readOnlyView = ImmutableCollectionsMarshal.AsImmutableArray(_items);
+            Count = items.Count;
+
+            items.CopyTo(_items, 0);
+        }
+
+        [MustDisposeResource]
         public RemoveHandler Add(T item)
         {
             ResizeIfNeeded(Count + 1);
@@ -34,6 +56,8 @@ namespace Generic.Core
             Count = 0;
         }
 
+        public readonly Enumerator GetEnumerator() => new (_readOnlyView.AsSpan());
+
         private void RemoveAt(int index)
         {
             var lastIndex = Count - 1;
@@ -42,7 +66,7 @@ namespace Generic.Core
                 _items[index] = _items[lastIndex];
             }
 
-            _items[lastIndex] = default;
+            _items[lastIndex] = default!;
             Count--;
         }
 
@@ -55,50 +79,38 @@ namespace Generic.Core
             _readOnlyView = ImmutableCollectionsMarshal.AsImmutableArray(_items);
         }
 
-        public Enumerator GetEnumerator()
+        public struct RemoveHandler : IDisposable
         {
-            return new Enumerator(_readOnlyView.AsSpan());
-        }
-
-        public readonly struct RemoveHandler : IDisposable
-        {
-            private readonly SwapbackArray<T> _collection;
             private readonly int _index;
+            private SwapbackArray<T> _collection;
 
             internal RemoveHandler(SwapbackArray<T> collection, int index)
             {
-                _collection = collection ?? throw new ArgumentNullException(nameof(collection));
+                _collection = collection;
                 _index = index;
             }
 
-            public void Dispose()
-            {
-                _collection.RemoveAt(_index);
-            }
+            public void Dispose() => _collection.RemoveAt(_index);
         }
 
         public ref struct Enumerator
         {
-            private readonly ReadOnlySpan<T?> _readOnlyView;
+            private readonly ReadOnlySpan<T> _readOnlyView;
             private int _index;
 
-            internal Enumerator(ReadOnlySpan<T?> readOnlyView)
+            internal Enumerator(ReadOnlySpan<T> readOnlyView)
             {
                 _readOnlyView = readOnlyView;
-                _index = 0;
+                _index = -1;
             }
 
-            public ref readonly T Current => ref _readOnlyView[_index]!;
+            public readonly ref readonly T Current => ref _readOnlyView[_index]!;
 
             public bool MoveNext()
             {
-                while (_index < _readOnlyView.Length - 1)
-                {
-                    ++_index;
-                    if (_readOnlyView[_index] != null) return true;
-                }
+                ++_index;
 
-                return false;
+                return _index < _readOnlyView.Length - 1;
             }
         }
     }

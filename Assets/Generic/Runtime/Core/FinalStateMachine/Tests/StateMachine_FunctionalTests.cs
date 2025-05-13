@@ -120,7 +120,7 @@ namespace Generic.Core.FinalStateMachine.Tests
         ////////////////////////////////////////////////////////////////////
 
 
-        private sealed record Unloaded : IState, IState.IWithEnterAction
+        private sealed record Unloaded : IState, IState.WithEnterAction
         {
             private readonly ValueReference<RawState> _sharedState;
 
@@ -129,7 +129,7 @@ namespace Generic.Core.FinalStateMachine.Tests
                 _sharedState = sharedState;
             }
 
-            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken cancellation)
+            UniTask<AsyncRichResult> IState.WithEnterAction.OnEnterAsync(CancellationToken cancellation)
             {
                 if (cancellation.IsCancellationRequested) return UniTask.FromCanceled<AsyncRichResult>(cancellation);
 
@@ -139,7 +139,7 @@ namespace Generic.Core.FinalStateMachine.Tests
             }
         }
 
-        private sealed record Prefetched : IState, IState.IWithEnterAction
+        private sealed record Prefetched : IState, IState.WithEnterAction
         {
             private readonly ValueReference<RawState> _sharedState;
 
@@ -148,7 +148,7 @@ namespace Generic.Core.FinalStateMachine.Tests
                 _sharedState = sharedState;
             }
 
-            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken cancellation)
+            UniTask<AsyncRichResult> IState.WithEnterAction.OnEnterAsync(CancellationToken cancellation)
             {
                 if (cancellation.IsCancellationRequested) return UniTask.FromCanceled<AsyncRichResult>(cancellation);
 
@@ -158,7 +158,7 @@ namespace Generic.Core.FinalStateMachine.Tests
             }
         }
 
-        private sealed record Activated : IState, IState.IWithEnterAction
+        private sealed record Activated : IState, IState.WithEnterAction
         {
             private readonly ValueReference<RawState> _sharedState;
 
@@ -167,7 +167,7 @@ namespace Generic.Core.FinalStateMachine.Tests
                 _sharedState = sharedState;
             }
 
-            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken cancellation)
+            UniTask<AsyncRichResult> IState.WithEnterAction.OnEnterAsync(CancellationToken cancellation)
             {
                 if (cancellation.IsCancellationRequested) return UniTask.FromCanceled<AsyncRichResult>(cancellation);
 
@@ -177,7 +177,7 @@ namespace Generic.Core.FinalStateMachine.Tests
             }
         }
 
-        private sealed record Deactivated : IState, IState.IWithEnterAction
+        private sealed record Deactivated : IState, IState.WithEnterAction
         {
             private readonly ValueReference<RawState> _sharedState;
 
@@ -186,7 +186,7 @@ namespace Generic.Core.FinalStateMachine.Tests
                 _sharedState = sharedState;
             }
 
-            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken cancellation)
+            UniTask<AsyncRichResult> IState.WithEnterAction.OnEnterAsync(CancellationToken cancellation)
             {
                 if (cancellation.IsCancellationRequested) return UniTask.FromCanceled<AsyncRichResult>(cancellation);
 

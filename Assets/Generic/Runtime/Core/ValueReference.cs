@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace Generic.Core
 {
@@ -16,12 +17,12 @@ namespace Generic.Core
             Value = null;
         }
 
-        [Pure] // Prevent value negligence
-        public bool TryGetValue(out T value)
+        [MustUseReturnValue]
+        public bool TryGetValue([NotNullWhen(returnValue: true)] out T? value)
         {
             if (_value.HasValue is false)
             {
-                value = default;
+                value = null;
                 return false;
             }
 

@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace Generic.Core
 {
+    [Obsolete("WIP: Use on your own risk!")]
     public sealed class MPMCEventBus<T> : IDisposable
     {
         private readonly ConcurrentQueue<T> _eventQueue = new ();

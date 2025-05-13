@@ -1,23 +1,27 @@
 ﻿#nullable enable
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Functional.Async;
-using JetBrains.Annotations;
 
 namespace Generic.Core.FinalStateMachine
 {
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public interface IState
     {
-        public interface IWithEnterAction
+        public interface WithEnterAction
         {
-            [MustUseReturnValue]
             UniTask<AsyncRichResult> OnEnterAsync(CancellationToken cancellation = default);
         }
 
-        public interface IWithExitAction
+        public interface WithEnterAction<in TTrigger>
         {
-            [MustUseReturnValue]
+            UniTask<AsyncRichResult> OnEnterAsync(TTrigger trigger, CancellationToken cancellation = default);
+        }
+
+        public interface WithExitAction
+        {
             UniTask<AsyncRichResult> OnExitAsync(CancellationToken cancellation = default);
         }
     }

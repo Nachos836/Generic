@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 
 namespace Generic.Core
 {
@@ -7,18 +7,19 @@ namespace Generic.Core
     {
         public static readonly IDisposable Empty = EmptyDisposable.Instance;
 
-        [Pure] // Prevent value negligence
+        [MustDisposeResource]
         public static IDisposable Create(Action disposeAction)
         {
             return new AnonymousDisposable(disposeAction);
         }
 
-        [Pure] // Prevent value negligence
+        [MustDisposeResource]
         public static IDisposable CreateWithState<TState>(TState state, Action<TState> disposeAction)
         {
             return new AnonymousDisposable<TState>(state, disposeAction);
         }
 
+        [MustDisposeResource]
         private sealed class EmptyDisposable : IDisposable
         {
             public static readonly IDisposable Instance = new EmptyDisposable();
@@ -28,6 +29,7 @@ namespace Generic.Core
             void IDisposable.Dispose() { }
         }
 
+        [MustDisposeResource]
         private sealed class AnonymousDisposable : IDisposable
         {
             private readonly Action _onDispose;
@@ -48,6 +50,7 @@ namespace Generic.Core
             }
         }
 
+        [MustDisposeResource]
         private sealed class AnonymousDisposable<T> : IDisposable
         {
             private readonly T _state;
@@ -70,6 +73,7 @@ namespace Generic.Core
             }
         }
 
+        [MustDisposeResource]
         public sealed class Bag : IDisposable
         {
             private readonly IDisposable[] _disposables;
@@ -78,6 +82,7 @@ namespace Generic.Core
 
             private Bag(IDisposable[] disposables) => _disposables = disposables;
 
+            [MustDisposeResource]
             public static IDisposable Create(params IDisposable[] disposables) => new Bag(disposables);
 
             void IDisposable.Dispose()

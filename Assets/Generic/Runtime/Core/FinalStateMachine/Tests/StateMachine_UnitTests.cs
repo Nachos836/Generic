@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Functional.Async;
 using NUnit.Framework;
+using UnityEditor.PackageManager;
 
 namespace Generic.Core.FinalStateMachine.Tests
 {
@@ -20,22 +21,34 @@ namespace Generic.Core.FinalStateMachine.Tests
         private sealed record SecondState : IState;
         private sealed record ThirdState : IState;
 
-        private sealed record EnterActionState : IState, IState.IWithEnterAction
+        private sealed record EnterActionState : IState, IState.WithEnterAction
         {
-            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+            UniTask<AsyncRichResult> IState.WithEnterAction.OnEnterAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
         }
-        private sealed record ExitActionState : IState, IState.IWithExitAction
+        private sealed record ExitActionState : IState, IState.WithExitAction
         {
-            UniTask<AsyncRichResult> IState.IWithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+            UniTask<AsyncRichResult> IState.WithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
         }
-        private sealed record FailedExitActionState : IState, IState.IWithExitAction
+        private sealed record FailedExitActionState : IState, IState.WithExitAction
         {
-            UniTask<AsyncRichResult> IState.IWithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Failure);
+            UniTask<AsyncRichResult> IState.WithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Failure);
         }
-        private sealed record EnterAndExitActionState : IState, IState.IWithEnterAction, IState.IWithExitAction
+        private sealed record EnterAndExitActionState : IState, IState.WithEnterAction, IState.WithExitAction
         {
-            UniTask<AsyncRichResult> IState.IWithEnterAction.OnEnterAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
-            UniTask<AsyncRichResult> IState.IWithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+            UniTask<AsyncRichResult> IState.WithEnterAction.OnEnterAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+            UniTask<AsyncRichResult> IState.WithExitAction.OnExitAsync(CancellationToken _) => UniTask.FromResult(AsyncRichResult.Success);
+        }
+        private sealed record ValueOnEnterActionState : IState, IState.WithEnterAction<int>
+        {
+            UniTask<AsyncRichResult> IState.WithEnterAction<int>.OnEnterAsync(int trigger, CancellationToken cancellation)
+            {
+                if (cancellation.IsCancellationRequested) return UniTask.FromResult<AsyncRichResult>(cancellation);
+                if (trigger > 42) return UniTask.FromResult<AsyncRichResult>(new ArgumentOutOfRangeException(nameof(trigger)));
+                if (trigger < 42) return UniTask.FromResult<AsyncRichResult>(new Functional.Core.Outcome.Expected.Failure(nameof(trigger)));
+
+                Assert.That(trigger, Is.EqualTo(42));
+                return UniTask.FromResult(AsyncRichResult.Success);
+            }
         }
 
         [Test]
@@ -362,6 +375,21 @@ namespace Generic.Core.FinalStateMachine.Tests
             // Act
             var result = await stateMachine.TransitAsync<FirstTrigger>();
             result = result.Combine(await stateMachine.TransitAsync<SecondTrigger>());
+
+            // Assert
+            Assert.IsTrue(result.IsSuccessful);
+        }
+
+        [Test]
+        public async Task StateMachine_EnterEnterValueAction_ReturnsSuccess()
+        {
+            // Arrange
+            StateMachine stateMachine = StateMachine.Immutable.CreateBuilder()
+                .WithInitialTransition<int>(new ValueOnEnterActionState())
+                .Build();
+
+            // Act
+            var result = await stateMachine.TransitAsync(42);
 
             // Assert
             Assert.IsTrue(result.IsSuccessful);

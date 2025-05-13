@@ -14,10 +14,10 @@
       "dependencies": {
         "com.cysharp.unitask": "2.5.10"
       },
-      "hash": "65d8d1b3d5a73ec9adb33921d2b462482cc3f964"
+      "hash": "bb8661ea37284242e3bbcd2968da53cb48de5e6c"
     },
     "com.unity.addressables": {
-      "version": "2.3.16",
+      "version": "2.4.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -27,7 +27,7 @@
         "com.unity.modules.jsonserialize": "1.0.0",
         "com.unity.modules.imageconversion": "1.0.0",
         "com.unity.modules.unitywebrequest": "1.0.0",
-        "com.unity.scriptablebuildpipeline": "2.2.11",
+        "com.unity.scriptablebuildpipeline": "2.3.8",
         "com.unity.modules.unitywebrequestassetbundle": "1.0.0"
       },
       "url": "https://packages.unity.com"
@@ -39,7 +39,7 @@
       "dependencies": {}
     },
     "com.unity.ide.rider": {
-      "version": "3.0.35",
+      "version": "3.0.36",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -64,7 +64,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.scriptablebuildpipeline": {
-      "version": "2.2.11",
+      "version": "2.3.8",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -91,7 +91,7 @@
       "url": "https://package.openupm.com"
     },
     "org.nuget.system.collections.immutable": {
-      "version": "9.0.3",
+      "version": "9.0.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {

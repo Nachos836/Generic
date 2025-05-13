@@ -66,47 +66,49 @@ namespace SerializableValueObjects.Editor
                 }
             };
 
-            container.Add(duplicateIndicator);
-            container.Add(keyField);
-            container.Add(valueField);
-
-            keyField.RegisterCallback<SerializedPropertyChangeEvent, KeyFieldState>(static (_, state) =>
+            keyField.RegisterCallback<SerializedPropertyChangeEvent, KeyFieldState>(static (@event, state) =>
             {
-                state.Property.serializedObject.Update();
-                state.DuplicateIndicator.visible = state.DuplicateProp.boolValue;
+                @event.changedProperty.serializedObject.UpdateIfRequiredOrScript();
 
+                state.DuplicateIndicator.visible = state.DuplicateProp.boolValue;
                 state.KeyField.style.backgroundColor = state.DuplicateProp.boolValue
                     ? new StyleColor { value = WarningColor }
                     : new StyleColor { keyword = StyleKeyword.Initial };
 
-            }, new (property, duplicateIndicator, duplicateProp, keyField));
+                @event.Dispose();
 
-            valueField.RegisterCallback<GeometryChangedEvent, PropertyField>(static (_, field) =>
+            }, new (duplicateIndicator, duplicateProp, keyField));
+
+            valueField.RegisterCallback<GeometryChangedEvent, PropertyField>(static (@event, field) =>
             {
-                if (field.Q<Foldout>(className: "unity-foldout") is not { } foldout) return;
-                if (foldout.Q<Toggle>(className: "unity-toggle") is not { } toggle) return;
+                if (field.Q<Foldout>(className: Foldout.ussClassName) is not { } foldout) return;
+                if (foldout.Q<Toggle>(className: Toggle.ussClassName) is not { } toggle) return;
 
                 field.style.paddingLeft = -toggle.resolvedStyle.left;
+
+                @event.Dispose();
+
             }, valueField);
+
+            container.Add(duplicateIndicator);
+            container.Add(keyField);
+            container.Add(valueField);
 
             return container;
         }
 
         private readonly struct KeyFieldState
         {
-            public readonly SerializedProperty Property;
             public readonly Image DuplicateIndicator;
             public readonly SerializedProperty DuplicateProp;
             public readonly PropertyField KeyField;
 
             public KeyFieldState
             (
-                SerializedProperty property,
                 Image duplicateIndicator,
                 SerializedProperty duplicateProp,
                 PropertyField keyField
             ) {
-                Property = property;
                 DuplicateIndicator = duplicateIndicator;
                 DuplicateProp = duplicateProp;
                 KeyField = keyField;

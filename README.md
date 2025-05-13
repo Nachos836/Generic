@@ -28,3 +28,8 @@ https://github.com/Nachos836/Generic.git?path=Assets/SerializableValueObjects
 ```
 https://github.com/Nachos836/Generic.git?path=Assets/InspectorAttributes
 ```
+
+(OPTIONAL) If you want to install Async Pool add the following URL:
+```
+https://github.com/Nachos836/Generic.git?path=Assets/Pooling
+```

@@ -1,0 +1,35 @@
+{
+	"name": "com.nachos836.pooling",
+	"displayName": "Unity Object Pooling",
+	"version": "0.0.1",
+	"unity": "2022.3",
+	"description": "Async Pooling solution for Unity",
+	"keywords": ["Pool", "Async"],
+	"license": "MIT",
+	"documentationUrl": "https://github.com/Nachos836/Generic",
+	"changelogUrl": "https://github.com/Nachos836/Generic/releases",
+	"licensesUrl": "https://github.com/Nachos836/Generic/blob/master/LICENSE",
+	"author": {
+		"name": "Sergey Shevchuk",
+		"email": "DEV_SergeyShevchuk@proton.me",
+		"url": "https://github.com/Nachos836"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Nachos836/Generic.git",
+		"revision": "master"
+	},
+	"dependencies": {
+		"com.cysharp.unitask": "2.5.10"
+	},
+	"scopedRegistries": [
+		{
+			"name": "OpenUPM",
+			"url": "https://package.openupm.com",
+			"scopes": [
+				"package.openupm.com",
+				"com.cysharp.unitask"
+			]
+		}
+	]
+}

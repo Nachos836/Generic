@@ -11,9 +11,10 @@ namespace InspectorAttributes.Editor
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var propertyField = new PropertyField(property);
-            propertyField.SetEnabled(false);
-            return propertyField;
+            return new PropertyField(property)
+            {
+                enabledSelf = false
+            };
         }
     }
 }

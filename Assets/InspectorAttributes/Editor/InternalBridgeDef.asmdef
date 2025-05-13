@@ -1,5 +1,5 @@
 {
-    "name": "InspectorAttributes.Editor",
+    "name": "Unity.InternalAPIEngineBridge.004",
     "rootNamespace": "",
     "references": [
         "GUID:d2b4a9c458a8406fa5b3c96f7fccbb80"
@@ -8,10 +8,10 @@
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
-    "overrideReferences": true,
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

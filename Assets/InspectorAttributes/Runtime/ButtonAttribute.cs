@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using UnityEngine;
 
 namespace InspectorAttributes
 {
+    [Obsolete("Not Yet Ready: disabled")]
     [Conditional("UNITY_EDITOR")]
     [AttributeUsage(AttributeTargets.Method)]
-    public sealed class ButtonAttribute : PropertyAttribute
+    public sealed class ButtonAttribute : Attribute
     {
         internal readonly string Label;
         internal readonly string MethodName;

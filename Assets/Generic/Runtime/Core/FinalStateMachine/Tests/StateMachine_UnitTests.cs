@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Functional.Async;
 using NUnit.Framework;
-using UnityEditor.PackageManager;
 
 namespace Generic.Core.FinalStateMachine.Tests
 {

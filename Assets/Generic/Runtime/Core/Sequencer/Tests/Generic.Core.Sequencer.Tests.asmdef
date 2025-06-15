@@ -1,0 +1,27 @@
+{
+    "name": "Generic.Core.Sequencer.Tests",
+    "rootNamespace": "",
+    "references": [
+        "GUID:dade192bce6283141ab2563dd99e022e",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:579ba19b64b1b7c439dd55a57f928fca",
+        "GUID:e067a5240a5d42b4bbaa0ddadcdd8d3e"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

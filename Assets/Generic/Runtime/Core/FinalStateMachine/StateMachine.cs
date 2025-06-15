@@ -72,7 +72,7 @@ namespace Generic.Core.FinalStateMachine
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryGetDestinationState<TTrigger>
         (
-            IReadOnlyDictionary<Key,IState> transitions,
+            IReadOnlyDictionary<Key, IState> transitions,
             IState current,
             [NotNullWhen(returnValue: true)] out IState? to,
             [NotNullWhen(returnValue: false)] out AsyncRichResult? error
@@ -80,7 +80,7 @@ namespace Generic.Core.FinalStateMachine
             var key = Key.Create<TTrigger>(from: current);
             if (transitions.TryGetValue(key, out to) is false)
             {
-                if (transitions.Keys.Any(candidate => candidate.TriggerHash == key.TriggerHash))
+                if (transitions.Keys.Contains(key, Key.TriggersComparer))
                 {
                     error = new Expected.Failure($"Can't transit from { current } by { typeof(TTrigger).Name }");
                     return false;

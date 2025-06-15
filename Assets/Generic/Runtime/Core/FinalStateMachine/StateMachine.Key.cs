@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 
 namespace Generic.Core.FinalStateMachine
 {
@@ -9,31 +9,31 @@ namespace Generic.Core.FinalStateMachine
     {
         internal readonly struct Key : IEquatable<Key>
         {
+            public static readonly IEqualityComparer<Key> TriggersComparer = new TriggersComparator();
             internal static Key Create<T>(IState from) => new (UniqueId<T>.Value, from);
 
-            public readonly int TriggerHash;
+            private readonly int _triggerHash;
             private readonly int _raw;
 
-            private Key(uint rawTrigger, IState from)
+            private Key(int rawTrigger, IState from)
             {
-                TriggerHash = (int) rawTrigger;
+                _triggerHash = rawTrigger;
                 _raw = HashCode.Combine(rawTrigger, from);
             }
 
             public bool Equals(Key other) => _raw == other._raw;
             public override int GetHashCode() => _raw;
+
+            internal sealed class TriggersComparator : IEqualityComparer<Key>
+            {
+                bool IEqualityComparer<Key>.Equals(Key first, Key second) => first._triggerHash == second._triggerHash;
+                int IEqualityComparer<Key>.GetHashCode(Key income) => income._triggerHash;
+            }
         }
 
-        [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
-        [SuppressMessage("ReSharper", "UnusedTypeParameter")]
         private protected static class UniqueId<T>
         {
-            public static uint Value { get; } = UniqueNumberHolder.Value++;
-        }
-
-        private static class UniqueNumberHolder
-        {
-            public static uint Value;
+            public static int Value { get; } = typeof(T).GetHashCode();
         }
     }
 }

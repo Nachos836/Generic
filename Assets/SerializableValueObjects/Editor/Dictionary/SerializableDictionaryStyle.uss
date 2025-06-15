@@ -1,0 +1,8 @@
+.unity-list-view__reorderable-handle {
+    display: none;
+}
+
+.unity-list-view__reorderable-item__container {
+    padding-left: 1px;
+    padding-right: 1px;
+}

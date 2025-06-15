@@ -1,22 +1,20 @@
 ﻿#nullable enable
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace SerializableValueObjects.Editor
+namespace SerializableValueObjects.Editor.TimeSpan
 {
     using static SerializableTimeSpan.Unit;
 
+    [Serializable]
     [CustomPropertyDrawer(typeof(SerializableTimeSpan))]
-    [SuppressMessage("ReSharper", "Unity.RedundantSerializeFieldAttribute")]
     internal sealed class SerializableTimeSpanDrawer : PropertyDrawer
     {
-        [SerializeField] [UsedImplicitly] private VisualTreeAsset _propertyGUI = default!;
+        [SerializeField] private VisualTreeAsset _propertyGUI = default!;
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -36,8 +34,8 @@ namespace SerializableValueObjects.Editor
                 var currentUnit = (SerializableTimeSpan.Unit) unitProperty.enumValueIndex;
                 unitDropdown.Init(currentUnit);
                 currentTypeLabel.text = $"in {currentUnit}";
-                inputField.value = TimeSpan.FromTicks(ticksProperty.longValue)
-                    .ToUnitString((SerializableTimeSpan.Unit)unitProperty.enumValueIndex);
+                inputField.value = System.TimeSpan.FromTicks(ticksProperty.longValue)
+                    .ToUnitString((SerializableTimeSpan.Unit) unitProperty.enumValueIndex);
             });
 
             unitDropdown.RegisterValueChangedCallback(OnDropdownUnitChanged);
@@ -51,11 +49,11 @@ namespace SerializableValueObjects.Editor
 
             return mainRowContainer;
 
-            void OnInputChanged(ChangeEvent<string> evt)
+            void OnInputChanged(ChangeEvent<string> @event)
             {
                 var currentUnit = (SerializableTimeSpan.Unit) unitProperty.enumValueIndex;
 
-                if (decimal.TryParse(evt.newValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var inputValue) is false)
+                if (decimal.TryParse(@event.newValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var inputValue) is false)
                 {
                     inputField.value = "0";
                 }
@@ -65,7 +63,7 @@ namespace SerializableValueObjects.Editor
                     {
                         if (inputValue < 0 || inputValue != Math.Truncate(inputValue))
                         {
-                            inputField.value = TimeSpan.FromTicks((long) Math.Max(0, Math.Truncate(inputValue)))
+                            inputField.value = System.TimeSpan.FromTicks((long) Math.Max(0, Math.Truncate(inputValue)))
                                 .ToUnitString(currentUnit);
                         }
                         else
@@ -114,7 +112,7 @@ namespace SerializableValueObjects.Editor
 
         private static decimal ConvertTicksToUnit(decimal ticks, SerializableTimeSpan.Unit unit)
         {
-            var timeSpan = TimeSpan.FromTicks((long) ticks);
+            var timeSpan = System.TimeSpan.FromTicks((long) ticks);
 
             return unit switch
             {
@@ -133,11 +131,11 @@ namespace SerializableValueObjects.Editor
             return unit switch
             {
                 Ticks => (long) value,
-                Milliseconds => TimeSpan.FromMilliseconds((double) value).Ticks,
-                Seconds => TimeSpan.FromSeconds((double) value).Ticks,
-                Minutes => TimeSpan.FromMinutes((double) value).Ticks,
-                Hours => TimeSpan.FromHours((double) value).Ticks,
-                Days => TimeSpan.FromDays((double) value).Ticks,
+                Milliseconds => System.TimeSpan.FromMilliseconds((double) value).Ticks,
+                Seconds => System.TimeSpan.FromSeconds((double) value).Ticks,
+                Minutes => System.TimeSpan.FromMinutes((double) value).Ticks,
+                Hours => System.TimeSpan.FromHours((double) value).Ticks,
+                Days => System.TimeSpan.FromDays((double) value).Ticks,
                 _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, null)
             };
         }
@@ -145,7 +143,7 @@ namespace SerializableValueObjects.Editor
 
     internal static class SerializableTimeSpanExtensions
     {
-        public static string ToUnitString(this TimeSpan input, SerializableTimeSpan.Unit unit)
+        public static string ToUnitString(this System.TimeSpan input, SerializableTimeSpan.Unit unit)
         {
             return unit switch
             {

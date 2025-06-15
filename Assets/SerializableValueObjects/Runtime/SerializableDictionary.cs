@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -81,7 +82,7 @@ namespace SerializableValueObjects
             {
                 var entry = _entries[index];
                 var key = entry._key;
-                var canAddKey = _orderedEntries.Any(candidate => candidate.Key.Equals(key)) is false;
+                var canAddKey = _orderedEntries.Contains(new KeyValuePair<TKey, TValue>(key, default!), KeyValueComparer.ByKey) is false;
                 if (canAddKey)
                 {
                     _orderedEntries.Add(entry);
@@ -147,10 +148,104 @@ namespace SerializableValueObjects
         #endif
             }
 
-            internal readonly bool SimilarAs(Entry other) => _key.Equals(other._key);
-
             public static implicit operator KeyValuePair<TKey, TValue>(Entry entry) => new (entry._key, entry._value);
             public static implicit operator Entry(KeyValuePair<TKey, TValue> entry) => new (entry.Key, entry.Value);
         }
+
+        private static class KeyEqualityComparer
+        {
+            public static readonly Func<TKey, TKey, bool> Invoke = GetComparator();
+            public new static readonly Func<TKey, int> GetHashCode = GetHasher();
+
+            private static Func<TKey, TKey, bool> GetComparator()
+            {
+                var keyType = typeof(TKey);
+
+                if (typeof(IEqualityComparer<TKey>).IsAssignableFrom(keyType)) return GenerateViaInterface<IEqualityComparer<TKey>>("Equals");
+                if (typeof(IEquatable<TKey>).IsAssignableFrom(keyType)) return GenerateViaInterface<IEquatable<TKey>>("Equals");
+
+                if (typeof(IComparable<TKey>).IsAssignableFrom(keyType))
+                {
+                    var first = Expression.Parameter(keyType, "a");
+                    var second = Expression.Parameter(keyType, "b");
+                    var call = Expression.Call
+                    (
+                        Expression.Convert(first, typeof(IComparable<TKey>)),
+                        typeof(IComparable<TKey>).GetMethod(nameof(IComparable<TKey>.CompareTo))!,
+                        second
+                    );
+
+                    var body = Expression.Equal(call, Expression.Constant(0));
+                    return Expression.Lambda<Func<TKey, TKey, bool>>(body, first, second)
+                        .Compile();
+                }
+
+                return EqualityComparer<TKey>.Default.Equals;
+
+                static Func<TKey, TKey, bool> GenerateViaInterface<TInterface>(string methodName)
+                {
+                    var type = typeof(TKey);
+                    var first = Expression.Parameter(type, "a");
+                    var second = Expression.Parameter(type, "b");
+
+                    var call = Expression.Call
+                    (
+                        Expression.Convert(first, typeof(TInterface)),
+                        typeof(TInterface).GetMethod(methodName, new[] { type })!,
+                        second
+                    );
+
+                    return Expression.Lambda<Func<TKey, TKey, bool>>(call, first, second)
+                        .Compile();
+                }
+            }
+
+            private static Func<TKey, int> GetHasher()
+            {
+                var type = typeof(TKey);
+
+                if (typeof(IEqualityComparer<TKey>).IsAssignableFrom(type))
+                {
+                    var key = Expression.Parameter(type, "k");
+                    var call = Expression.Call
+                    (
+                        Expression.Convert(key, typeof(IEqualityComparer<TKey>)),
+                        typeof(IEqualityComparer<TKey>).GetMethod(nameof(IEqualityComparer<TKey>.GetHashCode))!,
+                        key
+                    );
+
+                    return Expression.Lambda<Func<TKey, int>>(call, key)
+                        .Compile();
+                }
+                else
+                {
+                    var key = Expression.Parameter(type, "k");
+                    var call = Expression.Call(key, type.GetMethod(nameof(GetHashCode), Type.EmptyTypes)!);
+
+                    return Expression.Lambda<Func<TKey, int>>(call, key)
+                        .Compile();
+                }
+            }
+        }
+
+        private static class KeyValueComparer
+        {
+            public static readonly IEqualityComparer<KeyValuePair<TKey, TValue>> ByKey = new ComparerByKey();
+
+            private sealed class ComparerByKey : IEqualityComparer<KeyValuePair<TKey, TValue>>
+            {
+                public bool Equals(KeyValuePair<TKey, TValue> first, KeyValuePair<TKey, TValue> second)
+                {
+                    return KeyEqualityComparer.Invoke(first.Key, second.Key);
+                }
+
+                public int GetHashCode(KeyValuePair<TKey, TValue> income)
+                {
+                    return KeyEqualityComparer.GetHashCode(income.Key);
+                }
+            }
+        }
+
+
     }
 }

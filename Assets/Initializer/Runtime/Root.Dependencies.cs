@@ -22,6 +22,16 @@ namespace Initializer
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             if (_services.Length == 0) return;
+            if (_services.Any(static service => service == null))
+            {
+                Debug.LogError("Null service detected in services. Ensure all services are set!");
+                return;
+            }
+            if (_services.Distinct().Count() != _services.Length)
+            {
+                Debug.LogError("Duplicated service detected. Ensure all services are unique!");
+                return;
+            }
 
             _services = TopologicalSort(_services, GetDependencies);
         }

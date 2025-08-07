@@ -57,6 +57,8 @@ namespace Initializer
         {
             if (TrySetInstance(ref _instance) is false) return;
 
+            _instance = Enable(root: _instance);
+
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
@@ -84,11 +86,6 @@ namespace Initializer
             {
                 switch (change)
                 {
-                    case PlayModeStateChange.EnteredPlayMode when _instance:
-                    {
-                        _instance = Enable(root: _instance);
-                        return;
-                    }
                     case PlayModeStateChange.ExitingPlayMode when _instance:
                     {
                         EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;

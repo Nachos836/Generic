@@ -243,6 +243,66 @@ MonoBehaviour:
       _value:
         _a: 0
         _b: 0
+--- !u!1 &1282427589
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1282427591}
+  - component: {fileID: 1282427590}
+  m_Layer: 0
+  m_Name: Reference
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1282427590
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1282427589}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05dbcb4ce78441f3af0711f33d51d235, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _value: 1
+  _value2: 2
+  _reference1:
+    rid: 487703077161009242
+  _reference2:
+    rid: 487703077161009243
+  references:
+    version: 2
+    RefIds:
+    - rid: 487703077161009242
+      type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
+      data: 
+    - rid: 487703077161009243
+      type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
+      data:
+        _data: Cyka!
+--- !u!4 &1282427591
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1282427589}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1711494908
 GameObject:
   m_ObjectHideFlags: 0
@@ -296,3 +356,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 1711494909}
   - {fileID: 1213465286}
+  - {fileID: 1282427591}

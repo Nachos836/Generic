@@ -7,6 +7,16 @@
       "dependencies": {},
       "url": "https://package.openupm.com"
     },
+    "com.nachos836.application-flow": {
+      "version": "https://github.com/Nachos836/ApplicationFlow.git?path=Assets/ApplicationFlow",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.cysharp.unitask": "2.5.10",
+        "jp.hadashikick.vcontainer": "1.16.6"
+      },
+      "hash": "db6b2fce68897f27b72487456a2a00bc6a4b6e36"
+    },
     "com.nachos836.functional": {
       "version": "https://github.com/Nachos836/Functional.git?path=Assets/Functional",
       "depth": 0,
@@ -56,11 +66,35 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.nuget.mono-cecil": {
+      "version": "1.11.4",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "3.2.1",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.profiling.core": {
       "version": "1.0.2",
       "depth": 1,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.project-auditor": {
+      "version": "1.0.1",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.nuget.mono-cecil": "1.10.1",
+        "com.unity.nuget.newtonsoft-json": "3.2.1"
+      },
       "url": "https://packages.unity.com"
     },
     "com.unity.scriptablebuildpipeline": {
@@ -83,6 +117,20 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       }
     },
+    "jp.hadashikick.vcontainer": {
+      "version": "1.17.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://package.openupm.com"
+    },
+    "org.nuget.idisposableanalyzers": {
+      "version": "4.0.8",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://unitynuget-registry.openupm.com"
+    },
     "org.nuget.system.buffers": {
       "version": "4.5.1",
       "depth": 2,
@@ -91,7 +139,7 @@
       "url": "https://package.openupm.com"
     },
     "org.nuget.system.collections.immutable": {
-      "version": "9.0.4",
+      "version": "9.0.8",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -131,6 +179,12 @@
       "source": "builtin",
       "dependencies": {}
     },
+    "com.unity.modules.hierarchycore": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.modules.imageconversion": {
       "version": "1.0.0",
       "depth": 1,
@@ -148,6 +202,23 @@
       "depth": 1,
       "source": "builtin",
       "dependencies": {}
+    },
+    "com.unity.modules.ui": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
+    "com.unity.modules.uielements": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.hierarchycore": "1.0.0"
+      }
     },
     "com.unity.modules.unitywebrequest": {
       "version": "1.0.0",

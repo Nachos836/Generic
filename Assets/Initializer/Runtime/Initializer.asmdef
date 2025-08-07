@@ -1,0 +1,16 @@
+{
+    "name": "Initializer",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f7c1fc9c7721fc94094a619115195f14"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

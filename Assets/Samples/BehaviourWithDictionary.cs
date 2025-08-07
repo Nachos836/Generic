@@ -1,5 +1,6 @@
 ﻿using SerializableValueObjects;
 using System;
+using System.Diagnostics;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Events;
@@ -23,6 +24,7 @@ namespace Generic.Samples
         [SerializeField] private SerializableDictionary<int, Custom> _customDictionary = Empty<int, Custom>();
 
         [ContextMenu(nameof(Test))]
+        [Conditional("UNITY_EDITOR")]
         private void Test()
         {
             UnityEngine.Debug.Log(_dictionary.ContainsKey("1"));

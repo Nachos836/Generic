@@ -29,7 +29,7 @@ namespace EditorUtils.Editor
 
             if (targets.MoveNext() is false) return false;
 
-            do if (AssetDatabase.Contains(targets.Current) is not true) return false;
+            do if (AssetDatabase.Contains(targets.Current) is false) return false;
             while (targets.MoveNext());
 
             return true;

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="4.14.0" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+        <PackageReference Include="NUnit" Version="4.3.2" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\CustomAttributesEditorGenerator.InspectorAttributesBridge\InspectorAttributes\InspectorAttributes.csproj" />
+      <ProjectReference Include="..\..\CustomAttributesEditorGenerator.UnityEngineBridge\UnityEngine\UnityEngine.csproj" />
+      <ProjectReference Include="..\..\CustomAttributesEditorGenerator\CustomAttributesEditorGenerator.csproj" />
+    </ItemGroup>
+
+</Project>

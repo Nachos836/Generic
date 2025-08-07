@@ -1,10 +1,10 @@
 {
-	"name": "com.nachos836.generic",
-	"displayName": "Unity Code Snippets",
-	"version": "0.7.1",
+	"name": "com.nachos836.dotNetCompat",
+	"displayName": "Unity .Net Compatibility Layer",
+	"version": "0.0.1",
 	"unity": "2022.3",
-	"description": "Function style helpers and misc stuff",
-	"keywords": ["Code", "Patterns"],
+	"description": "Set of helpers and extensions to leverage Unity|.Net differences",
+	"keywords": ["Code", ".net"],
 	"license": "MIT",
 	"documentationUrl": "https://github.com/Nachos836/Generic",
 	"changelogUrl": "https://github.com/Nachos836/Generic/releases",
@@ -20,9 +20,7 @@
 		"revision": "master"
 	},
 	"dependencies": {
-		"com.cysharp.unitask": "2.5.10",
-		"org.nuget.system.collections.immutable": "9.0.8",
-		"com.nachos836.functional": "https://github.com/Nachos836/Functional.git?path=Assets/Functional#0.4.0"
+		"org.nuget.system.collections.immutable": "9.0.8"
 	},
 	"scopedRegistries": [
 		{
@@ -30,7 +28,6 @@
 			"url": "https://package.openupm.com",
 			"scopes": [
 				"package.openupm.com",
-				"com.cysharp.unitask",
 				"org.nuget.system.buffers",
 				"org.nuget.system.collections.immutable",
 				"org.nuget.system.memory",

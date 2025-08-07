@@ -33,3 +33,14 @@ https://github.com/Nachos836/Generic.git?path=Assets/InspectorAttributes
 ```
 https://github.com/Nachos836/Generic.git?path=Assets/Pooling
 ```
+
+(OPTIONAL) If you want to install .NetCompatibility add the following URL:
+```
+https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat
+```
+
+
+(OPTIONAL) If you want to install Root/Initializer add the following URL:
+```
+https://github.com/Nachos836/Generic.git?path=Assets/Initializer
+```

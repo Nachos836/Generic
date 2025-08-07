@@ -24,12 +24,12 @@ namespace Initializer
             if (_services.Length == 0) return;
             if (_services.Any(static service => service == null))
             {
-                Debug.LogError("Null service detected in services. Ensure all services are set!");
+                Debug.LogError("[ROOT] Null service detected in services. Ensure all services are set!");
                 return;
             }
             if (_services.Distinct().Count() != _services.Length)
             {
-                Debug.LogError("Duplicated service detected. Ensure all services are unique!");
+                Debug.LogError("[ROOT] Duplicated service detected. Ensure all services are unique!");
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace Initializer
 
             if (result.Count == items.Length) return result.ToArray();
 
-            Debug.LogError("Cycle detected in services, sort failed.");
+            Debug.LogError("[ROOT] Cycle detected in services, sort failed.");
             return items;
         }
 

@@ -68,7 +68,7 @@ namespace Initializer
             {
                 if (EditorApplication.isPlayingOrWillChangePlaymode is false) return false;
 
-                Debug.Log("EditorAwake is called!");
+                Debug.Log("[ROOT] EditorAwake is called!");
 
                 foreach (ref var candidate in PlayerSettings.GetPreloadedAssets().AsSpan())
                 {

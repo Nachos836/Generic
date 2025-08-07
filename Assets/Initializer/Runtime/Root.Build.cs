@@ -11,25 +11,20 @@ namespace Initializer
     {
         private void Awake()
         {
-            _instance = this;
-        }
-
-        private void OnEnable()
-        {
             if (_instance == this) throw new InvalidOperationException("Root should be set only once!");
 
             _instance = Enable(this);
 
-            Debug.Log("Build OnEnable is called!");
+            Debug.Log("[ROOT] Build Awake is called!");
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
             if (_instance != this) throw new InvalidOperationException("Root is not set!");
 
             _instance = Disable(this);
 
-            Debug.Log("Build OnDisable is called!");
+            Debug.Log("[ROOT] Build OnDestroy is called!");
         }
     }
 }

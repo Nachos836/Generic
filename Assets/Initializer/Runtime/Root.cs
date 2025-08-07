@@ -64,7 +64,7 @@ namespace Initializer
         [MustUseReturnValue]
         private static Root Enable(in Root root)
         {
-            Debug.Log("Root Enable is called!");
+            Debug.Log("[ROOT] Enable is called!");
 
             foreach (ref var service in root._services.AsSpan())
             {
@@ -80,7 +80,7 @@ namespace Initializer
         [MustUseReturnValue]
         private static Root? Disable(in Root root)
         {
-            Debug.Log("Root Disable is called!");
+            Debug.Log("[ROOT] Disable is called!");
 
             foreach (ref var service in root._services.AsSpan())
             {

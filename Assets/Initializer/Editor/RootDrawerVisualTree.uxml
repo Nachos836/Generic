@@ -6,12 +6,12 @@
             <ui:Label text="No registred Services in the Root ..." enable-rich-text="false" emoji-fallback-support="false" double-click-selects-word="false" triple-click-selects-line="false" display-tooltip-when-elided="true" tooltip="Ensure at least one successor of ServiceAsset exist in the project" class="services-status-label" />
         </ui:VisualElement>
         <ui:VisualElement name="ServicesSectionLayout" class="services-section-layout list-section-layout">
-            <ui:VisualElement name="Header" class="services-header-layout common-header-layout" style="flex-grow: 1;">
+            <ui:VisualElement name="Header" class="services-header-layout common-header-layout">
                 <ui:Label text="Registred Services" name="Title" emoji-fallback-support="false" enable-rich-text="false" class="services-label" />
                 <ui:Button text="Remove Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-header-action-button-layout" />
             </ui:VisualElement>
-            <ui:ListView name="Container" virtualization-method="DynamicHeight" selection-type="None" allow-remove="false" allow-add="false" show-border="true" show-alternating-row-backgrounds="ContentOnly" show-add-remove-footer="false" show-bound-collection-size="false" class="list-view-layout" />
-            <ui:VisualElement name="Footer" class="services-footer-layout common-footer-layout" style="flex-grow: 1;">
+            <ui:ListView name="Container" virtualization-method="DynamicHeight" selection-type="None" allow-remove="false" allow-add="false" show-border="true" show-alternating-row-backgrounds="All" show-bound-collection-size="false" item-template="project://database/Assets/Initializer/Editor/RootServiceItemVisualTree.uxml?fileID=9197481963319205126&amp;guid=558c1c23f70de3949885520756d400e1&amp;type=3#RootServiceItemVisualTree" class="list-view-layout" />
+            <ui:VisualElement name="Footer" class="services-footer-layout common-footer-layout">
                 <ui:Button text="Remove Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-footer-action-button-layout" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -20,12 +20,12 @@
             <ui:Label text="No more Services to add ..." enable-rich-text="false" emoji-fallback-support="false" double-click-selects-word="false" triple-click-selects-line="false" display-tooltip-when-elided="true" tooltip="All Services, that could be added are registred in the asset" class="services-status-label" />
         </ui:VisualElement>
         <ui:VisualElement name="AddServiceSectionLayout" class="add-service-section-layout list-section-layout">
-            <ui:VisualElement name="Header" class="add-service-header-layout common-header-layout" style="flex-grow: 1;">
+            <ui:VisualElement name="Header" class="add-service-header-layout common-header-layout">
                 <ui:Label text="Available Services" name="Title" emoji-fallback-support="false" enable-rich-text="false" class="services-label" />
                 <ui:Button text="Add Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-header-action-button-layout" />
             </ui:VisualElement>
-            <ui:ListView name="Container" virtualization-method="DynamicHeight" selection-type="None" allow-remove="false" allow-add="false" show-border="true" show-alternating-row-backgrounds="All" class="list-view-layout" />
-            <ui:VisualElement name="Footer" class="add-service-footer-layout common-footer-layout" style="flex-grow: 1;">
+            <ui:ListView name="Container" virtualization-method="DynamicHeight" selection-type="None" allow-remove="false" allow-add="false" show-border="true" show-alternating-row-backgrounds="All" show-bound-collection-size="false" item-template="project://database/Assets/Initializer/Editor/RootServiceItemVisualTree.uxml?fileID=9197481963319205126&amp;guid=558c1c23f70de3949885520756d400e1&amp;type=3#RootServiceItemVisualTree" class="list-view-layout" />
+            <ui:VisualElement name="Footer" class="add-service-footer-layout common-footer-layout">
                 <ui:Button text="Add Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-footer-action-button-layout" />
             </ui:VisualElement>
         </ui:VisualElement>

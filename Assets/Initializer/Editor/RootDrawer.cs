@@ -4,14 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Initializer.Editor.Internals;
-using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Initializer.Editor
 {
+    using Internals;
+
     [CustomEditor(typeof(Root))]
     [SuppressMessage("ReSharper", "Unity.NoNullPatternMatching")]
     internal sealed class RootDrawer : UnityEditor.Editor
@@ -22,42 +22,30 @@ namespace Initializer.Editor
         private readonly ObservableList<ServiceAsset> _services = new ();
         private readonly ObservableList<Type> _available = new ();
 
-        [SerializeField] [UsedImplicitly] private VisualTreeAsset _mainAsset = default!;
-        [SerializeField] [UsedImplicitly] private VisualTreeAsset _serviceItemAsset = default!;
+        [SerializeField] private VisualTreeAsset _mainAsset = default!;
 
-        private Root _root = default!;
-        private string _assetPath = default!;
-        private IEnumerable<Type> _allServiceTypes = default!;
-
-        private void OnEnable()
-        {
-            _root = (Root) serializedObject.targetObject;
-            _assetPath = AssetDatabase.GetAssetPath(_root);
-
-            _allServiceTypes = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(static assembly =>
-                {
-                    try { return assembly.GetTypes(); }
-                    catch { return Array.Empty<Type>(); }
-                })
-                .Where(static type => type.IsAbstract is false && typeof(ServiceAsset).IsAssignableFrom(type));
-        }
+        private static IEnumerable<Type> AllServiceTypes { get; } = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(static assembly =>
+            {
+                try { return assembly.GetTypes(); }
+                catch { return Array.Empty<Type>(); }
+            })
+            .Where(static type => type.IsAbstract is false && typeof(ServiceAsset).IsAssignableFrom(type))
+            .ToArray();
 
         private void OnDisable()
         {
             _disposables.Dispose();
             _services.Dispose();
             _available.Dispose();
-            _root = default!;
-            _allServiceTypes = default!;
         }
 
         public override VisualElement CreateInspectorGUI()
         {
             const string hidden = "hidden";
 
-            var root = _mainAsset.CloneTree();
-            var mainLayout = root.Q<VisualElement>("MainLayout");
+            var main = _mainAsset.CloneTree();
+            var mainLayout = main.Q<VisualElement>("MainLayout");
             var servicesSectionLayout = mainLayout.Q<VisualElement>("ServicesSectionLayout");
             var noServicesSectionLayout = mainLayout.Q<VisualElement>("NoServicesAvailableLayout");
             var addServiceSectionLayout = mainLayout.Q<VisualElement>("AddServiceSectionLayout");
@@ -66,14 +54,10 @@ namespace Initializer.Editor
             servicesSectionLayout.EnableInClassList(hidden, true);
             addServiceSectionLayout.EnableInClassList(hidden, true);
 
-            var (servicesFooter, servicesList) = SetupSectionLayout
-            (
-                _root, servicesSectionLayout, _services, _serviceItemAsset, _disposables
-            );
-            var (addSectionFooter, addSectionList) = SetupSectionLayout
-            (
-                _root, addServiceSectionLayout, _available, _serviceItemAsset, _disposables
-            );
+            var root = (Root) serializedObject.targetObject;
+            var assetPath = AssetDatabase.GetAssetPath(root);
+            var (servicesFooter, servicesList) = SetupSectionLayout(root, servicesSectionLayout, _services, _disposables);
+            var (addSectionFooter, addSectionList) = SetupSectionLayout(root, addServiceSectionLayout, _available, _disposables);
 
             _services.ItemAddedSubscribe((_, _) =>
             {
@@ -104,9 +88,9 @@ namespace Initializer.Editor
             {
                 var instance = CreateInstance(type);
                 instance.name = type.Name;
-                AssetDatabase.AddObjectToAsset(instance, _assetPath);
+                AssetDatabase.AddObjectToAsset(instance, assetPath);
 
-                RefreshServices(_assetPath, _services, income: type);
+                RefreshServices(assetPath, _services, income: type);
 
             }).AddTo(_disposables);
             _available.CountChangedSubscribe(amount =>
@@ -117,10 +101,10 @@ namespace Initializer.Editor
 
             }).AddTo(_disposables);
 
-            PopulateServices(_assetPath, _services);
-            PopulateAvailable(_allServiceTypes, _services, _available);
+            PopulateServices(assetPath, _services);
+            PopulateAvailable(AllServiceTypes, _services, _available);
 
-            return root;
+            return main;
         }
 
         private static void RefreshServices(string assetPath, ObservableList<ServiceAsset> services, Type income)
@@ -161,7 +145,6 @@ namespace Initializer.Editor
             Root root,
             VisualElement sectionLayout,
             ObservableList<TElement> collection,
-            VisualTreeAsset serviceItemAsset,
             DisposableList disposables
         ) {
             var header = sectionLayout.Q<VisualElement>("Header");
@@ -177,7 +160,6 @@ namespace Initializer.Editor
             footerActionButton.SetEnabled(false);
 
             container.itemsSource = collection;
-            container.makeItem = serviceItemAsset.CloneTree;
             container.bindItem = (visualElement, index) =>
             {
                 var toggle = visualElement.Q<Toggle>();

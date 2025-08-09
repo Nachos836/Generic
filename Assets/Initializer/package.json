@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.initializer",
-	"displayName": "Initializer-root",
-	"version": "0.1.2",
+	"displayName": "Initializer-Root",
+	"version": "0.2.2",
 	"unity": "2022.3",
 	"description": "Universal root-solution for Unity projects",
 	"keywords": ["Entry", "Root"],

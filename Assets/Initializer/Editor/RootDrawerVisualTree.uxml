@@ -1,32 +1,32 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <Style src="project://database/Assets/Initializer/Editor/RootDrawerStyleSheet.uss?fileID=7433441132597879392&amp;guid=8448877f481eceb46b61138a3125ea98&amp;type=3#RootDrawerStyleSheet" />
     <ui:VisualElement name="MainLayout" data-source-type="Initializer.Root+&lt;&gt;c, Initializer" class="services-main-layout">
-        <ui:VisualElement name="NoServicesAvailableLayout" enabled="true" tooltip="Ensure at least one successor of ServiceAsset exist in the project" class="services-nothing-available status-section-layout">
-            <ui:VisualElement name="Icon" class="add-service-no-more-view-icon" />
-            <ui:Label text="No registred Services in the Root ..." enable-rich-text="false" emoji-fallback-support="false" double-click-selects-word="false" triple-click-selects-line="false" display-tooltip-when-elided="true" class="services-status-label" />
+        <ui:VisualElement name="NoServicesAvailableLayout" class="services-nothing-available status-section-layout">
+            <ui:VisualElement name="Icon" tooltip="Ensure at least one successor of ServiceAsset exist in the project" class="add-service-no-more-view-icon" />
+            <ui:Label text="No registred Services in the Root ..." enable-rich-text="false" emoji-fallback-support="false" double-click-selects-word="false" triple-click-selects-line="false" display-tooltip-when-elided="true" tooltip="Ensure at least one successor of ServiceAsset exist in the project" class="services-status-label" />
         </ui:VisualElement>
         <ui:VisualElement name="ServicesSectionLayout" class="services-section-layout list-section-layout">
-            <ui:VisualElement name="Header" class="services-header-layout" style="flex-grow: 1;">
+            <ui:VisualElement name="Header" class="services-header-layout common-header-layout" style="flex-grow: 1;">
                 <ui:Label text="Registred Services" name="Title" emoji-fallback-support="false" enable-rich-text="false" class="services-label" />
-                <ui:Button text="Remove Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" />
+                <ui:Button text="Remove Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-header-action-button-layout" />
             </ui:VisualElement>
             <ui:ListView name="Container" virtualization-method="DynamicHeight" selection-type="None" allow-remove="false" allow-add="false" show-border="true" show-alternating-row-backgrounds="ContentOnly" show-add-remove-footer="false" show-bound-collection-size="false" class="list-view-layout" />
-            <ui:VisualElement name="Footer" class="services-footer-layout" style="flex-grow: 1;">
-                <ui:Button text="Remove Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" />
+            <ui:VisualElement name="Footer" class="services-footer-layout common-footer-layout" style="flex-grow: 1;">
+                <ui:Button text="Remove Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-footer-action-button-layout" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="NoServicesToAddLayout" enabled="true" tooltip="All Services, that could be added are registred in the asset" class="add-service-no-more-view-layout status-section-layout">
-            <ui:VisualElement name="Icon" class="add-service-no-more-view-icon" />
-            <ui:Label text="No more Services to add ..." enable-rich-text="false" emoji-fallback-support="false" double-click-selects-word="false" triple-click-selects-line="false" display-tooltip-when-elided="true" class="services-status-label" />
+        <ui:VisualElement name="NoServicesToAddLayout" class="add-service-no-more-view-layout status-section-layout">
+            <ui:VisualElement name="Icon" tooltip="All Services, that could be added are registred in the asset" class="add-service-no-more-view-icon" />
+            <ui:Label text="No more Services to add ..." enable-rich-text="false" emoji-fallback-support="false" double-click-selects-word="false" triple-click-selects-line="false" display-tooltip-when-elided="true" tooltip="All Services, that could be added are registred in the asset" class="services-status-label" />
         </ui:VisualElement>
         <ui:VisualElement name="AddServiceSectionLayout" class="add-service-section-layout list-section-layout">
-            <ui:VisualElement name="Header" class="add-service-header-layout" style="flex-grow: 1;">
+            <ui:VisualElement name="Header" class="add-service-header-layout common-header-layout" style="flex-grow: 1;">
                 <ui:Label text="Available Services" name="Title" emoji-fallback-support="false" enable-rich-text="false" class="services-label" />
-                <ui:Button text="Add Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" />
+                <ui:Button text="Add Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-header-action-button-layout" />
             </ui:VisualElement>
             <ui:ListView name="Container" virtualization-method="DynamicHeight" selection-type="None" allow-remove="false" allow-add="false" show-border="true" show-alternating-row-backgrounds="All" class="list-view-layout" />
-            <ui:VisualElement name="Footer" class="add-service-footer-layout" style="flex-grow: 1;">
-                <ui:Button text="Add Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" />
+            <ui:VisualElement name="Footer" class="add-service-footer-layout common-footer-layout" style="flex-grow: 1;">
+                <ui:Button text="Add Selected" name="ActionButton" emoji-fallback-support="false" enable-rich-text="false" class="common-footer-action-button-layout" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

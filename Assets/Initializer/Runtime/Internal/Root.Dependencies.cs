@@ -21,7 +21,7 @@ namespace Initializer
         [Header("Services Load Order")]
         [SerializeField] private ServiceAsset[] _services = Array.Empty<ServiceAsset>();
 
-        private void OnValidate()
+        internal void OnValidate()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 

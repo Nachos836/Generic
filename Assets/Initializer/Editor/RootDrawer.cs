@@ -84,8 +84,6 @@ namespace Initializer.Editor
             {
                 AssetDatabase.RemoveObjectFromAsset(asset);
 
-                servicesList.RefreshItems();
-
                 RefreshAddSection(_available, asset);
 
             }).AddTo(_disposables);
@@ -107,8 +105,6 @@ namespace Initializer.Editor
                 var instance = CreateInstance(type);
                 instance.name = type.Name;
                 AssetDatabase.AddObjectToAsset(instance, _assetPath);
-
-                addSectionList.RefreshItems();
 
                 RefreshServices(_assetPath, _services, income: type);
 
@@ -170,13 +166,16 @@ namespace Initializer.Editor
         ) {
             var header = sectionLayout.Q<VisualElement>("Header");
             var headerActionButton = header.Q<Button>("ActionButton");
-
             var footer = sectionLayout.Q<VisualElement>("Footer");
             var footerActionButton = footer.Q<Button>("ActionButton");
+            var container = sectionLayout.Q<ListView>("Container");
 
             var selectedToggles = new List<TElement>(collection.Count);
-            var viewToggles = new List<Toggle>(collection.Count);
-            var container = sectionLayout.Q<ListView>("Container");
+            var viewToggles = new ObservableList<Toggle>(collection.Count);
+
+            headerActionButton.SetEnabled(false);
+            footerActionButton.SetEnabled(false);
+
             container.itemsSource = collection;
             container.makeItem = serviceItemAsset.CloneTree;
             container.bindItem = (visualElement, index) =>
@@ -211,6 +210,14 @@ namespace Initializer.Editor
                 }
             };
 
+            viewToggles.CountChangedSubscribe(amount =>
+            {
+                headerActionButton.SetEnabled(amount >= 1);
+                footerActionButton.SetEnabled(amount >= 1);
+
+            }).AddTo(disposables);
+            viewToggles.AddTo(disposables);
+
             headerActionButton.clicked += ActionOnSelected;
             new Subscription(() => headerActionButton.clicked -= ActionOnSelected)
                 .AddTo(disposables);
@@ -238,6 +245,8 @@ namespace Initializer.Editor
 
                 selectedToggles.Clear();
                 viewToggles.Clear();
+
+                root.OnValidate();
 
                 EditorUtility.SetDirty(root);
                 AssetDatabase.SaveAssets();

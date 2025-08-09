@@ -8,8 +8,8 @@
 }
 
 .service-item-toggle {
-    margin-top: 6px;
-    margin-right: 6px;
-    margin-bottom: 6px;
-    margin-left: 6px;
+    padding-top: 6px;
+    padding-right: 12px;
+    padding-bottom: 6px;
+    padding-left: 12px;
 }

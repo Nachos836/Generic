@@ -15,10 +15,13 @@
 }
 
 .status-section-layout {
-    margin-top: 4px;
+    margin-top: 8px;
     margin-bottom: 8px;
-    margin-right: 8px;
-    margin-left: 8px;
+    margin-right: 12px;
+    margin-left: 12px;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
 }
 
 .list-section-layout {
@@ -36,9 +39,6 @@
 }
 
 .services-nothing-available {
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
 }
 
 .services-nothing-available.hidden {
@@ -53,9 +53,6 @@
 }
 
 .add-service-no-more-view-layout {
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
 }
 
 .add-service-no-more-view-layout.hidden {
@@ -95,18 +92,33 @@
     height: 24px;
 }
 
-.services-header-layout {
+.common-header-layout {
     justify-content: space-between;
     align-self: stretch;
     flex-direction: row;
     align-items: stretch;
 }
 
-.services-footer-layout {
-    justify-content: space-between;
-    align-self: stretch;
+.common-header-action-button-layout {
+    margin-right: 24px;
+}
+
+.common-footer-layout {
+    justify-content: flex-start;
+    align-self: auto;
     flex-direction: row;
-    align-items: stretch;
+    align-items: auto;
+    align-content: auto;
+}
+
+.common-footer-action-button-layout {
+    margin-left: 24px;
+}
+
+.services-header-layout {
+}
+
+.services-footer-layout {
 }
 
 .services-footer-layout.hidden {
@@ -114,17 +126,9 @@
 }
 
 .add-service-header-layout {
-    justify-content: space-between;
-    align-self: stretch;
-    flex-direction: row;
-    align-items: stretch;
 }
 
 .add-service-footer-layout {
-    justify-content: space-between;
-    align-self: stretch;
-    flex-direction: row;
-    align-items: stretch;
 }
 
 .add-service-footer-layout.hidden {

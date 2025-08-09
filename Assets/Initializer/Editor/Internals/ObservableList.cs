@@ -12,7 +12,7 @@ namespace Initializer.Editor.Internals
     {
         private readonly List<T> _inner;
 
-        public ObservableList() => _inner = new List<T>();
+        public ObservableList(int amount = 16) => _inner = new List<T>(amount);
         public ObservableList(IEnumerable<T> items)
         {
             _inner = new List<T>(items);
@@ -180,7 +180,21 @@ namespace Initializer.Editor.Internals
 
         public void Dispose()
         {
-            foreach (var it in _inner) DetachItem(it);
+            foreach (var it in _inner)
+            {
+                DetachItem(it);
+            }
+
+            _inner.Clear();
+            Cleared?.Invoke();
+            CountChanged?.Invoke(Count);
+
+            Cleared = null;
+            CountChanged = null;
+            ItemAdded = null;
+            ItemRemoved = null;
+            ItemReplaced = null;
+            ItemPropertyChanged = null;
         }
     }
 }

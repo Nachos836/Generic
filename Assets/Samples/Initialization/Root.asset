@@ -1,30 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-5501844997929626282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e440c21db2934ff1b7bc2aae1aa170fe, type: 3}
-  m_Name: DummyService9
-  m_EditorClassIdentifier: 
---- !u!114 &-5071016322570695117
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6dd711521a84c03a5672e596a812dba, type: 3}
-  m_Name: DummyService10
-  m_EditorClassIdentifier: 
---- !u!114 &-3429007937519396416
+--- !u!114 &-8715335636937735642
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -36,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e43653eea7184de5809f7111f96e84bd, type: 3}
   m_Name: DummyService6
   m_EditorClassIdentifier: 
---- !u!114 &-1994291895008893757
+--- !u!114 &-5912527516147763498
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -45,10 +21,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 019993e169c644e082194062e568234f, type: 3}
-  m_Name: DummyService4
+  m_Script: {fileID: 11500000, guid: 44eeb11362317624fb25b9d0fb7ce060, type: 3}
+  m_Name: DummyService
   m_EditorClassIdentifier: 
---- !u!114 &-1136140674082305345
+--- !u!114 &-5658574374082269670
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -57,8 +33,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6027fc231d3407394e24a0dfe2bda9d, type: 3}
-  m_Name: DummyService3
+  m_Script: {fileID: 11500000, guid: 18a1e493baa8446b96117b35e31bc60d, type: 3}
+  m_Name: DummyService7
+  m_EditorClassIdentifier: 
+--- !u!114 &-3835678145739219815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e440c21db2934ff1b7bc2aae1aa170fe, type: 3}
+  m_Name: DummyService9
+  m_EditorClassIdentifier: 
+--- !u!114 &-1475005913085876514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31a47b7ca2904eb5a28bfc09aa554d32, type: 3}
+  m_Name: DummyService5
   m_EditorClassIdentifier: 
 --- !u!114 &11400000
 MonoBehaviour:
@@ -73,17 +73,16 @@ MonoBehaviour:
   m_Name: Root
   m_EditorClassIdentifier: 
   _services:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
---- !u!114 &691918472930833965
+  - {fileID: -3835678145739219815}
+  - {fileID: 7389254354471075811}
+  - {fileID: -5658574374082269670}
+  - {fileID: -8715335636937735642}
+  - {fileID: -1475005913085876514}
+  - {fileID: 1903964299394895442}
+  - {fileID: 1519249975735493974}
+  - {fileID: 7142238274037323803}
+  - {fileID: -5912527516147763498}
+--- !u!114 &1519249975735493974
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -92,10 +91,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee244f883add492bb374e31087b8fdc5, type: 3}
-  m_Name: DummyService8
+  m_Script: {fileID: 11500000, guid: a6027fc231d3407394e24a0dfe2bda9d, type: 3}
+  m_Name: DummyService3
   m_EditorClassIdentifier: 
---- !u!114 &4277085256249019937
+--- !u!114 &1903964299394895442
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -104,22 +103,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 18a1e493baa8446b96117b35e31bc60d, type: 3}
-  m_Name: DummyService7
+  m_Script: {fileID: 11500000, guid: 019993e169c644e082194062e568234f, type: 3}
+  m_Name: DummyService4
   m_EditorClassIdentifier: 
---- !u!114 &5533583835541916305
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44eeb11362317624fb25b9d0fb7ce060, type: 3}
-  m_Name: DummyService
-  m_EditorClassIdentifier: 
---- !u!114 &5746897723345775211
+--- !u!114 &7142238274037323803
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -131,7 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 510eb8e354dc417b960a91acf0ffe491, type: 3}
   m_Name: DummyService2
   m_EditorClassIdentifier: 
---- !u!114 &5988059650727155904
+--- !u!114 &7389254354471075811
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -140,6 +127,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31a47b7ca2904eb5a28bfc09aa554d32, type: 3}
-  m_Name: DummyService5
+  m_Script: {fileID: 11500000, guid: ee244f883add492bb374e31087b8fdc5, type: 3}
+  m_Name: DummyService8
   m_EditorClassIdentifier: 

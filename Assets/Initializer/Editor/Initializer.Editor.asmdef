@@ -1,0 +1,18 @@
+{
+    "name": "Initializer.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:d6fc65a459a64e947b006d4842c99e47"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

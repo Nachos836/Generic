@@ -118,18 +118,11 @@
       }
     },
     "jp.hadashikick.vcontainer": {
-      "version": "1.17.0",
-      "depth": 0,
+      "version": "1.16.6",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://package.openupm.com"
-    },
-    "org.nuget.idisposableanalyzers": {
-      "version": "4.0.8",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://unitynuget-registry.openupm.com"
     },
     "org.nuget.system.buffers": {
       "version": "4.5.1",

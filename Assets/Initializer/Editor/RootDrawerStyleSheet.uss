@@ -1,0 +1,132 @@
+.services-label {
+    -unity-font-style: bold;
+    margin-top: 4px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
+.services-status-label {
+    -unity-font-style: italic;
+}
+
+.services-main-layout {
+    flex-grow: 1;
+}
+
+.status-section-layout {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    margin-right: 8px;
+    margin-left: 8px;
+}
+
+.list-section-layout {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    margin-right: 8px;
+    margin-left: 8px;
+}
+
+.list-view-layout {
+    margin-top: 12px;
+    margin-right: 24px;
+    margin-bottom: 12px;
+    margin-left: 24px;
+}
+
+.services-nothing-available {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.services-nothing-available.hidden {
+    display: none;
+}
+
+.services-section-layout {
+}
+
+.services-section-layout.hidden {
+    display: none;
+}
+
+.add-service-no-more-view-layout {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.add-service-no-more-view-layout.hidden {
+    display: none;
+}
+
+.add-service-section-layout {
+}
+
+.add-service-section-layout.hidden {
+    display: none;
+}
+
+.add-service-no-more-view-icon {
+    flex-direction: row;
+    background-image: var(--unity-icons-console_entry_info);
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-top: 4px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
+.add-service-action-layout {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.add-service-action-button {
+    font-size: 18px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    width: 24px;
+    height: 24px;
+}
+
+.services-header-layout {
+    justify-content: space-between;
+    align-self: stretch;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.services-footer-layout {
+    justify-content: space-between;
+    align-self: stretch;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.services-footer-layout.hidden {
+    display: none;
+}
+
+.add-service-header-layout {
+    justify-content: space-between;
+    align-self: stretch;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.add-service-footer-layout {
+    justify-content: space-between;
+    align-self: stretch;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.add-service-footer-layout.hidden {
+    display: none;
+}

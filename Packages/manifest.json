@@ -8,20 +8,10 @@
     "com.unity.ide.visualstudio": "2.0.23",
     "com.unity.project-auditor": "1.0.1",
     "com.unity.test-framework": "1.5.1",
-    "jp.hadashikick.vcontainer": "1.17.0",
-    "org.nuget.idisposableanalyzers": "4.0.8",
     "org.nuget.system.collections.immutable": "9.0.8",
     "com.unity.modules.uielements": "1.0.0"
   },
   "scopedRegistries": [
-    {
-      "name": "Unity NuGet",
-      "url": "https://unitynuget-registry.openupm.com",
-      "scopes": [
-        "org.nuget"
-      ],
-      "overrideBuiltIns": true
-    },
     {
       "name": "package.openupm.com",
       "url": "https://package.openupm.com",
@@ -33,6 +23,13 @@
         "org.nuget.system.memory",
         "org.nuget.system.numerics.vectors",
         "org.nuget.system.runtime.compilerservices.unsafe"
+      ]
+    },
+    {
+      "name": "Unity NuGet",
+      "url": "https://unitynuget-registry.openupm.com",
+      "scopes": [
+        "org"
       ]
     }
   ]

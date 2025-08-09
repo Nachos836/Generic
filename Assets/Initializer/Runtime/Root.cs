@@ -14,8 +14,6 @@ namespace Initializer
     {
         private static Root? _instance;
 
-        [SerializeField] private ScriptableObject[] _services = Array.Empty<ScriptableObject>();
-
         /// <summary>
         /// Controverts the main design philosophy! <br/>
         /// Always prefer serialized fields for direct getting a dependency! <br/>
@@ -32,11 +30,12 @@ namespace Initializer
         /// <returns>Singleton-like dependency from the Root scope</returns>
         /// <exception cref="InvalidOperationException">Shoots when there is no such a dependency within a root <br/>
         /// Or if there are multiple occasions of a requested type (ScriptableObject, for example)</exception>
-        [MustUseReturnValue]
         [UsedImplicitly]
+        [MustUseReturnValue]
         public T GetDependency<T>() where T : class
         {
-            if (TryGetDependency<T>(out var dependency) is false) throw new InvalidOperationException($"Can't resolve a single dependency of type { typeof(T).Name }");
+            if (TryGetDependency<T>(out var dependency) is false)
+                throw new InvalidOperationException($"Can't resolve a single dependency of type { typeof(T).Name }");
 
             return dependency;
         }
@@ -44,8 +43,8 @@ namespace Initializer
         /// <summary>
         /// Non-throw version of <see cref="GetDependency{T}"/>
         /// </summary>
-        [MustUseReturnValue]
         [UsedImplicitly]
+        [MustUseReturnValue]
         public bool TryGetDependency<T>([NotNullWhen(returnValue: true)] out T? dependency) where T : class
         {
             var candidate = _services.SingleOrDefault(static service => service is T);

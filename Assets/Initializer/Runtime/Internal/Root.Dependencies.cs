@@ -18,9 +18,19 @@ namespace Initializer
     [SuppressMessage("ReSharper", "Unity.NoNullPatternMatching")]
     partial class Root
     {
+        [Header("Services Load Order")]
+        [SerializeField] private ServiceAsset[] _services = Array.Empty<ServiceAsset>();
+
         private void OnValidate()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+
+            var location = AssetDatabase.GetAssetPath(this);
+            _services = AssetDatabase.LoadAllAssetsAtPath(location)
+                .Where(static candidate => candidate is ServiceAsset)
+                .Cast<ServiceAsset>()
+                .ToArray();
+
             if (_services.Length == 0) return;
             if (_services.Any(static service => service == null))
             {
@@ -77,8 +87,7 @@ namespace Initializer
             return items;
         }
 
-
-        private static IEnumerable<ScriptableObject> GetDependencies(ScriptableObject service)
+        private static IEnumerable<T> GetDependencies<T>(T? service) where T : class
         {
             if (service == null) yield break;
 
@@ -88,9 +97,9 @@ namespace Initializer
                 var serializedByAttribute = field.GetCustomAttribute<SerializeField>() != null;
                 if (publiclySerialized is false && serializedByAttribute is false) continue;
 
-                if (typeof(ScriptableObject).IsAssignableFrom(field.FieldType) is false) continue;
-                var dependency = (ScriptableObject?) field.GetValue(service);
-                if (dependency && dependency is IInitializable) yield return dependency;
+                if (typeof(T).IsAssignableFrom(field.FieldType) is false) continue;
+                var dependency = (T?) field.GetValue(service);
+                if (dependency != null) yield return dependency;
             }
         }
     }

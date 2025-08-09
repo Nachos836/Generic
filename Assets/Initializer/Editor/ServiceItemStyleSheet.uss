@@ -1,0 +1,15 @@
+.service-item-toggle > VisualElement {
+    justify-content: flex-end;
+}
+
+.service-item-toggle > VisualElement > #unity-checkmark {
+    align-self: flex-end;
+    align-content: flex-end;
+}
+
+.service-item-toggle {
+    margin-top: 6px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    margin-left: 6px;
+}

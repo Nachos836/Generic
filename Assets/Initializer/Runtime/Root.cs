@@ -65,7 +65,7 @@ namespace Initializer
         {
             Debug.Log("[ROOT] Enable is called!");
 
-            foreach (ref var service in root._services.AsSpan())
+            foreach (var service in root._services)
             {
                 if (service && service is IInitializable initializable)
                 {
@@ -81,7 +81,7 @@ namespace Initializer
         {
             Debug.Log("[ROOT] Disable is called!");
 
-            foreach (ref var service in root._services.AsSpan())
+            foreach (var service in root._services)
             {
                 if (service && service is IDisposable disposable)
                 {

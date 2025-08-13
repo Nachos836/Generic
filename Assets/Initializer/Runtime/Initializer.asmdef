@@ -1,9 +1,7 @@
 {
     "name": "Initializer",
     "rootNamespace": "",
-    "references": [
-        "GUID:d2b4a9c458a8406fa5b3c96f7fccbb80"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,

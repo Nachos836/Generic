@@ -2,5 +2,5 @@
 
 namespace Initializer
 {
-    public abstract class ServiceAsset : ScriptableObject { }
+    public abstract partial class ServiceAsset : ScriptableObject { }
 }

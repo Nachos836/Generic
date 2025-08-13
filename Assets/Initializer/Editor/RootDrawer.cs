@@ -18,26 +18,45 @@ namespace Initializer.Editor
     {
         private const int FooterAddButtonShowThreshold = 5;
 
-        private readonly DisposableList _disposables = new ();
-        private readonly ObservableList<ServiceAsset> _services = new ();
-        private readonly ObservableList<Type> _available = new ();
-
         [SerializeField] private VisualTreeAsset _mainAsset = default!;
 
-        private static IEnumerable<Type> AllServiceTypes { get; } = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(static assembly =>
-            {
-                try { return assembly.GetTypes(); }
-                catch { return Array.Empty<Type>(); }
-            })
-            .Where(static type => type.IsAbstract is false && typeof(ServiceAsset).IsAssignableFrom(type))
-            .ToArray();
+        private DisposableList _disposables = default!;
+        private ObservableList<ServiceAsset> _rootServicesProjection = default!;
+        private ObservableList<Type> _availableServiceTypes = default!;
+
+        private void Awake()
+        {
+            var root = (Root) target;
+            var assets = root.GetSubAssets();
+            var serializedServices = root.Services;
+
+            // -1 to compensate root itself
+            if (assets.Count - 1 == serializedServices.Count) return;
+
+            serializedServices.Clear();
+            serializedServices.AddRange(assets.OfType<ServiceAsset>());
+        }
+
+        private void OnEnable()
+        {
+            _disposables = new DisposableList();
+            _rootServicesProjection = ObservableList<ServiceAsset>.WrapList(((Root) target).Services);
+            var presentServiceTypes = _rootServicesProjection.RawList.Select(static service => service.GetType());
+            var availableServiceTypes = Root.AllPotentialServicesTypes.Except(presentServiceTypes);
+            _availableServiceTypes = new ObservableList<Type>(availableServiceTypes);
+        }
 
         private void OnDisable()
         {
             _disposables.Dispose();
-            _services.Dispose();
-            _available.Dispose();
+            _rootServicesProjection.Dispose();
+            _availableServiceTypes.Dispose();
+
+            _availableServiceTypes.Clear();
+
+            _disposables = default!;
+            _rootServicesProjection = default!;
+            _availableServiceTypes = default!;
         }
 
         public override VisualElement CreateInspectorGUI()
@@ -46,97 +65,78 @@ namespace Initializer.Editor
 
             var main = _mainAsset.CloneTree();
             var mainLayout = main.Q<VisualElement>("MainLayout");
-            var servicesSectionLayout = mainLayout.Q<VisualElement>("ServicesSectionLayout");
-            var noServicesSectionLayout = mainLayout.Q<VisualElement>("NoServicesAvailableLayout");
-            var addServiceSectionLayout = mainLayout.Q<VisualElement>("AddServiceSectionLayout");
-            var noServicesToAddSectionLayout = mainLayout.Q<VisualElement>("NoServicesToAddLayout");
+            var registeredServicesSectionLayout = mainLayout.Q<VisualElement>("RegisteredServicesSectionLayout");
+            var noRegisteredServicesLayout = mainLayout.Q<VisualElement>("NoRegisteredServicesLayout");
+            var availableServiceSectionLayout = mainLayout.Q<VisualElement>("AvailableServiceSectionLayout");
+            var noAvailableServicesLayout = mainLayout.Q<VisualElement>("NoAvailableServicesLayout");
 
-            servicesSectionLayout.EnableInClassList(hidden, true);
-            addServiceSectionLayout.EnableInClassList(hidden, true);
+            var root = (Root) target;
 
-            var root = (Root) serializedObject.targetObject;
-            var assetPath = AssetDatabase.GetAssetPath(root);
-            var (servicesFooter, servicesList) = SetupSectionLayout(root, servicesSectionLayout, _services, _disposables);
-            var (addSectionFooter, addSectionList) = SetupSectionLayout(root, addServiceSectionLayout, _available, _disposables);
+            var (registeredSectionFooter, registeredSectionList) = SetupSectionLayout(root, registeredServicesSectionLayout, _rootServicesProjection,
+                _disposables, getItemName: static asset => asset.name);
+            var (availableSectionFooter, availableSectionList) = SetupSectionLayout(root, availableServiceSectionLayout, _availableServiceTypes,
+                _disposables, getItemName: static type => type.Name);
 
-            _services.ItemAddedSubscribe((_, _) =>
+            RefreshRegisteredServicesSection();
+            RefreshAvailableServicesSection();
+
+            _rootServicesProjection.ItemsAddedSubscribe(items =>
             {
-                servicesList.RefreshItems();
+                root.AddServices(items);
 
             }).AddTo(_disposables);
-            _services.ItemRemovedSubscribe((_, asset) =>
+            _rootServicesProjection.ItemsRemovedSubscribe(items =>
             {
-                AssetDatabase.RemoveObjectFromAsset(asset);
+                _availableServiceTypes.Add(items.Select(static service => service.GetType()).ToArray());
 
-                RefreshAddSection(_available, asset);
+                root.RemoveServices(items);
 
             }).AddTo(_disposables);
-            _services.CountChangedSubscribe(amount =>
+            _rootServicesProjection.CountChangedSubscribe(amount =>
             {
-                servicesSectionLayout.EnableInClassList(hidden, amount == 0);
-                noServicesSectionLayout.EnableInClassList(hidden, amount >= 1);
-                servicesFooter.EnableInClassList(hidden, amount < FooterAddButtonShowThreshold);
+                registeredServicesSectionLayout.EnableInClassList(hidden, amount == 0);
+                noRegisteredServicesLayout.EnableInClassList(hidden, amount >= 1);
+                registeredSectionFooter.EnableInClassList(hidden, amount < FooterAddButtonShowThreshold);
 
-            }).AddTo(_disposables);
-
-            _available.ItemAddedSubscribe((_, _) =>
-            {
-                addSectionList.RefreshItems();
-
-            }).AddTo(_disposables);
-            _available.ItemRemovedSubscribe((_, type) =>
-            {
-                var instance = CreateInstance(type);
-                instance.name = type.Name;
-                AssetDatabase.AddObjectToAsset(instance, assetPath);
-
-                RefreshServices(assetPath, _services, income: type);
-
-            }).AddTo(_disposables);
-            _available.CountChangedSubscribe(amount =>
-            {
-                addServiceSectionLayout.EnableInClassList(hidden, amount == 0);
-                noServicesToAddSectionLayout.EnableInClassList(hidden, amount >= 1);
-                addSectionFooter.EnableInClassList(hidden, amount < FooterAddButtonShowThreshold);
+                registeredSectionList.RefreshItems();
 
             }).AddTo(_disposables);
 
-            PopulateServices(assetPath, _services);
-            PopulateAvailable(AllServiceTypes, _services, _available);
+            _availableServiceTypes.ItemsRemovedSubscribe(types =>
+            {
+                _rootServicesProjection.Add(Root.CreateInstances(types));
+
+            }).AddTo(_disposables);
+            _availableServiceTypes.CountChangedSubscribe(amount =>
+            {
+                availableServiceSectionLayout.EnableInClassList(hidden, amount == 0);
+                noAvailableServicesLayout.EnableInClassList(hidden, amount >= 1);
+                availableSectionFooter.EnableInClassList(hidden, amount < FooterAddButtonShowThreshold);
+
+                availableSectionList.RefreshItems();
+
+            }).AddTo(_disposables);
 
             return main;
-        }
 
-        private static void RefreshServices(string assetPath, ObservableList<ServiceAsset> services, Type income)
-        {
-            var candidate = AssetDatabase.LoadAllAssetsAtPath(assetPath)
-                .Single(asset => asset.GetType() == income);
-            services.Add((ServiceAsset) candidate);
-        }
-
-        private static void RefreshAddSection(ObservableList<Type> available, ServiceAsset income)
-        {
-            available.Add(income.GetType());
-        }
-
-        private static void PopulateServices(string assetPath, ObservableList<ServiceAsset> services)
-        {
-            var gathered = AssetDatabase.LoadAllAssetsAtPath(assetPath)
-                .Where(static candidate => candidate && candidate is ServiceAsset)
-                .Cast<ServiceAsset>();
-
-            foreach (var service in gathered.Except(services))
+            void RefreshRegisteredServicesSection()
             {
-                services.Add(service);
+                registeredSectionList.RefreshItems();
+                var amount = registeredSectionList.itemsSource.Count;
+
+                registeredServicesSectionLayout.EnableInClassList(hidden, amount == 0);
+                noRegisteredServicesLayout.EnableInClassList(hidden, amount >= 1);
+                registeredSectionFooter.EnableInClassList(hidden, amount < FooterAddButtonShowThreshold);
             }
-        }
 
-        private static void PopulateAvailable(IEnumerable<Type> allServiceTypes, IEnumerable<ServiceAsset> services, ObservableList<Type> available)
-        {
-            var gathered = allServiceTypes.Except(services.Select(static service => service.GetType()));
-            foreach (var type in gathered.Except(available))
+            void RefreshAvailableServicesSection()
             {
-                available.Add(type);
+                availableSectionList.RefreshItems();
+                var amount = availableSectionList.itemsSource.Count;
+
+                availableServiceSectionLayout.EnableInClassList(hidden, amount == 0);
+                noAvailableServicesLayout.EnableInClassList(hidden, amount >= 1);
+                availableSectionFooter.EnableInClassList(hidden, amount < FooterAddButtonShowThreshold);
             }
         }
 
@@ -145,7 +145,8 @@ namespace Initializer.Editor
             Root root,
             VisualElement sectionLayout,
             ObservableList<TElement> collection,
-            DisposableList disposables
+            DisposableList disposables,
+            Func<TElement, string> getItemName
         ) {
             var header = sectionLayout.Q<VisualElement>("Header");
             var headerActionButton = header.Q<Button>("ActionButton");
@@ -159,17 +160,12 @@ namespace Initializer.Editor
             headerActionButton.SetEnabled(false);
             footerActionButton.SetEnabled(false);
 
-            container.itemsSource = collection;
+            container.itemsSource = collection.ObjectRawList;
             container.bindItem = (visualElement, index) =>
             {
                 var toggle = visualElement.Q<Toggle>();
                 var candidate = collection[index];
-                toggle.label = candidate switch
-                {
-                    ServiceAsset serviceAsset => serviceAsset.name,
-                    Type type => type.Name,
-                    _ => toggle.label
-                };
+                toggle.label = getItemName(candidate);
 
                 toggle.RegisterCallback<ChangeEvent<bool>>(ProcessToggle);
                 new Subscription(() => toggle.UnregisterCallback<ChangeEvent<bool>>(ProcessToggle))
@@ -215,25 +211,15 @@ namespace Initializer.Editor
 
                 Undo.RegisterCompleteObjectUndo(root, $"Modify {typeof(TElement).Name} Collection");
 
-                foreach (var selected in selectedToggles)
-                {
-                    collection.Remove(selected);
-                }
-
-                foreach (var toggle in viewToggles)
+                foreach (var toggle in viewToggles.RawList)
                 {
                     toggle.value = false;
                 }
 
+                collection.Remove(selectedToggles);
+
                 selectedToggles.Clear();
                 viewToggles.Clear();
-
-                root.OnValidate();
-
-                EditorUtility.SetDirty(root);
-                AssetDatabase.SaveAssets();
-
-                container.RefreshItems();
             }
         }
     }

@@ -20,7 +20,7 @@
 		"revision": "master"
 	},
 	"dependencies": {
-		"com.nachos836.dotNetCompat" : "https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat"
+		"com.nachos836.dot-net-compat" : "https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat"
 	},
 	"scopedRegistries": []
 }

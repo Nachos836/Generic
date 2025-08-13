@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.dotNetCompat",
 	"displayName": "Unity .Net Compatibility Layer",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"unity": "2022.3",
 	"description": "Set of helpers and extensions to leverage Unity|.Net differences",
 	"keywords": ["Code", ".net"],
@@ -19,21 +19,6 @@
 		"url": "https://github.com/Nachos836/Generic.git",
 		"revision": "master"
 	},
-	"dependencies": {
-		"org.nuget.system.collections.immutable": "9.0.8"
-	},
-	"scopedRegistries": [
-		{
-			"name": "OpenUPM",
-			"url": "https://package.openupm.com",
-			"scopes": [
-				"package.openupm.com",
-				"org.nuget.system.buffers",
-				"org.nuget.system.collections.immutable",
-				"org.nuget.system.memory",
-				"org.nuget.system.numerics.vectors",
-				"org.nuget.system.runtime.compilerservices.unsafe"
-			]
-		}
-	]
+	"dependencies": {},
+	"scopedRegistries": []
 }

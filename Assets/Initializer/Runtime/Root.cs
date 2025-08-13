@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using dotNetCompat.Extensions;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -65,7 +66,7 @@ namespace Initializer
         {
             Debug.Log("[ROOT] Enable is called!");
 
-            foreach (var service in root._services)
+            foreach (ref readonly var service in root._services.AsReadOnlySpan())
             {
                 if (service && service is IInitializable initializable)
                 {
@@ -81,7 +82,7 @@ namespace Initializer
         {
             Debug.Log("[ROOT] Disable is called!");
 
-            foreach (var service in root._services)
+            foreach (ref readonly var service in root._services.AsReadOnlySpan())
             {
                 if (service && service is IDisposable disposable)
                 {

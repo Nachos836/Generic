@@ -30,9 +30,6 @@ namespace Initializer
             .Where(static type => type.IsAbstract is false && typeof(ServiceAsset).IsAssignableFrom(type))
             .ToArray();
 
-        [Header("Services Load Order")]
-        [SerializeField] private List<ServiceAsset> _services = new ();
-
         internal List<ServiceAsset> Services => _services;
 
         internal static IReadOnlyCollection<ServiceAsset> CreateInstances(IReadOnlyCollection<Type> types)

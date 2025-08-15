@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dotNetCompat.Extensions;
@@ -13,6 +14,9 @@ namespace Initializer
     [SuppressMessage("ReSharper", "Unity.NoNullPatternMatching")]
     public sealed partial class Root : ScriptableObject
     {
+        [Header("Services Load Order")]
+        [SerializeField] private List<ServiceAsset> _services = new ();
+
         private static Root? _instance;
 
         /// <summary>

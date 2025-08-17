@@ -2,15 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomAttributesEditorGenerator", "CustomAttributesEditorGenerator.csproj", "{E88924FE-38AA-4237-97DE-CDC332C0021F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnityBridge", "UnityBridge", "{26D12B50-B202-4989-9EE0-73F0927737C5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityEngine", "..\CustomAttributesEditorGenerator.UnityEngineBridge\UnityEngine\UnityEngine.csproj", "{41EC3666-73A9-4F61-BBE8-EE0ACEF8B13F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InspectorAttributes", "..\CustomAttributesEditorGenerator.InspectorAttributesBridge\InspectorAttributes\InspectorAttributes.csproj", "{E628AA74-E2E7-4292-A389-CC30464DE569}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomAttributesEditorGenerator.Tests", "..\CustomAttributesEditorGenerator.Tests\CustomAttributesEditorGenerator.Tests\CustomAttributesEditorGenerator.Tests.csproj", "{967D4759-F131-4196-8D7C-FE3B74583E30}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityEditor", "..\CustomAttributesEditorGenerator.UnityEditorBridge\UnityEditor\UnityEditor.csproj", "{0EC6E9A0-85C6-4507-B871-E42B04C2F2DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,26 +14,11 @@ Global
 		{E88924FE-38AA-4237-97DE-CDC332C0021F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E88924FE-38AA-4237-97DE-CDC332C0021F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E88924FE-38AA-4237-97DE-CDC332C0021F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{41EC3666-73A9-4F61-BBE8-EE0ACEF8B13F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{41EC3666-73A9-4F61-BBE8-EE0ACEF8B13F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{41EC3666-73A9-4F61-BBE8-EE0ACEF8B13F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{41EC3666-73A9-4F61-BBE8-EE0ACEF8B13F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E628AA74-E2E7-4292-A389-CC30464DE569}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E628AA74-E2E7-4292-A389-CC30464DE569}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E628AA74-E2E7-4292-A389-CC30464DE569}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E628AA74-E2E7-4292-A389-CC30464DE569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E88924FE-38AA-4237-97DE-CDC332C0021F}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{E88924FE-38AA-4237-97DE-CDC332C0021F}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{967D4759-F131-4196-8D7C-FE3B74583E30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{967D4759-F131-4196-8D7C-FE3B74583E30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{967D4759-F131-4196-8D7C-FE3B74583E30}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{967D4759-F131-4196-8D7C-FE3B74583E30}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0EC6E9A0-85C6-4507-B871-E42B04C2F2DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0EC6E9A0-85C6-4507-B871-E42B04C2F2DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0EC6E9A0-85C6-4507-B871-E42B04C2F2DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0EC6E9A0-85C6-4507-B871-E42B04C2F2DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{41EC3666-73A9-4F61-BBE8-EE0ACEF8B13F} = {26D12B50-B202-4989-9EE0-73F0927737C5}
-		{E628AA74-E2E7-4292-A389-CC30464DE569} = {26D12B50-B202-4989-9EE0-73F0927737C5}
-		{0EC6E9A0-85C6-4507-B871-E42B04C2F2DE} = {26D12B50-B202-4989-9EE0-73F0927737C5}
 	EndGlobalSection
 EndGlobal

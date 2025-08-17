@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "com.cysharp.unitask": "2.5.10",
-    "com.nachos836.application-flow": "https://github.com/Nachos836/ApplicationFlow.git?path=Assets/ApplicationFlow",
     "com.nachos836.functional": "https://github.com/Nachos836/Functional.git?path=Assets/Functional",
     "com.unity.addressables": "2.4.6",
     "com.unity.ide.rider": "3.0.36",

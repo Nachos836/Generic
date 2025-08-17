@@ -7,16 +7,6 @@
       "dependencies": {},
       "url": "https://package.openupm.com"
     },
-    "com.nachos836.application-flow": {
-      "version": "https://github.com/Nachos836/ApplicationFlow.git?path=Assets/ApplicationFlow",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.cysharp.unitask": "2.5.10",
-        "jp.hadashikick.vcontainer": "1.16.6"
-      },
-      "hash": "db6b2fce68897f27b72487456a2a00bc6a4b6e36"
-    },
     "com.nachos836.functional": {
       "version": "https://github.com/Nachos836/Functional.git?path=Assets/Functional",
       "depth": 0,
@@ -116,13 +106,6 @@
         "com.unity.modules.imgui": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0"
       }
-    },
-    "jp.hadashikick.vcontainer": {
-      "version": "1.16.6",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://package.openupm.com"
     },
     "org.nuget.system.buffers": {
       "version": "4.5.1",

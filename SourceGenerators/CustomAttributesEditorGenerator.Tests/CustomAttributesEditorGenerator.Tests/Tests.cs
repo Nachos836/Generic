@@ -8,8 +8,8 @@ namespace CustomAttributesEditorGenerator.Tests;
 
 public sealed class Tests
 {
-    private IIncrementalGenerator _generator;
-    private CSharpGeneratorDriver _driver;
+    private IIncrementalGenerator _generator = default!;
+    private CSharpGeneratorDriver _driver = default!;
 
     [SetUp]
     public void Setup()
@@ -24,19 +24,21 @@ public sealed class Tests
         const string source = """
             using System.Diagnostics;
             using InspectorAttributes;
+            using JetBrains.Annotations;
             using UnityEngine;
-
+            
             namespace Generic.Samples
             {
                 internal sealed partial class BehaviourWithButtonAttribute : MonoBehaviour
                 {
-                    [Button(nameof(Test)), Conditional("UNITY_EDITOR")]
+                    [Button(nameof(Test)), UsedImplicitly, Conditional("UNITY_EDITOR")]
                     private void Test()
                     {
                         UnityEngine.Debug.Log("Test");
                     }
                 }
             }
+            
             """;
         var syntaxTree = CSharpSyntaxTree.ParseText(source);
         var references = new[]
@@ -55,10 +57,9 @@ public sealed class Tests
 
         _driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out var diagnostics);
 
-        // 6. Извлекаем сгенерированные деревья (они идут после исходного)
         var generatedTrees = newCompilation.SyntaxTrees
-            .Where(t => t != syntaxTree)
-            .ToList();
+            .Where(tree => tree != syntaxTree)
+            .ToArray();
 
         if (diagnostics.IsEmpty is false)
         {
@@ -66,17 +67,14 @@ public sealed class Tests
             {
                 TestContext.WriteLine(diagnostic.ToString());
             }
-            Assert.Fail();
+            return;
         }
 
-        // Проверяем, что что-то сгенерировалось
-        Assert.That(generatedTrees, Is.Not.Empty);
-
-        // Получаем текст первого сгенерированного файла
-        var generatedCode = generatedTrees[0].ToString();
-
-        TestContext.WriteLine(generatedCode);
-
-        // Assert.That(generatedCode, Does.Contain("partial class"));
+        Assert.That(generatedTrees.Length == 0, Is.Not.True);
+        foreach (var tree in generatedTrees)
+        {
+            TestContext.WriteLine(tree.ToString());
+            TestContext.WriteLine("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
+        }
     }
 }

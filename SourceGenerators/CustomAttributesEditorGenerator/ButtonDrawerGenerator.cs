@@ -26,7 +26,7 @@ public sealed class ButtonDrawerGenerator : IIncrementalGenerator
             .WithTrackingName("CandidateMethods");
 
         var attributeTypeProvider = context.CompilationProvider
-            .Select(static (compilation, _) => compilation.GetTypeByMetadataName(CodeGenerator.AttributeFullName));
+            .Select(static (compilation, _) => compilation.GetTypeByMetadataName(CodeGenerator.ButtonAttributeFullName));
         var methodsWithButton = candidateMethods
             .Combine(attributeTypeProvider)
             .Where(static income =>

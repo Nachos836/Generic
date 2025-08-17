@@ -21,18 +21,12 @@ namespace Generic.Samples
             UnityEngine.Debug.Log("Test 2");
         }
 
-        // ToDo: WIP design of API that will allow client code to change resulted UI
         partial class Drawer
         {
-            [Conditional("BehaviourWithButtonAttributeCustomUIProcessing")]
-            private partial void ApplyCustomUIProcessing(ref VisualElement defaultRoot, ref VisualElement customRoot);
-
-            #if !BehaviourWithButtonAttributeCustomUIProcessing
             private partial void ApplyCustomUIProcessing(ref VisualElement defaultRoot, ref VisualElement customRoot)
             {
-
+                defaultRoot.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
             }
-            #endif
         }
     }
 }

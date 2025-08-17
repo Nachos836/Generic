@@ -29,6 +29,7 @@ public sealed class Tests
             
             namespace Generic.Samples
             {
+                [ApplyCustomUIProcessing]
                 internal sealed partial class BehaviourWithButtonAttribute : MonoBehaviour
                 {
                     [Button(nameof(Test)), UsedImplicitly, Conditional("UNITY_EDITOR")]

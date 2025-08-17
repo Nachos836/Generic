@@ -10,7 +10,8 @@ namespace CustomAttributesEditorGenerator.Components;
 
 internal static class CodeGenerator
 {
-    public const string AttributeFullName = $"{nameof(InspectorAttributes)}.{nameof(InspectorAttributes.ButtonAttribute)}";
+    public const string ButtonAttributeFullName = $"{nameof(InspectorAttributes)}.{nameof(InspectorAttributes.ButtonAttribute)}";
+    public const string CustomProcessingAttributeName = $"{nameof(InspectorAttributes.ApplyCustomUIProcessingAttribute)}";
 
     private static readonly Version Version = new(1, 0, 0);
 
@@ -37,15 +38,22 @@ internal static class CodeGenerator
             return;
         }
 
+        var detectCustomUIProcessing = container.GetAttributes()
+            .Any(static attribute => attribute.AttributeClass!.Name.Equals(CustomProcessingAttributeName));
+
         var ownerName = container.Name.Replace("global::", "")
             .Replace('<', '_')
             .Replace('>', '_');
-        var buttonDefineKey = ownerName + "RequireButton";
         var drawerName = "Drawer";
+
+        var buttonDefineKey = ownerName + "RequireButton";
+        var customUIDefineKey = ownerName + "RequireCustomUIProcessing";
 
         var inspectorGUI = Method.CreateInspectorGUIMethod();
         var buttonsDetectedPartialMethod = Method.CreateWhenButtonAttributeDetectedPartialMethod(buttonDefineKey);
         var buttonsDetectedMethod = Method.CreateWhenButtonAttributeDetectedMethod(ownerName, methods);
+        var whenCustomUIProcessingRequired = Method.CreateWhenCustomAttributeDetectedPartialMethod(customUIDefineKey);
+        var whenCustomUIProcessingSkipped = Method.CreateWhenCustomAttributeMissedPartialMethod(customUIDefineKey);
 
         var drawerClass = Class.CreateClass(drawerName,
             modifiers: [InternalKeyword, SealedKeyword, PartialKeyword],
@@ -83,7 +91,9 @@ internal static class CodeGenerator
                 Using.System.Diagnostics.CodeAnalysis.Value,
                 Using.Unity.Editor.Value,
                 Using.Unity.Engine.UIElements.Value)
-            .AddButtonHeader(buttonDefineKey)
+            .AddHeaderWithDefinitions(
+                buttonDefineKey,
+                detectCustomUIProcessing ? customUIDefineKey : null)
             .AddGenericFooter();
         var shortOwnerCompilation = compilation
             .AddUsings(
@@ -97,7 +107,10 @@ internal static class CodeGenerator
                 .AddClass(ownerClass
                     .AddClass(drawerClass
                         .AddMethod(inspectorGUI)
-                        .AddMethod(buttonsDetectedPartialMethod))));
+                        .AddMethod(buttonsDetectedPartialMethod)
+                        .AddMethod(detectCustomUIProcessing
+                            ? whenCustomUIProcessingRequired
+                            : whenCustomUIProcessingSkipped))));
 
         var drawerSourceCode = shortOwnerCompilation
             .AddNamespace(@namespace

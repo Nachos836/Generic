@@ -119,10 +119,10 @@ internal static class CodeGenerator
                         .AddMethod(buttonsDetectedMethod))));
 
         productionContext.AddSource($"{ownerName}.g.cs", ownerSourceCode
-            .NormalizeWhitespace()
+            .NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
                 .ToFullString());
         productionContext.AddSource($"{ownerName}.buttons.g.cs", drawerSourceCode
-            .NormalizeWhitespace()
+            .NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
                 .ToFullString());
     }
 }

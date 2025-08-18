@@ -32,7 +32,7 @@ public sealed class Tests
                 [ApplyCustomUIProcessing]
                 internal sealed partial class BehaviourWithButtonAttribute : MonoBehaviour
                 {
-                    [Button(nameof(Test)), UsedImplicitly, Conditional("UNITY_EDITOR")]
+                    [Button("Cyka!"), UsedImplicitly, Conditional("UNITY_EDITOR")]
                     private void Test()
                     {
                         UnityEngine.Debug.Log("Test");
@@ -74,6 +74,7 @@ public sealed class Tests
         Assert.That(generatedTrees.Length == 0, Is.Not.True);
         foreach (var tree in generatedTrees)
         {
+            TestContext.WriteLine(tree.FilePath);
             TestContext.WriteLine(tree.ToString());
             TestContext.WriteLine("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n");
         }

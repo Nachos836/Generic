@@ -21,13 +21,14 @@ namespace Generic.Samples
             UnityEngine.Debug.Log("Test 2");
         }
 
+#if UNITY_EDITOR
         partial class Drawer
         {
-            [Conditional("UNITY_EDITOR")]
             private partial void ApplyCustomUIProcessing(ref VisualElement defaultRoot, ref VisualElement customRoot)
             {
                 defaultRoot.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
             }
         }
+#endif
     }
 }

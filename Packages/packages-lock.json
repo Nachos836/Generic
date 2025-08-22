@@ -16,6 +16,13 @@
       },
       "hash": "bb8661ea37284242e3bbcd2968da53cb48de5e6c"
     },
+    "com.pelerin.editor-dark-mode-extended": {
+      "version": "https://gitlab.com/pelerin-pub/unity3d/package/editor-dark-mode-extended.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "df89625ce6a66048a37c564e6e3b84ce14c3542e"
+    },
     "com.unity.addressables": {
       "version": "2.4.6",
       "depth": 0,

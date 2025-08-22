@@ -1,12 +1,7 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <Style src="project://database/Assets/SerializableValueObjects/Editor/Dictionary/SerializableDictionaryEntryStyle.uss?fileID=7433441132597879392&amp;guid=3258fe7b034126c4ea084eb97336f875&amp;type=3#SerializableDictionaryEntryStyle" />
-    <ui:VisualElement name="Container" class="container" style="flex-grow: 1;">
-        <ui:VisualElement name="KeyContainer" class="key-container" style="flex-grow: 1;">
-            <ui:VisualElement name="ConflictIcon" class="conflict-icon">
-                <ui:Label text="!" enable-rich-text="false" triple-click-selects-line="false" double-click-selects-word="false" emoji-fallback-support="false" tooltip="This Key Is Duplicated!" class="conflict-label" />
-            </ui:VisualElement>
-            <uie:PropertyField name="KeyField" class="key-field" />
-        </ui:VisualElement>
+    <ui:VisualElement name="Container" class="container">
+        <uie:PropertyField name="KeyField" class="key-field" />
         <uie:PropertyField name="ValueField" class="value-field" />
     </ui:VisualElement>
 </ui:UXML>

@@ -172,19 +172,19 @@ MonoBehaviour:
     _displayUnit: 5
     _ticks: 5184000000000
   _serializeFieldDictionary:
+    _staging: []
     _entries:
-    - _duplicated: 0
-      _key: 1
+    - _key: 1
       _value: 1
   _publicDictionary:
+    _staging: []
     _entries:
-    - _duplicated: 0
-      _key: 2
+    - _key: 2
       _value: 2
   _serializeFieldRichDictionary:
+    _staging: []
     _entries:
-    - _duplicated: 0
-      _key: Blah
+    - _key: Blah
       _value:
         _displayUnit: 0
         _ticks: 69

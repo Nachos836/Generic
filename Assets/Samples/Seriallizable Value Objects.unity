@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1213465285
+--- !u!1 &442287019
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,22 +127,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1213465286}
-  - component: {fileID: 1213465287}
+  - component: {fileID: 442287020}
+  - component: {fileID: 442287021}
   m_Layer: 0
-  m_Name: Dictionary
+  m_Name: SimpleDictionary
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 2147483647
   m_IsActive: 1
---- !u!4 &1213465286
+--- !u!4 &442287020
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1213465285}
+  m_GameObject: {fileID: 442287019}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -151,95 +151,138 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1213465287
+--- !u!114 &442287021
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1213465285}
+  m_GameObject: {fileID: 442287019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60be9a06b79144b88f2706c89e775c7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _dictionary:
+    _staging:
+    - _key: 21
+      _value: 0
+    _entries:
+    - _key: 211
+      _value: 0
+    - _key: 21
+      _value: 0
+    - _key: 222
+      _value: 0
+--- !u!1 &1168703982
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1168703983}
+  - component: {fileID: 1168703984}
+  m_Layer: 0
+  m_Name: AdvancedDictionary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1168703983
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168703982}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1168703984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168703982}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 115ddba3658f41beb6b3b617431111f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _dictionary:
+    _staging:
+    - _key: 1111
+      _value: 
     _entries:
-    - _duplicated: 0
-      _key: 5
-      _value: 2
-    - _duplicated: 0
-      _key: 41111111111111111111111111
-      _value: 2
-    - _duplicated: 0
-      _key: 4111111111111111111
-      _value: 4
-    - _duplicated: 0
-      _key: 9
-      _value: 3
-    - _duplicated: 1
-      _key: 41111111111111111111111111
-      _value: 1
-    - _duplicated: 0
-      _key: 411111111111111111111111111
-      _value: 4
-    - _duplicated: 0
-      _key: 0
-      _value: 2
-    - _duplicated: 0
-      _key: 4111111111111111111111111111111111111111111111111111111111111111111111111111111111
-      _value: 2
-    - _duplicated: 0
-      _key: 3
-      _value: 3
+    - _key: 11
+      _value: gdfgfdg
+    - _key: 111
+      _value: gdfgfdg
+    - _key: 1111
+      _value: gdfgfdg
   _anotherDictionary:
+    _staging:
+    - _key: {fileID: 0}
+      _value:
+        m_PersistentCalls:
+          m_Calls: []
     _entries:
-    - _duplicated: 0
-      _key: {fileID: 1213465285}
+    - _key: {fileID: 1282427589}
       _value:
         m_PersistentCalls:
-          m_Calls: []
-    - _duplicated: 1
-      _key: {fileID: 1213465285}
-      _value:
-        m_PersistentCalls:
-          m_Calls: []
-    - _duplicated: 1
-      _key: {fileID: 1213465285}
-      _value:
-        m_PersistentCalls:
-          m_Calls: []
+          m_Calls:
+          - m_Target: {fileID: 0}
+            m_TargetAssemblyTypeName: 
+            m_MethodName: 
+            m_Mode: 0
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: 
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
   _yetAnotherDictionary:
-    _entries:
-    - _duplicated: 0
-      _key: 333333333333333333333333333
+    _staging:
+    - _key: 4545
       _value:
         m_PersistentCalls:
           m_Calls: []
-    - _duplicated: 1
-      _key: 333333333333333333333333333
+    _entries:
+    - _key: 4545
+      _value:
+        m_PersistentCalls:
+          m_Calls: []
+    - _key: 45455
       _value:
         m_PersistentCalls:
           m_Calls: []
   _customDictionary:
+    _staging:
+    - _key: 111
+      _value:
+        _a: 0
+        _b: 0
     _entries:
-    - _duplicated: 0
-      _key: 0
+    - _key: 1
       _value:
         _a: 0
         _b: 0
-    - _duplicated: 0
-      _key: 1
-      _value:
-        _a: 7
-        _b: 0
-    - _duplicated: 0
-      _key: 2
+    - _key: 11
       _value:
         _a: 0
         _b: 0
-    - _duplicated: 0
-      _key: 3
+    - _key: 111
       _value:
         _a: 0
         _b: 0
@@ -275,16 +318,16 @@ MonoBehaviour:
   _value: 1
   _value2: 2
   _reference1:
-    rid: 3117085079887675421
+    rid: 3117085193342026415
   _reference2:
-    rid: 3117085079887675422
+    rid: 3117085193342026416
   references:
     version: 2
     RefIds:
-    - rid: 3117085079887675421
+    - rid: 3117085193342026415
       type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 3117085079887675422
+    - rid: 3117085193342026416
       type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
       data:
         _data: Cyka!
@@ -355,5 +398,6 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1711494909}
-  - {fileID: 1213465286}
   - {fileID: 1282427591}
+  - {fileID: 442287020}
+  - {fileID: 1168703983}

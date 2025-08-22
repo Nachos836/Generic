@@ -1,0 +1,7 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/SerializableValueObjects/Editor/Dictionary/SerializableDictionaryStyle.uss?fileID=7433441132597879392&amp;guid=9de87e7c4060c0d41afad5f63b7a9e81&amp;type=3#SerializableDictionaryStyle" />
+    <ui:VisualElement name="Header" class="dictionary-main-header">
+        <ui:Label text="Label" name="Label" />
+    </ui:VisualElement>
+    <ui:ListView name="Entries" item-template="project://database/Assets/SerializableValueObjects/Editor/Dictionary/SerializableDictionaryEntryAsset.uxml?fileID=9197481963319205126&amp;guid=79b2ddd3081cc8d459bcbde68c53e661&amp;type=3#SerializableDictionaryEntryAsset" allow-add="true" allow-remove="true" reorderable="true" show-alternating-row-backgrounds="All" selection-type="Multiple" show-border="true" virtualization-method="DynamicHeight" fixed-item-height="1" show-bound-collection-size="false" reorder-mode="Animated" show-add-remove-footer="true" show-foldout-header="false" usage-hints="DynamicColor" enabled="true" class="dictionary-entities-section" />
+</ui:UXML>

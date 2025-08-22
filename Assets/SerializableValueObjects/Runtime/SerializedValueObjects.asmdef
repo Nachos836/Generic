@@ -1,7 +1,9 @@
 {
     "name": "SerializedValueObjects",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:148b9497abf05ab4182762ab24770896"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,

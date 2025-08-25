@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.dot-net-compat",
 	"displayName": "Unity .Net Compatibility Layer",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"unity": "2022.3",
 	"description": "Set of helpers and extensions to leverage Unity|.Net differences",
 	"keywords": ["Code", ".net"],

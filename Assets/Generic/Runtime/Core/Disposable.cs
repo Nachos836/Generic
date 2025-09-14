@@ -91,7 +91,7 @@ namespace Generic.Core
 
                 _isDisposed = true;
 
-                foreach (ref var disposable in _disposables.AsSpan())
+                foreach (ref readonly var disposable in _disposables.AsSpan())
                 {
                     disposable.Dispose();
                 }

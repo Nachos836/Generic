@@ -13,7 +13,7 @@ namespace Generic.Core
         private readonly ConcurrentQueue<T> _eventQueue = new ();
         private readonly List<Action<T>?> _subscribers = new ();
 
-        [MustUseReturnValue]
+        [MustDisposeResource]
         public IDisposable Subscribe(Action<T> whenHappened)
         {
             _subscribers.Add(whenHappened);

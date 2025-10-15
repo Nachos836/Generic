@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
 namespace Generic.Core
@@ -11,7 +9,6 @@ namespace Generic.Core
     [Obsolete("WIP: Use on your own risk!")]
     public struct SwapbackArray<T>
     {
-        private ImmutableArray<T> _readOnlyView;
         private T[] _items;
 
         public int Count { get; private set; }
@@ -19,14 +16,12 @@ namespace Generic.Core
         public SwapbackArray(int capacity = 16)
         {
             _items = new T[capacity];
-            _readOnlyView = ImmutableCollectionsMarshal.AsImmutableArray(_items);
             Count = 0;
         }
 
         public SwapbackArray(ReadOnlySpan<T> items)
         {
             _items = new T[items.Length];
-            _readOnlyView = ImmutableCollectionsMarshal.AsImmutableArray(_items);
             Count = items.Length;
 
             items.CopyTo(_items);
@@ -35,7 +30,6 @@ namespace Generic.Core
         public SwapbackArray(ICollection<T> items)
         {
             _items = new T[items.Count];
-            _readOnlyView = ImmutableCollectionsMarshal.AsImmutableArray(_items);
             Count = items.Count;
 
             items.CopyTo(_items, 0);
@@ -56,7 +50,7 @@ namespace Generic.Core
             Count = 0;
         }
 
-        public readonly Enumerator GetEnumerator() => new (_readOnlyView.AsSpan());
+        public readonly Enumerator GetEnumerator() => new (_items.AsSpan());
 
         private void RemoveAt(int index)
         {
@@ -76,7 +70,6 @@ namespace Generic.Core
 
             var newCapacity = Math.Max(_items.Length * 2, capacity);
             Array.Resize(ref _items, newCapacity);
-            _readOnlyView = ImmutableCollectionsMarshal.AsImmutableArray(_items);
         }
 
         public struct RemoveHandler : IDisposable

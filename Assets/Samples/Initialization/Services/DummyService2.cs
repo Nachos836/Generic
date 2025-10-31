@@ -10,6 +10,8 @@ namespace Generic.Samples.Initialization.Services
 
         void IInitializable.Initialize()
         {
+            _ = _service;
+
             UnityEngine.Debug.Log("Whoa! 2");
         }
     }

@@ -119,6 +119,89 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &258504254
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 258504255}
+  - component: {fileID: 258504256}
+  - component: {fileID: 258504257}
+  m_Layer: 0
+  m_Name: Serialize Reference Attribute
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &258504255
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258504254}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &258504256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258504254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05dbcb4ce78441f3af0711f33d51d235, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Generic.Samples.BehaviourWithSerializeReference
+  _value: 0
+  _value2: 0
+  _reference1:
+    rid: 8787421896002502700
+  _reference2:
+    rid: 8787421896002502701
+  references:
+    version: 2
+    RefIds:
+    - rid: 8787421896002502700
+      type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
+      data: 
+    - rid: 8787421896002502701
+      type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
+      data:
+        _data: Cyka!
+--- !u!114 &258504257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258504254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa2f616111324f8eb2e5e09367c2ef10, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Generic.Samples.BehaviourWithInspectableReferenceAttribute
+  _reference:
+    rid: 8787421896002502699
+  _enum: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 8787421896002502699
+      type: {class: FirstDataOption, ns: Samples.References, asm: Assembly-CSharp}
+      data:
+        _unused: Unused Data
 --- !u!1 &1023420806
 GameObject:
   m_ObjectHideFlags: 0
@@ -172,17 +255,25 @@ MonoBehaviour:
     _displayUnit: 5
     _ticks: 5184000000000
   _serializeFieldDictionary:
-    _staging: []
+    _staging:
+    - _key: 0
+      _value: 
     _entries:
     - _key: 1
       _value: 1
   _publicDictionary:
-    _staging: []
+    _staging:
+    - _key: 0
+      _value: 
     _entries:
     - _key: 2
       _value: 2
   _serializeFieldRichDictionary:
-    _staging: []
+    _staging:
+    - _key: 
+      _value:
+        _displayUnit: 0
+        _ticks: 0
     _entries:
     - _key: Blah
       _value:
@@ -239,3 +330,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 1023420807}
   - {fileID: 1450003573}
+  - {fileID: 258504255}

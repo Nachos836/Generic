@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.cysharp.unitask": "2.5.10",
+    "com.nachos836.dot-net-compat": "file:../Assets/dotNetCompat",
     "com.nachos836.functional": "https://github.com/Nachos836/Functional.git?path=Assets/Functional",
     "com.pelerin.editor-dark-mode-extended": "https://gitlab.com/pelerin-pub/unity3d/package/editor-dark-mode-extended.git",
     "com.unity.addressables": "2.7.4",

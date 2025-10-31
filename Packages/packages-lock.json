@@ -7,21 +7,30 @@
       "dependencies": {},
       "url": "https://package.openupm.com"
     },
+    "com.nachos836.dot-net-compat": {
+      "version": "file:../Assets/dotNetCompat",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "org.nuget.system.runtime.compilerservices.unsafe": "6.1.2"
+      }
+    },
     "com.nachos836.functional": {
       "version": "https://github.com/Nachos836/Functional.git?path=Assets/Functional",
       "depth": 0,
       "source": "git",
       "dependencies": {
-        "com.cysharp.unitask": "2.5.10"
+        "com.cysharp.unitask": "2.5.10",
+        "com.nachos836.dot-net-compat": "https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat"
       },
-      "hash": "bb8661ea37284242e3bbcd2968da53cb48de5e6c"
+      "hash": "afb05eac48470e623b8373d61657cfadd8e1abe9"
     },
     "com.pelerin.editor-dark-mode-extended": {
       "version": "https://gitlab.com/pelerin-pub/unity3d/package/editor-dark-mode-extended.git",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "97b624da1fef2ced26a93631085f41bfd6e3eb8c"
+      "hash": "c28482179bcbce17775b8f1d4dff9de7585394dc"
     },
     "com.unity.addressables": {
       "version": "2.7.4",

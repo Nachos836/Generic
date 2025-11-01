@@ -19,6 +19,8 @@ namespace InspectorAttributes.Editor
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var container = new VisualElement();
+            container.EnableInClassList("unity-property-field", enable: true);
+            container.EnableInClassList("unity-property-field__inspector-property", enable: true);
 
             if (property.propertyType != SerializedPropertyType.ManagedReference)
             {
@@ -41,41 +43,39 @@ namespace InspectorAttributes.Editor
                 return container;
             }
 
-            var horizontalContainer = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    marginLeft = 3,
-                }
-            };
+            var horizontalContainer = new VisualElement();
+            horizontalContainer.EnableInClassList("unity-base-popup-field", enable: true);
+            horizontalContainer.EnableInClassList("unity-popup-field", enable: true);
+            horizontalContainer.EnableInClassList("unity-base-field", enable: true);
+            horizontalContainer.EnableInClassList("unity-base-field__aligned", enable: true);
+            horizontalContainer.EnableInClassList("unity-base-field__inspector-field", enable: true);
 
             var label = new Label(property.displayName + " Selector")
             {
                 style =
                 {
-                    minWidth = 120,
-                    marginRight = 4
+                    width = new StyleLength
+                    {
+                        value = new Length(40, LengthUnit.Percent)
+                    }
                 }
             };
+            label.EnableInClassList("unity-label", enable: true);
+            label.EnableInClassList("unity-text-element", enable: true);
+            label.EnableInClassList("unity-base-field__label", enable: true);
+            label.EnableInClassList("unity-base-popup-field__label", enable: true);
+            label.EnableInClassList("unity-popup-field__label", enable: true);
+            label.EnableInClassList("unity-property-field__label", enable: true);
 
-            var dropdown = new DropdownField
-            {
-                style =
-                {
-                    flexGrow = 1
-                }
-            };
+            var dropdown = new DropdownField();
+            dropdown.EnableInClassList("unity-base-field__input", enable: true);
+            dropdown.EnableInClassList("unity-popup-field__input", enable: true);
+            dropdown.EnableInClassList("unity-property-field__input", enable: true);
 
-            var propertyField = new PropertyField(property)
-            {
-                style =
-                {
-                    marginTop = 5
-                }
-            };
+            var propertyField = new PropertyField(property, property.displayName + " Editor");
             propertyField.BindProperty(property);
+            propertyField.EnableInClassList("unity-property-field", enable: true);
+            propertyField.EnableInClassList("unity-property-field__inspector-property", enable: true);
 
             horizontalContainer.Add(label);
             horizontalContainer.Add(dropdown);
@@ -91,6 +91,7 @@ namespace InspectorAttributes.Editor
             var currentType = GetCurrentType(property);
             dropdown.value = currentType != null ? currentType.Name : "None";
 
+            UpdatePropertyFieldVisibility(property, propertyField);
             dropdown.RegisterValueChangedCallback(@event =>
             {
                 if (@event.newValue == "None")
@@ -99,13 +100,13 @@ namespace InspectorAttributes.Editor
                 }
                 else
                 {
-                    var selectedType = Array.Find(implementations, type => type.Name == @event.newValue);
-                    if (selectedType != null)
+                    if (Array.Find(implementations, type => type.Name == @event.newValue) is { } selectedType)
                     {
                         property.managedReferenceValue = Activator.CreateInstance(selectedType);
                     }
                 }
                 property.serializedObject.ApplyModifiedProperties();
+                UpdatePropertyFieldVisibility(property, propertyField);
             });
 
             return container;
@@ -176,15 +177,37 @@ namespace InspectorAttributes.Editor
             switch (types.Count)
             {
                 case > 1:
-                    types.Sort(comparer: ByNames.ComparerInstance);
+                    types.Sort(ByNames.ComparerInstance);
                     goto case 1;
                 case 1:
                     result = types.ToArray();
-                    break;
+                    goto default;
+                default:
+                    CachedImplementations[baseType] = result;
+                    return result;
             }
+        }
 
-            CachedImplementations[baseType] = result;
-            return result;
+        private static void UpdatePropertyFieldVisibility(SerializedProperty property, VisualElement propertyField)
+        {
+            propertyField.style.display = HasVisibleChildren(property)
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
+        }
+
+        private static bool HasVisibleChildren(SerializedProperty property)
+        {
+            if (property.managedReferenceValue == null) return false;
+
+            var copy = property.Copy();
+
+            return copy.NextVisible(enterChildren: true)
+                && IsChildOf(copy, parent: property);
+        }
+
+        private static bool IsChildOf(SerializedProperty child, SerializedProperty parent)
+        {
+            return child.propertyPath.StartsWith(parent.propertyPath + ".");
         }
 
         [UnityEditor.Callbacks.DidReloadScripts]

@@ -5,8 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
+
+using static System.Reflection.BindingFlags;
 
 namespace InspectorAttributes.Editor
 {
@@ -50,16 +53,7 @@ namespace InspectorAttributes.Editor
             horizontalContainer.EnableInClassList("unity-base-field__aligned", enable: true);
             horizontalContainer.EnableInClassList("unity-base-field__inspector-field", enable: true);
 
-            var label = new Label(property.displayName + " Selector")
-            {
-                style =
-                {
-                    width = new StyleLength
-                    {
-                        value = new Length(40, LengthUnit.Percent)
-                    }
-                }
-            };
+            var label = new Label(property.displayName + " Selector");
             label.EnableInClassList("unity-label", enable: true);
             label.EnableInClassList("unity-text-element", enable: true);
             label.EnableInClassList("unity-base-field__label", enable: true);
@@ -67,7 +61,10 @@ namespace InspectorAttributes.Editor
             label.EnableInClassList("unity-popup-field__label", enable: true);
             label.EnableInClassList("unity-property-field__label", enable: true);
 
-            var dropdown = new DropdownField();
+            var dropdown = new DropdownField
+            {
+                style = { marginLeft = 0 }
+            };
             dropdown.EnableInClassList("unity-base-field__input", enable: true);
             dropdown.EnableInClassList("unity-popup-field__input", enable: true);
             dropdown.EnableInClassList("unity-property-field__input", enable: true);
@@ -109,16 +106,19 @@ namespace InspectorAttributes.Editor
                 UpdatePropertyFieldVisibility(property, propertyField);
             });
 
+            container.RegisterCallback<GeometryChangedEvent, RootAndLabelToResize>
+            (
+                static (_, resizer) => resizer.SetDesiredSize(),
+                new RootAndLabelToResize(container, label)
+            );
+
             return container;
         }
 
         private static Type? GetFieldType(SerializedProperty property)
         {
             var candidate = property.serializedObject.targetObject.GetType()
-                .GetField(property.propertyPath,
-                    System.Reflection.BindingFlags.Public |
-                    System.Reflection.BindingFlags.NonPublic |
-                    System.Reflection.BindingFlags.Instance);
+                .GetField(property.propertyPath, bindingAttr : Public | NonPublic | Instance);
 
             return candidate?.FieldType;
         }
@@ -208,6 +208,25 @@ namespace InspectorAttributes.Editor
         private static bool IsChildOf(SerializedProperty child, SerializedProperty parent)
         {
             return child.propertyPath.StartsWith(parent.propertyPath + ".");
+        }
+
+        private readonly struct RootAndLabelToResize
+        {
+            private readonly VisualElement _root;
+            private readonly VisualElement _label;
+
+            public RootAndLabelToResize(VisualElement root, VisualElement label)
+            {
+                _root = root;
+                _label = label;
+            }
+
+            public void SetDesiredSize()
+            {
+                var width = _root.panel.visualTree.resolvedStyle.width;
+
+                _label.style.width = Mathf.Max(Mathf.Ceil(width * 0.45f) - 40f, 120f);
+            }
         }
 
         [UnityEditor.Callbacks.DidReloadScripts]

@@ -189,7 +189,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!4 &1168703983
 Transform:
@@ -301,7 +301,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!114 &1282427590
 MonoBehaviour:
@@ -318,16 +318,16 @@ MonoBehaviour:
   _value: 1
   _value2: 2
   _reference1:
-    rid: 788421336168398943
+    rid: 788421436322349907
   _reference2:
-    rid: 788421336168398944
+    rid: 788421436322349908
   references:
     version: 2
     RefIds:
-    - rid: 788421336168398943
+    - rid: 788421436322349907
       type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 788421336168398944
+    - rid: 788421436322349908
       type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
       data:
         _data: Cyka!
@@ -393,6 +393,71 @@ MonoBehaviour:
   _timeSpan:
     _displayUnit: 1
     _ticks: 900000000
+--- !u!1 &1837163726
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1837163727}
+  - component: {fileID: 1837163728}
+  m_Layer: 0
+  m_Name: Decimal
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &1837163727
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1837163726}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1837163728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1837163726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 837258fc083b94be18aeeda97b15dd90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Samples.BehaviourWithDecimal
+  _value:
+    _lo: 4224
+    _mid: 0
+    _hi: 0
+    _flags: 131072
+  _integerOnlyValue:
+    _lo: 42
+    _mid: 0
+    _hi: 0
+    _flags: 0
+  _valueWithSlider:
+    _lo: 125
+    _mid: 0
+    _hi: 0
+    _flags: -2147418112
+  _integerValueWithSlider:
+    _lo: 6
+    _mid: 0
+    _hi: 0
+    _flags: 0
+  _doubleValue: 4.444444444444445
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -401,3 +466,4 @@ SceneRoots:
   - {fileID: 1282427591}
   - {fileID: 442287020}
   - {fileID: 1168703983}
+  - {fileID: 1837163727}

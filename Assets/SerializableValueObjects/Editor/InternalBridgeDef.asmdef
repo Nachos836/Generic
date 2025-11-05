@@ -1,5 +1,5 @@
 {
-    "name": "SerializedValueObjects.Editor",
+    "name": "Unity.InternalAPIEngineBridge.005",
     "rootNamespace": "",
     "references": [
         "GUID:3b57db1126e81b143bc2686c4d6be5ad"
@@ -8,10 +8,10 @@
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
-    "overrideReferences": true,
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

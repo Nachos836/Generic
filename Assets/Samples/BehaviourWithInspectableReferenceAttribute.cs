@@ -10,7 +10,7 @@ namespace Generic.Samples
         [InspectableReference]
         [SerializeReference] private IData _reference = default!;
 
-        [SerializeField] private MyEnum _enum = default!;
+        [SerializeField] private MyEnum _enum = MyEnum.A;
 
         private void OnEnable()
         {
@@ -18,6 +18,8 @@ namespace Generic.Samples
             {
                 UnityEngine.Debug.LogFormat("[InspectableReferenceAttribute] Test: data contains: {0}", _reference.Value);
             }
+
+            _ = _enum;
         }
 
         private enum MyEnum

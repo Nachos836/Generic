@@ -8,6 +8,14 @@ namespace Samples.References
     {
         [SerializeField] private string _unused = "Unused Data";
 
-        string IData.Value => "First option";
+        string IData.Value
+        {
+            get
+            {
+                _ = _unused;
+
+                return "First option";
+            }
+        }
     }
 }

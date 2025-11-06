@@ -167,16 +167,16 @@ MonoBehaviour:
   _value: 0
   _value2: 0
   _reference1:
-    rid: 788421336168398945
+    rid: 788421441752662046
   _reference2:
-    rid: 788421336168398946
+    rid: 788421441752662047
   references:
     version: 2
     RefIds:
-    - rid: 788421336168398945
+    - rid: 788421441752662046
       type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 788421336168398946
+    - rid: 788421441752662047
       type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
       data:
         _data: Cyka!
@@ -193,14 +193,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Generic.Samples.BehaviourWithInspectableReferenceAttribute
   _reference:
-    rid: 788421336168398940
+    rid: -2
   _enum: 0
   references:
     version: 2
     RefIds:
-    - rid: 788421336168398940
-      type: {class: SecondDataOption, ns: Generic.Samples, asm: Assembly-CSharp}
-      data: 
+    - rid: -2
+      type: {class: , ns: , asm: }
 --- !u!1 &1023420806
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
 
@@ -13,6 +12,8 @@ using static System.Reflection.BindingFlags;
 
 namespace InspectorAttributes.Editor
 {
+    using Common;
+
     [CustomPropertyDrawer(typeof(InspectableReferenceAttribute))]
     internal sealed class InspectableReferenceAttributeDrawer : PropertyDrawer
     {
@@ -106,10 +107,10 @@ namespace InspectorAttributes.Editor
                 UpdatePropertyFieldVisibility(property, propertyField);
             });
 
-            container.RegisterCallback<GeometryChangedEvent, RootAndLabelToResize>
+            container.RegisterCallback<GeometryChangedEvent, EditorLabelAutoAdjust>
             (
-                static (_, resizer) => resizer.SetDesiredSize(),
-                new RootAndLabelToResize(container, label)
+                static (_, resizer) => resizer.Adjust(),
+                new EditorLabelAutoAdjust(container, label)
             );
 
             return container;
@@ -208,25 +209,6 @@ namespace InspectorAttributes.Editor
         private static bool IsChildOf(SerializedProperty child, SerializedProperty parent)
         {
             return child.propertyPath.StartsWith(parent.propertyPath + ".");
-        }
-
-        private readonly struct RootAndLabelToResize
-        {
-            private readonly VisualElement _root;
-            private readonly VisualElement _label;
-
-            public RootAndLabelToResize(VisualElement root, VisualElement label)
-            {
-                _root = root;
-                _label = label;
-            }
-
-            public void SetDesiredSize()
-            {
-                var width = _root.panel.visualTree.resolvedStyle.width;
-
-                _label.style.width = Mathf.Max(Mathf.Ceil(width * 0.45f) - 40f, 120f);
-            }
         }
 
         [UnityEditor.Callbacks.DidReloadScripts]

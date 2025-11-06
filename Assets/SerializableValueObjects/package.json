@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.serializable-value-objects",
 	"displayName": "Serializable Value Objects",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"unity": "2022.3",
 	"description": "Set of Serializable Value Objects with UI Toolkit in mind",
 	"keywords": ["Editor", "Serialization", "UIToolkit"],

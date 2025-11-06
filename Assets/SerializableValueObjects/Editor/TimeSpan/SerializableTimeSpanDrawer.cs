@@ -8,6 +8,8 @@ using UnityEngine.UIElements;
 
 namespace SerializableValueObjects.Editor.TimeSpan
 {
+    using Common;
+
     using static SerializableTimeSpan.Unit;
 
     [Serializable]
@@ -24,6 +26,7 @@ namespace SerializableValueObjects.Editor.TimeSpan
             var container = _propertyGUI.CloneTree();
             var mainRowContainer = container.Q("Root");
             var propertyLabel = container.Q<Label>("BaseName");
+            var labelContainer = container.Q<VisualElement>("LabelContainer");
             var currentTypeLabel = container.Q<Label>("TypeName");
             var inputField = container.Q<TextField>("InputField");
             var unitDropdown = container.Q<EnumField>("InputType");
@@ -46,6 +49,12 @@ namespace SerializableValueObjects.Editor.TimeSpan
                 unitDropdown.UnregisterValueChangedCallback(OnDropdownUnitChanged);
                 inputField.UnregisterValueChangedCallback(OnInputChanged);
             });
+
+            mainRowContainer.RegisterCallback<GeometryChangedEvent, EditorLabelAutoAdjust>
+            (
+                static (_, resizer) => resizer.Adjust(),
+                new EditorLabelAutoAdjust(mainRowContainer, labelContainer)
+            );
 
             return mainRowContainer;
 

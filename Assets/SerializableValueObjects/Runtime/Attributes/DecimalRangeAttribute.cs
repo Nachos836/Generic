@@ -20,8 +20,6 @@ namespace SerializableValueObjects.Attributes
         internal float Min { get; }
         internal float Max { get; }
 
-        /// <param name="min">Minimum allowed value</param>
-        /// <param name="max">Maximum allowed value</param>
         public DecimalRangeAttribute(int min, int max)
         {
             Min = min;

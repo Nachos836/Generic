@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Linq;
 using UnityEditor;
@@ -9,26 +11,22 @@ namespace SerializableValueObjects.Editor.Decimal
 {
     using Attributes;
 
+    using static Attributes.DecimalFormatType;
+
     [CustomPropertyDrawer(typeof(SerializableDecimal))]
     internal sealed class SerializableDecimalDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var attributes = fieldInfo?.GetCustomAttributes(typeof(Attribute), inherit: true) ?? Array.Empty<Attribute>();
-            var formatAttribute = attributes.OfType<DecimalFormatAttribute>().FirstOrDefault();
-            var rangeAttribute = attributes.OfType<DecimalRangeAttribute>().FirstOrDefault();
+            var attributes = fieldInfo.GetCustomAttributes(typeof(Attribute), inherit: true);
+            var formatAttribute = attributes.Matches(DecimalFormatAttribute.None);
+            var rangeAttribute = attributes.Matches(DecimalRangeAttribute.None);
+            var integersOnly = formatAttribute.FormatType.Contains(flag: Integers);
+            var customFormat = formatAttribute.CustomFormat;
 
-            var integersOnly = formatAttribute?.FormatType == DecimalFormatType.Integers;
-            var customFormat = formatAttribute?.CustomFormat ?? string.Empty;
-
-            if (rangeAttribute != null)
-            {
-                return CreateSliderField(property, rangeAttribute, customFormat, integersOnly);
-            }
-            else
-            {
-                return CreateRegularField(property, customFormat, integersOnly);
-            }
+            return rangeAttribute.IsNeeded
+                ? CreateSliderField(property, rangeAttribute, customFormat, integersOnly)
+                : CreateRegularField(property, customFormat, integersOnly);
         }
 
         private static VisualElement CreateRegularField
@@ -175,6 +173,15 @@ namespace SerializableValueObjects.Editor.Decimal
             flagsProp.intValue = bits[3];
 
             loProp.serializedObject.ApplyModifiedProperties();
+        }
+    }
+
+    internal static class CheckAttributeExtensions
+    {
+        public static T Matches<T>(this object[] collection, T fallback) where T : class
+        {
+            return collection.FirstOrDefault(static attribute => attribute is T) as T
+                ?? fallback;
         }
     }
 }

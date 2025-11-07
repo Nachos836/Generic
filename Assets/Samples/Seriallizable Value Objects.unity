@@ -318,16 +318,16 @@ MonoBehaviour:
   _value: 1
   _value2: 2
   _reference1:
-    rid: 788421441752662048
+    rid: 788421475378660053
   _reference2:
-    rid: 788421441752662049
+    rid: 788421475378660054
   references:
     version: 2
     RefIds:
-    - rid: 788421441752662048
+    - rid: 788421475378660053
       type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 788421441752662049
+    - rid: 788421475378660054
       type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
       data:
         _data: Cyka!
@@ -438,17 +438,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Samples.BehaviourWithDecimal
   _value:
-    _lo: 4224
+    _lo: 123446789
     _mid: 0
     _hi: 0
-    _flags: 131072
+    _flags: 327680
   _integerOnlyValue:
-    _lo: 42
+    _lo: 41596
     _mid: 0
     _hi: 0
     _flags: 0
   _valueWithSlider:
-    _lo: 125
+    _lo: 128
     _mid: 0
     _hi: 0
     _flags: -2147418112
@@ -457,7 +457,18 @@ MonoBehaviour:
     _mid: 0
     _hi: 0
     _flags: 0
+  _valueWithCustomFormat:
+    _lo: 1222333444
+    _mid: 0
+    _hi: 0
+    _flags: 196608
+  _maxDecimalValue:
+    _lo: -1
+    _mid: -1
+    _hi: -1
+    _flags: 0
   _doubleValue: 4.444444444444445
+  _maxLongValue: 9223372036854775807
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -14,7 +16,9 @@ namespace SerializableValueObjects.Editor.Decimal
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public sealed partial class DecimalField : TextValueField<decimal>
     {
-        private static readonly IFormatProvider DefaultFormat = CultureInfo.InvariantCulture.NumberFormat;
+        private const string DefaultFormat = "G";
+        private const NumberStyles DefaultNumberStyle = NumberStyles.Number;
+        private static readonly IFormatProvider DefaultFormatProvider = CultureInfo.GetCultureInfo("en-US").NumberFormat;
 
         /// <summary>
         /// USS class name of elements for this type
@@ -29,29 +33,43 @@ namespace SerializableValueObjects.Editor.Decimal
         /// </summary>
         public new const string inputUssClassName = ussClassName + "__input";
 
+        // Note: base constructor will trigger those, so we provide fallback
+        // ReSharper disable once MemberInitializerValueIgnored
+        private readonly Func<decimal, string?> _valueToStringRoutine = static income => income.ToString(DefaultFormat, DefaultFormatProvider);
+        // ReSharper disable once MemberInitializerValueIgnored
+        private readonly Func<string, decimal?> _stringToValueRoutine = static income => decimal.Parse(income, DefaultNumberStyle, DefaultFormatProvider);
+
         private DecimalInput GetDecimalInput => (DecimalInput) textInputBase;
 
         protected override string ValueToString(decimal income)
         {
-            return income.ToString(formatString, DefaultFormat);
+            return _valueToStringRoutine.Invoke(income)
+                ?? text;
         }
 
         protected override decimal StringToValue(string income)
         {
-            return decimal.TryParse(income, NumberStyles.Float, DefaultFormat, out var result)
-                ? result
-                : value;
+            return _stringToValueRoutine.Invoke(income)
+                ?? value;
         }
 
-        public DecimalField() : this(label: string.Empty, format: "") { }
+        public DecimalField() : this(label: string.Empty, DefaultFormat, integersOnly: false) { }
 
-        /// <param name="maxLength">Maximum number of characters the field can take.</param>
-        /// <param name="label"></param>
-        /// <param name="format"></param>
-        /// <param name="integersOnly"></param>
-        public DecimalField(string label, int maxLength = 1000, string format = "", bool integersOnly = false)
-            : base(label, maxLength, new DecimalInput(format, integersOnly))
+        public DecimalField(string label, string format, bool integersOnly)
+            : base(label, 256, new DecimalInput(format, integersOnly ? "0123456789" : UINumericFieldsUtils.k_AllowedCharactersForFloat))
         {
+            var numberStyles = integersOnly ? NumberStyles.Integer : DefaultNumberStyle;
+            _valueToStringRoutine = income =>
+            {
+                return income.ToString(format: format, DefaultFormatProvider);
+            };
+            _stringToValueRoutine = income =>
+            {
+                return decimal.TryParse(income, numberStyles, DefaultFormatProvider, out var result)
+                    ? result
+                    : value;
+            };
+
             AddToClassList(ussClassName);
             labelElement.AddToClassList(labelUssClassName);
             AddLabelDragger<decimal>();
@@ -75,15 +93,13 @@ namespace SerializableValueObjects.Editor.Decimal
         {
             private DecimalField ParentField => (DecimalField) parent;
 
-            internal DecimalInput(string format, bool integersOnly)
-            {
-                formatString = format;
-                allowedCharacters = integersOnly
-                    ? "0123456789"
-                    : UINumericFieldsUtils.k_AllowedCharactersForFloat;
-            }
-
             protected override string allowedCharacters { get; }
+
+            internal DecimalInput(string formatString, string allowedCharacters)
+            {
+                this.formatString = formatString;
+                this.allowedCharacters = allowedCharacters;
+            }
 
             public override void ApplyInputDeviceDelta(Vector3 delta, DeltaSpeed speed, decimal startValue)
             {
@@ -95,15 +111,15 @@ namespace SerializableValueObjects.Editor.Decimal
                         shiftPressed: speed == DeltaSpeed.Fast,
                         altPressed: speed == DeltaSpeed.Slow
                     );
-                    var currentValue = StringToValue(text);
-                    var candidate = (decimal)Mathf.RoundBasedOnMinimumDifference
+                    var currentValue = StringToValue(ParentField.text);
+                    var candidate = (decimal) Mathf.RoundBasedOnMinimumDifference
                     (
                         valueToRound: (double) (currentValue + (decimal) NumericFieldDraggerUtility.NiceDelta(delta, acceleration) * dragSensitivity),
                         minDifference: (double) dragSensitivity
                     );
                     if (ParentField.isDelayed)
                     {
-                        text = ValueToString(candidate);
+                        ParentField.text = ValueToString(candidate);
                     }
                     else
                     {
@@ -116,7 +132,7 @@ namespace SerializableValueObjects.Editor.Decimal
                 }
             }
 
-            protected override string ValueToString(decimal income) => income.ToString(formatString);
+            protected override string ValueToString(decimal income) => ParentField.ValueToString(income);
             protected override decimal StringToValue(string income) => ParentField.StringToValue(income);
 
             private static decimal CalculateDragSensitivity(decimal value)

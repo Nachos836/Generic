@@ -4,17 +4,22 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 
 using static System.AttributeTargets;
 
 namespace SerializableValueObjects.Attributes
 {
+    using static DecimalFormatType;
+
+    [Flags]
     public enum DecimalFormatType
     {
         /// <summary>
         /// Only integer values allowed (no fractional part)
         /// </summary>
-        Integers = 1
+        Integers = 1 << 0
     }
 
     /// <summary>
@@ -29,7 +34,9 @@ namespace SerializableValueObjects.Attributes
     [AttributeUsage(Field | Property)]
     public sealed class DecimalFormatAttribute : Attribute
     {
-        internal DecimalFormatType? FormatType { get; }
+        internal static DecimalFormatAttribute None { get; } = new ();
+
+        internal DecimalFormatType FormatType { get; }
         internal string CustomFormat { get; }
 
         public DecimalFormatAttribute(DecimalFormatType formatType)
@@ -40,8 +47,23 @@ namespace SerializableValueObjects.Attributes
 
         public DecimalFormatAttribute(string customFormat)
         {
-            FormatType = null;
-            CustomFormat = string.IsNullOrEmpty(customFormat) ? "G" : customFormat;
+            FormatType = default;
+            CustomFormat = customFormat;
+        }
+
+        private DecimalFormatAttribute()
+        {
+            FormatType = default;
+            CustomFormat = string.Empty;
+        }
+    }
+
+    internal static class DecimalFormatTypeFlags
+    {
+        [Pure] [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Contains(this DecimalFormatType formatType, DecimalFormatType flag)
+        {
+            return (formatType & flag) == flag;
         }
     }
 }

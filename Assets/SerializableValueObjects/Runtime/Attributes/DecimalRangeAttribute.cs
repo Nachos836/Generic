@@ -17,19 +17,34 @@ namespace SerializableValueObjects.Attributes
     [AttributeUsage(Field | Property)]
     public sealed class DecimalRangeAttribute : Attribute
     {
+        internal static DecimalRangeAttribute None { get; } = new ();
+
+        internal bool IsNeeded { get; }
+
         internal float Min { get; }
         internal float Max { get; }
 
         public DecimalRangeAttribute(int min, int max)
         {
+            IsNeeded = true;
+
             Min = min;
             Max = max;
         }
 
         public DecimalRangeAttribute(float min, float max)
         {
+            IsNeeded = true;
+
             Min = min;
             Max = max;
+        }
+
+        private DecimalRangeAttribute()
+        {
+            IsNeeded = false;
+            Min = default;
+            Max = default;
         }
     }
 }

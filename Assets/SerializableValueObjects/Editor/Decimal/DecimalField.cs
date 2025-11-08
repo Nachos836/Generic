@@ -53,12 +53,17 @@ namespace SerializableValueObjects.Editor.Decimal
                 ?? value;
         }
 
-        public DecimalField() : this(label: string.Empty, DefaultFormat, integersOnly: false) { }
+        public DecimalField(): this
+        (
+            label: string.Empty,
+            DefaultFormat,
+            UINumericFieldsUtils.k_AllowedCharactersForFloat,
+            DefaultNumberStyle
+        ) { }
 
-        public DecimalField(string label, string format, bool integersOnly)
-            : base(label, 256, new DecimalInput(format, integersOnly ? "0123456789" : UINumericFieldsUtils.k_AllowedCharactersForFloat))
+        public DecimalField(string label, string format, string allowedCharacters, NumberStyles numberStyles)
+            : base(label, 256, new DecimalInput(format, allowedCharacters))
         {
-            var numberStyles = integersOnly ? NumberStyles.Integer : DefaultNumberStyle;
             _valueToStringRoutine = income =>
             {
                 return income.ToString(format: format, DefaultFormatProvider);

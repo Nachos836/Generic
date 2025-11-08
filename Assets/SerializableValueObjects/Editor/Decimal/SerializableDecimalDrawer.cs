@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Globalization;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -22,18 +23,30 @@ namespace SerializableValueObjects.Editor.Decimal
             var formatAttribute = attributes.Matches(DecimalFormatAttribute.None);
             var rangeAttribute = attributes.Matches(DecimalRangeAttribute.None);
             var integersOnly = formatAttribute.FormatType.Contains(flag: Integers);
+            var positiveOnly = formatAttribute.FormatType.Contains(flag: PositiveOnly);
             var customFormat = formatAttribute.CustomFormat;
+            var numberStyles = integersOnly ? NumberStyles.Integer : NumberStyles.Number;
+            var allowedCharacters = (integersOnly, positiveOnly) switch
+            {
+                (integersOnly: true, positiveOnly: true) => "0123456789",
+                (integersOnly: true, positiveOnly: false) => "0123456789-",
+                (integersOnly: false, positiveOnly: false) => UINumericFieldsUtils.k_AllowedCharactersForFloat,
+                (integersOnly: false, positiveOnly: true) => UINumericFieldsUtils.k_AllowedCharactersForFloat
+                    .Except("-")
+                    .ToString()
+            };
 
             return rangeAttribute.IsNeeded
-                ? CreateSliderField(property, rangeAttribute, customFormat, integersOnly)
-                : CreateRegularField(property, customFormat, integersOnly);
+                ? CreateSliderField(property, rangeAttribute, customFormat, allowedCharacters, numberStyles, integersOnly)
+                : CreateRegularField(property, customFormat, allowedCharacters, numberStyles);
         }
 
         private static VisualElement CreateRegularField
         (
             SerializedProperty property,
             string customFormat,
-            bool integersOnly
+            string allowedCharacters,
+            NumberStyles numberStyles
         ) {
             var loProp = property.FindPropertyRelative(SerializableDecimal.LoPartName);
             var midProp = property.FindPropertyRelative(SerializableDecimal.MidPartName);
@@ -44,11 +57,9 @@ namespace SerializableValueObjects.Editor.Decimal
             (
                 label: property.displayName,
                 format: customFormat,
-                integersOnly: integersOnly
-            ) {
-                style = { flexGrow = 1 }
-            };
-
+                allowedCharacters,
+                numberStyles
+            );
             decimalField.AddToClassList(DecimalField.alignedFieldUssClassName);
 
             var currentValue = GetDecimalValue(loProp, midProp, hiProp, flagsProp);
@@ -78,6 +89,8 @@ namespace SerializableValueObjects.Editor.Decimal
             SerializedProperty property,
             DecimalRangeAttribute range,
             string customFormat,
+            string allowedCharacters,
+            NumberStyles numberStyles,
             bool integersOnly
         ) {
             var loProp = property.FindPropertyRelative(SerializableDecimal.LoPartName);
@@ -85,7 +98,10 @@ namespace SerializableValueObjects.Editor.Decimal
             var hiProp = property.FindPropertyRelative(SerializableDecimal.HiPartName);
             var flagsProp = property.FindPropertyRelative(SerializableDecimal.FlagsPartName);
 
-            var root = new VisualElement { style = { flexDirection = FlexDirection.Row, flexGrow = 1 } };
+            var root = new VisualElement
+            {
+                style = { flexDirection = FlexDirection.Row, flexGrow = 1 }
+            };
 
             var slider = new Slider(start: range.Min, end: range.Max)
             {
@@ -95,10 +111,16 @@ namespace SerializableValueObjects.Editor.Decimal
             };
             slider.AddToClassList(Slider.alignedFieldUssClassName);
 
-            var inputField = new DecimalField(string.Empty, format: customFormat, integersOnly: integersOnly)
-            {
-                style = { width = 60, marginLeft = 4 }
+            var inputField = new DecimalField
+            (
+                label: string.Empty,
+                format: customFormat,
+                allowedCharacters,
+                numberStyles
+            ) {
+                style = { minWidth = 60, marginLeft = 4 }
             };
+            inputField.AddToClassList(DecimalField.alignedFieldUssClassName);
 
             root.Add(slider);
             root.Add(inputField);

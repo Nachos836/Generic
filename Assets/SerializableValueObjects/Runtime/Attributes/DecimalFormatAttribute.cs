@@ -11,15 +11,14 @@ using static System.AttributeTargets;
 
 namespace SerializableValueObjects.Attributes
 {
-    using static DecimalFormatType;
-
     [Flags]
     public enum DecimalFormatType
     {
         /// <summary>
         /// Only integer values allowed (no fractional part)
         /// </summary>
-        Integers = 1 << 0
+        Integers = 1 << 0,
+        PositiveOnly = 1 << 1
     }
 
     /// <summary>

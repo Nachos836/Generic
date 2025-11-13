@@ -7,6 +7,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Cysharp.Threading.Tasks.Linq;
 
+// ReSharper disable CheckNamespace
 namespace Pooling
 {
     public sealed class AsyncPool<T> : IDisposable
@@ -17,7 +18,7 @@ namespace Pooling
         private readonly Action<T> _whenDestroy;
 
         private readonly ConcurrentStack<T> _items = new ();
-        private readonly SemaphoreSlim _semaphore = new (0, int.MaxValue);
+        private readonly SemaphoreSlim _semaphore = new (initialCount: 1, maxCount: int.MaxValue);
 
         public AsyncPool
         (
@@ -35,8 +36,8 @@ namespace Pooling
         public UniTask WarmupAsync<TState>
         (
             int amount,
-            Func<TState, int, CancellationToken, UniTask<T[]>> bulkCreate,
             TState state,
+            Func<TState, int, CancellationToken, UniTask<T[]>> bulkCreate,
             CancellationToken cancellation = default
         ) {
             var items = _items;
@@ -45,7 +46,7 @@ namespace Pooling
                 .ContinueWith(results => items.PushRange(results));
         }
 
-        public async UniTask<Pooled> GetAsync
+        public async UniTask<ObjectHandler<T>> GetAsync
         (
             CancellationToken cancellation = default,
             bool configureAwait = false
@@ -54,7 +55,7 @@ namespace Pooling
             {
                 await _whenGet(item, cancellation);
 
-                return new Pooled(this, item);
+                return new ObjectHandler<T>(pool: this, item);
             }
 
             await _semaphore.WaitAsync(cancellation)
@@ -73,17 +74,87 @@ namespace Pooling
 
             await _whenGet(item, cancellation);
 
-            return new Pooled(this, item);
+            return new ObjectHandler<T>(pool: this, item);
         }
 
-        public async UniTask<Pooled[]> GetAsync<TState>
+        public async UniTask<ObjectHandler<T>> GetAsync
+        (
+            Action<T> bootstrapObject,
+            CancellationToken cancellation = default,
+            bool configureAwait = false
+        ) {
+            if (_items.TryPop(out var item))
+            {
+                bootstrapObject.Invoke(item);
+                await _whenGet(item, cancellation);
+
+                return new ObjectHandler<T>(pool: this, item);
+            }
+
+            await _semaphore.WaitAsync(cancellation)
+                .AsUniTask(!configureAwait);
+            try
+            {
+                if (_items.TryPop(out item) is false)
+                {
+                    item = await _toCreate(cancellation);
+                    _items.Push(item);
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+
+            bootstrapObject.Invoke(item);
+            await _whenGet(item, cancellation);
+
+            return new ObjectHandler<T>(pool: this, item);
+        }
+
+        public async UniTask<ObjectHandler<T>> GetAsync<TState>
+        (
+            TState state,
+            Action<T, TState> bootstrapObject,
+            CancellationToken cancellation = default,
+            bool configureAwait = false
+        ) {
+            if (_items.TryPop(out var item))
+            {
+                bootstrapObject.Invoke(item, state);
+                await _whenGet(item, cancellation);
+
+                return new ObjectHandler<T>(pool: this, item);
+            }
+
+            await _semaphore.WaitAsync(cancellation)
+                .AsUniTask(configureAwait);
+            try
+            {
+                if (_items.TryPop(out item) == false)
+                {
+                    item = await _toCreate(cancellation);
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+
+            bootstrapObject.Invoke(item, state);
+            await _whenGet(item, cancellation);
+
+            return new ObjectHandler<T>(pool: this, item);
+        }
+
+        public async UniTask<ObjectHandler<T>[]> GetAsync<TState>
         (
             int amount,
             TState state,
             Func<TState, int, CancellationToken, UniTask<T[]>>? bulkCreate = null,
             CancellationToken cancellation = default
         ) {
-            if (amount <= 0) return Array.Empty<Pooled>();
+            if (amount <= 0) return Array.Empty<ObjectHandler<T>>();
 
             var buffer = new T[amount];
             var obtained = _items.TryPopRange(buffer);
@@ -122,23 +193,23 @@ namespace Pooling
                 }
             }
 
-            var pooled = new Pooled[amount];
+            var pooled = new ObjectHandler<T>[amount];
             for (var i = 0; i < amount; i++)
             {
                 await _whenGet(buffer[i], cancellation);
-                pooled[i] = new Pooled(this, buffer[i]);
+                pooled[i] = new ObjectHandler<T>(pool: this, buffer[i]);
             }
 
             return pooled;
         }
 
-        public IUniTaskAsyncEnumerable<Pooled> GetAsync<TState>
+        public IUniTaskAsyncEnumerable<ObjectHandler<T>> GetAsync<TState>
         (
             int amount,
             TState state,
             Func<TState, int, IUniTaskAsyncEnumerable<T>>? bulkCreate = null
         ) {
-            return UniTaskAsyncEnumerable.Create<Pooled>(async (writer, cancellation) =>
+            return UniTaskAsyncEnumerable.Create<ObjectHandler<T>>(async (writer, cancellation) =>
             {
                 if (amount <= 0) return;
 
@@ -149,7 +220,7 @@ namespace Pooling
                     for (var i = 0; i < obtained; ++i)
                     {
                         await _whenGet(rent[i], cancellation);
-                        await writer.YieldAsync(new Pooled(this, rent[i]));
+                        await writer.YieldAsync(new ObjectHandler<T>(pool: this, rent[i]));
                     }
 
                     var left = amount - obtained;
@@ -174,7 +245,7 @@ namespace Pooling
                             if (_items.TryPop(out var pooled))
                             {
                                 await _whenGet(pooled, cancellation);
-                                await writer.YieldAsync(new Pooled(this, pooled));
+                                await writer.YieldAsync(new ObjectHandler<T>(pool: this, pooled));
                                 --left;
                                 continue;
                             }
@@ -191,7 +262,7 @@ namespace Pooling
                                 }
 
                                 await _whenGet(pooled, cancellation);
-                                await writer.YieldAsync(new Pooled(this, pooled));
+                                await writer.YieldAsync(new ObjectHandler<T>(pool: this, pooled));
                                 --left;
                             }
                             catch
@@ -224,36 +295,36 @@ namespace Pooling
             _items.Clear();
         }
 
-        private UniTaskVoid ReturnAsync(T item)
+        internal UniTaskVoid ReturnAsync(T item)
         {
             _items.Push(item);
 
             return _whenRelease.Invoke(item);
         }
+    }
 
-        public struct Pooled : IDisposable
+    public struct ObjectHandler<T> : IDisposable
+    {
+        private readonly AsyncPool<T> _pool;
+        private bool _disposed;
+
+        public readonly T Value;
+
+        internal ObjectHandler(AsyncPool<T> pool, T value)
         {
-            private readonly AsyncPool<T> _pool;
-            private bool _disposed;
+            _disposed = false;
+            _pool = pool;
+            Value = value;
+        }
 
-            public readonly T Value;
+        public void Dispose()
+        {
+            if (_disposed) return;
 
-            internal Pooled(AsyncPool<T> pool, T value)
-            {
-                _disposed = false;
-                _pool = pool;
-                Value = value;
-            }
+            _disposed = true;
 
-            public void Dispose()
-            {
-                if (_disposed) return;
-
-                _disposed = true;
-
-                _pool.ReturnAsync(Value)
-                    .Forget();
-            }
+            _pool.ReturnAsync(Value)
+                .Forget();
         }
     }
 }

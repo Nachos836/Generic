@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.inspector-attributes",
 	"displayName": "Unity Inspector Attributes",
-	"version": "0.5.3",
+	"version": "0.5.4",
 	"unity": "2022.3",
 	"description": "Set of Unity Inspector Attributes with UI Toolkit in mind",
 	"keywords": ["Editor", "Attributes", "UIToolkit"],

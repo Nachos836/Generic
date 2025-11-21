@@ -158,21 +158,25 @@ namespace InspectorAttributes.Editor
 
             if (baseType.IsInterface)
             {
-                types.AddRange(TypeCache.GetTypesDerivedFrom(baseType).Where(type => type is
-                {
-                    IsAbstract: false,
-                    IsInterface: false,
-                    IsGenericTypeDefinition: false
-                }));
+                types.AddRange(TypeCache.GetTypesDerivedFrom(baseType)
+                    .Where(static type => type is
+                    {
+                        IsAbstract: false,
+                        IsInterface: false,
+                        IsGenericTypeDefinition: false
+                    }));
             }
             else if (baseType.IsAbstract)
             {
-                types.AddRange(TypeCache.GetTypesDerivedFrom(baseType).Where(type => type is
-                {
-                    IsAbstract: false,
-                    IsGenericTypeDefinition: false
-                }));
+                types.AddRange(TypeCache.GetTypesDerivedFrom(baseType)
+                    .Where(static type => type is
+                    {
+                        IsAbstract: false,
+                        IsGenericTypeDefinition: false
+                    }));
             }
+
+            types.RemoveAll(match: static type => typeof(UnityEngine.Object).IsAssignableFrom(type));
 
             var result = Array.Empty<Type>();
             switch (types.Count)
@@ -208,7 +212,7 @@ namespace InspectorAttributes.Editor
 
         private static bool IsChildOf(SerializedProperty child, SerializedProperty parent)
         {
-            return child.propertyPath.StartsWith(parent.propertyPath + ".");
+            return child.propertyPath.StartsWith(parent.propertyPath + ".", StringComparison.Ordinal);
         }
 
         [UnityEditor.Callbacks.DidReloadScripts]
@@ -227,6 +231,7 @@ namespace InspectorAttributes.Editor
                 if (ReferenceEquals(first, second)) return 0;
                 if (second is null) return 1;
                 if (first is null) return -1;
+
                 return string.Compare(first.Name, second.Name, StringComparison.Ordinal);
             }
         }

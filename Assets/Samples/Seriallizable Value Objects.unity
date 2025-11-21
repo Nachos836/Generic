@@ -318,16 +318,16 @@ MonoBehaviour:
   _value: 1
   _value2: 2
   _reference1:
-    rid: 788421506472345678
+    rid: 5270211512019189762
   _reference2:
-    rid: 788421506472345679
+    rid: 5270211512019189763
   references:
     version: 2
     RefIds:
-    - rid: 788421506472345678
+    - rid: 5270211512019189762
       type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 788421506472345679
+    - rid: 5270211512019189763
       type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
       data:
         _data: Cyka!

@@ -1,4 +1,4 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Assets/Initializer/Editor/ServiceItemStyleSheet.uss?fileID=7433441132597879392&amp;guid=dfddc0d6939e529458e219fedbc3f18f&amp;type=3#ServiceItemStyleSheet" />
-    <ui:Toggle label="Toggle" class="service-item-toggle" />
+    <Style src="project://database/Assets/Initializer/Editor/RootServiceItemStyleSheet.uss?fileID=7433441132597879392&amp;guid=dfddc0d6939e529458e219fedbc3f18f&amp;type=3#RootServiceItemStyleSheet"/>
+    <ui:Toggle label="Toggle" class="service-item-toggle"/>
 </ui:UXML>

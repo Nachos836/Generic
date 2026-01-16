@@ -27,7 +27,7 @@ namespace Generic.Samples
         [Conditional("UNITY_EDITOR")]
         private void Test()
         {
-            UnityEngine.Debug.Log(_dictionary.ContainsKey("1"));
+            UnityEngine.Debug.Log(_dictionary.AsFrozenDictionary().ContainsKey("1"));
         }
 
         [Serializable]

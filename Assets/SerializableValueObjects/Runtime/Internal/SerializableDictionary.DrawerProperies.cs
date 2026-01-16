@@ -73,7 +73,7 @@ namespace SerializableValueObjects
             return true;
         }
 
-        partial struct Entry
+        internal partial struct Entry
         {
             internal const string KeyName = nameof(_key);
             internal const string ValueName = nameof(_value);

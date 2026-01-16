@@ -1,32 +1,40 @@
-﻿#if !UNITY_EDITOR
+﻿#nullable enable
 
-#nullable enable
-
-using System.Collections.Frozen;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace SerializableValueObjects
 {
     partial struct SerializableDictionary<TKey, TValue> : ISerializationCallbackReceiver where TKey : notnull
     {
         void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
+        #if UNITY_EDITOR
+
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            _entries ??= new ();
+            _backingDictionary = null;
+        }
+
+        #else
+
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        {
             if (_entries.Count == 0)
             {
-                _backingDictionary = FrozenDictionary<TKey, TValue>.Empty;
-                return;
+                _backingDictionary = System.Collections.Frozen.FrozenDictionary<TKey, TValue>.Empty;
             }
-
-            _backingDictionary = _entries.ToFrozenDictionary
-            (
-                keySelector: static entry => entry._key,
-                elementSelector:  static entry => entry._value
-            );
+            else
+            {
+                _backingDictionary = System.Collections.Frozen.FrozenDictionary.ToFrozenDictionary
+                (
+                    _entries,
+                    keySelector: static entry => entry._key,
+                    elementSelector: static entry => entry._value
+                );
+            }
         }
+
+        #endif
     }
 }
-
-#endif

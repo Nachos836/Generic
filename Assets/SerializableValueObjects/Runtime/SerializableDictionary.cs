@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -28,11 +26,7 @@ namespace SerializableValueObjects
     {
         [SerializeField] private List<Entry> _entries;
 
-        private FrozenDictionary<TKey, TValue> _backingDictionary;
-
-        public readonly int Count => _backingDictionary.Count;
-        public readonly ImmutableArray<TKey> Keys => _backingDictionary.Keys;
-        public readonly ImmutableArray<TValue> Values => _backingDictionary.Values;
+        private FrozenDictionary<TKey, TValue>? _backingDictionary;
 
         public static SerializableDictionary<TKey, TValue> Empty() => new ()
         {
@@ -63,34 +57,23 @@ namespace SerializableValueObjects
         }
 
         [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        public readonly bool ContainsKey(TKey key) => _backingDictionary.ContainsKey(key);
-
-        [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract")]
-        public readonly bool TryGetValue(TKey key, [NotNullWhen(returnValue: true)] out TValue? value)
+        public FrozenDictionary<TKey, TValue> AsFrozenDictionary()
         {
-            if (_backingDictionary.TryGetValue(key, out value))
-            {
-                return value is not null;
-            }
+            if (_backingDictionary is not null) return _backingDictionary;
+            if (_entries.Count == 0) return FrozenDictionary<TKey, TValue>.Empty;
 
-            value = default;
-            return false;
+            return _backingDictionary = _entries.ToFrozenDictionary
+            (
+                keySelector: static entry => entry._key,
+                elementSelector:  static entry => entry._value
+            );
         }
 
         [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        public readonly FrozenDictionary<TKey, TValue> AsFrozenDictionary() => _backingDictionary;
-
-        public readonly ref readonly TValue this[TKey key]
+        public static implicit operator FrozenDictionary<TKey, TValue>(SerializableDictionary<TKey, TValue> source)
         {
-            [MustUseReturnValue] [MethodImpl(AggressiveInlining)] get => ref _backingDictionary[key];
+            return source.AsFrozenDictionary();
         }
-
-        [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        public readonly FrozenDictionary<TKey, TValue>.Enumerator GetEnumerator() => _backingDictionary.GetEnumerator();
-
-        [MustUseReturnValue] [MethodImpl(AggressiveInlining)]
-        public static implicit operator FrozenDictionary<TKey, TValue>(SerializableDictionary<TKey, TValue> source) => source._backingDictionary;
 
         [Serializable]
         internal partial struct Entry

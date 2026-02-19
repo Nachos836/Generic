@@ -2,7 +2,7 @@
 
 namespace EditorUtils.Editor
 {
-    public static class AssetsReserialize
+    internal static class AssetsReserialize
     {
         [MenuItem("Tools/Force Reserialize Assets")]
         public static void ForceReserializeAssets()

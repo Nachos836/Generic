@@ -10,6 +10,7 @@ using UnityEngine;
 
 using static System.Runtime.CompilerServices.MethodImplOptions;
 
+// ReSharper disable CheckNamespace
 namespace SerializableValueObjects
 {
     public static partial class SerializableDictionary
@@ -60,12 +61,12 @@ namespace SerializableValueObjects
         public FrozenDictionary<TKey, TValue> AsFrozenDictionary()
         {
             if (_backingDictionary is not null) return _backingDictionary;
-            if (_entries.Count == 0) return FrozenDictionary<TKey, TValue>.Empty;
+            if (_entries is null or { Count: 0}) return FrozenDictionary<TKey, TValue>.Empty;
 
             return _backingDictionary = _entries.ToFrozenDictionary
             (
                 keySelector: static entry => entry._key,
-                elementSelector:  static entry => entry._value
+                elementSelector: static entry => entry._value
             );
         }
 

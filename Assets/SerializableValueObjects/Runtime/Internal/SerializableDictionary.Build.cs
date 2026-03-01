@@ -1,6 +1,10 @@
 ﻿#nullable enable
 
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+
+using static System.Runtime.CompilerServices.MethodImplOptions;
 
 // ReSharper disable once CheckNamespace
 namespace SerializableValueObjects
@@ -9,18 +13,27 @@ namespace SerializableValueObjects
     {
         void ISerializationCallbackReceiver.OnBeforeSerialize() { }
 
-        #if UNITY_EDITOR
-
         void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            ResetBackingDictionaryForEditor();
+            PopulateBackingDictionaryForBuild();
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [MethodImpl(AggressiveInlining)]
+        private void ResetBackingDictionaryForEditor()
         {
             _backingDictionary = null;
         }
 
-        #else
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        [MethodImpl(AggressiveInlining)]
+        private void PopulateBackingDictionaryForBuild()
         {
-            if (_entries.Count == 0)
+            #if UNITY_EDITOR
+                if (Application.isEditor) return;
+            #endif
+
+            if (_entries is null or { Count: 0})
             {
                 _backingDictionary = System.Collections.Frozen.FrozenDictionary<TKey, TValue>.Empty;
             }
@@ -34,7 +47,5 @@ namespace SerializableValueObjects
                 );
             }
         }
-
-        #endif
     }
 }

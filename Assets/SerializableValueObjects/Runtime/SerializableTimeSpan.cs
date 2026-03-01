@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using UnityEngine;
 
+// ReSharper disable CheckNamespace
 namespace SerializableValueObjects
 {
     using static SerializableTimeSpan.Unit;

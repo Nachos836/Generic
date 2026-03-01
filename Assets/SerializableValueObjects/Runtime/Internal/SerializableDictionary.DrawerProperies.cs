@@ -4,7 +4,6 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using dotNetCompat.Extensions;
 using UnityEngine;
@@ -36,35 +35,18 @@ namespace SerializableValueObjects
 
         [SerializeField] private Entry[] _staging;
 
-        IList ISerializableDictionaryRawAccess.BackingCollection => _entries;
+        IList ISerializableDictionaryRawAccess.BackingCollection => _entries ??= new ();
 
         bool ISerializableDictionaryRawAccess.CheckUpdatedKey(int index, object rawKey)
         {
-            var builder = ImmutableDictionary.CreateBuilder<TKey, TValue>();
+            if (Entry.TryCastKey(rawKey, out var checkKey) is false) return false;
+
             var current = 0;
             foreach (ref readonly var entry in _entries.AsReadOnlySpan())
             {
-                if (current == index)
+                if (current != index)
                 {
-                    if (Entry.TryCastKey(rawKey, out var checkKey))
-                    {
-                        if (builder.TryAdd(checkKey, default!) is false) return false;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (entry is { _key: not null })
-                    {
-                        if (builder.TryAdd(entry._key, default!) is false) return false;
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    if (EqualityComparer<TKey>.Default.Equals(entry._key, checkKey)) return false;
                 }
 
                 ++current;

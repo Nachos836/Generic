@@ -21,6 +21,7 @@ namespace InspectorAttributes.Editor
     internal sealed class InspectableReferenceAttributeDrawer : PropertyDrawer
     {
         private static readonly Dictionary<Type, Type[]> CachedImplementations = new();
+        private static readonly Dictionary<string, Type?> CachedTypes = new();
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -157,81 +158,204 @@ namespace InspectorAttributes.Editor
 
         private static VisualElement CreateCollectionEditor(SerializedProperty property, Type elementType, string labelText)
         {
-            var captureProperty = property;
-            var capturedElementType = elementType;
-
             var root = new VisualElement();
+            var content = new VisualElement { style = { marginLeft = 14 } };
+
+            var propertyPath = property.propertyPath;
+            var isApplyingFromUi = false;
+
             var foldout = new Foldout { text = labelText, value = property.isExpanded };
             foldout.RegisterValueChangedCallback(evt =>
             {
-                captureProperty.isExpanded = evt.newValue;
-                captureProperty.serializedObject.ApplyModifiedProperties();
+                property.isExpanded = evt.newValue;
+                property.serializedObject.ApplyModifiedProperties();
             });
 
-            var content = new VisualElement { style = { marginLeft = 14 } };
             var toolbar = new VisualElement { style = { flexDirection = FlexDirection.Row } };
             var addButton = new Button(() =>
             {
-                captureProperty.arraySize++;
-                captureProperty.serializedObject.ApplyModifiedProperties();
-                captureProperty.serializedObject.Update();
-                RebuildCollectionContent(content, captureProperty, capturedElementType);
-            }) {
+                var refreshed = property.serializedObject.FindProperty(propertyPath);
+                if (refreshed == null) return;
+
+                isApplyingFromUi = true;
+                try
+                {
+                    refreshed.arraySize++;
+                    refreshed.serializedObject.ApplyModifiedProperties();
+                    refreshed.serializedObject.Update();
+                }
+                finally
+                {
+                    isApplyingFromUi = false;
+                }
+
+                Rebuild(refreshed);
+            })
+            {
                 text = "Add"
             };
             toolbar.Add(addButton);
-
-            RebuildCollectionContent(content, property, elementType);
 
             foldout.Add(toolbar);
             foldout.Add(content);
             root.Add(foldout);
 
+            Rebuild(property);
+
+            root.TrackSerializedObjectValue(property.serializedObject, _ =>
+            {
+                if (isApplyingFromUi) return;
+
+                var refreshed = property.serializedObject.FindProperty(propertyPath);
+                if (refreshed == null)
+                {
+                    content.Clear();
+                    return;
+                }
+
+                Rebuild(refreshed);
+            });
+
             return root;
+
+            void Rebuild(SerializedProperty collectionProperty)
+            {
+                var currentFieldType = GetFieldType(collectionProperty);
+                var currentElementType = currentFieldType != null && TryGetCollectionElementType(currentFieldType, out var resolvedElementType)
+                    ? resolvedElementType
+                    : elementType;
+
+                RebuildCollectionContent(content, collectionProperty, currentElementType);
+            }
         }
 
         private static void RebuildCollectionContent(VisualElement content, SerializedProperty collectionProperty, Type elementType)
         {
             content.Clear();
 
+            var collectionPath = collectionProperty.propertyPath;
+            var serializedObject = collectionProperty.serializedObject;
+
             for (var i = 0; i < collectionProperty.arraySize; i++)
             {
                 var index = i;
-                var elementProperty = collectionProperty.GetArrayElementAtIndex(index);
+                var elementPath = $"{collectionPath}.Array.data[{index}]";
 
-                var row = new VisualElement
+                var row = CreateCollectionRow(content, collectionProperty, elementType, index, elementPath);
+                content.Add(row);
+
+                row.TrackSerializedObjectValue(serializedObject, _ =>
                 {
-                    style =
+                    var refreshedCollection = serializedObject.FindProperty(collectionPath);
+                    if (refreshedCollection == null) return;
+
+                    // Если структура изменилась (удаление/вставка/сдвиг) — полный ребилд списка.
+                    if (index >= refreshedCollection.arraySize)
                     {
-                        borderBottomWidth = 1,
-                        borderBottomColor = new Color(0.2f, 0.2f, 0.2f, 0.3f),
-                        paddingBottom = 4,
-                        marginBottom = 4
+                        RebuildCollectionContent(content, refreshedCollection, elementType);
+                        return;
                     }
-                };
 
-                var header = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-                var title = new Label($"Element {index}") { style = { unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1 } };
-                var removeButton = new Button(() =>
+                    var refreshedElement = serializedObject.FindProperty(elementPath);
+                    if (refreshedElement == null)
+                    {
+                        RebuildCollectionContent(content, refreshedCollection, elementType);
+                        return;
+                    }
+
+                    RefreshCollectionRow(row, content, refreshedCollection, elementType, index, elementPath);
+                });
+            }
+        }
+
+        private static void RefreshCollectionRow(
+            VisualElement row,
+            VisualElement content,
+            SerializedProperty collectionProperty,
+            Type elementType,
+            int index,
+            string elementPath)
+        {
+            row.Clear();
+
+            var header = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            var title = new Label($"Element {index}") { style = { unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1 } };
+
+            var removeButton = new Button(() =>
+            {
+                var refreshedCollection = collectionProperty.serializedObject.FindProperty(collectionProperty.propertyPath);
+                if (refreshedCollection == null) return;
+
+                refreshedCollection.DeleteArrayElementAtIndex(index);
+                refreshedCollection.serializedObject.ApplyModifiedProperties();
+                refreshedCollection.serializedObject.Update();
+
+                RebuildCollectionContent(content, refreshedCollection, elementType);
+            })
+            {
+                text = "Remove"
+            };
+
+            header.Add(title);
+            header.Add(removeButton);
+            row.Add(header);
+
+            var refreshedElement = collectionProperty.serializedObject.FindProperty(elementPath);
+            if (refreshedElement != null)
+            {
+                var elementEditor = CreateReferenceEditor(refreshedElement, elementType, $"Element {index}");
+                row.Add(elementEditor);
+            }
+        }
+
+        private static VisualElement CreateCollectionRow(
+            VisualElement content,
+            SerializedProperty collectionProperty,
+            Type elementType,
+            int index,
+            string elementPath)
+        {
+            var row = new VisualElement
+            {
+                style =
                 {
-                    collectionProperty.DeleteArrayElementAtIndex(index);
-                    collectionProperty.serializedObject.ApplyModifiedProperties();
-                    collectionProperty.serializedObject.Update();
-                    RebuildCollectionContent(content, collectionProperty, elementType);
-                })
-                {
-                    text = "Remove"
-                };
+                    borderBottomWidth = 1,
+                    borderBottomColor = new Color(0.2f, 0.2f, 0.2f, 0.3f),
+                    paddingBottom = 4,
+                    marginBottom = 4
+                }
+            };
 
-                header.Add(title);
-                header.Add(removeButton);
-                row.Add(header);
+            var header = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            var title = new Label($"Element {index}") { style = { unityFontStyleAndWeight = FontStyle.Bold, flexGrow = 1 } };
 
+            var removeButton = new Button(() =>
+            {
+                var refreshedCollection = collectionProperty.serializedObject.FindProperty(collectionProperty.propertyPath);
+                if (refreshedCollection == null) return;
+
+                refreshedCollection.DeleteArrayElementAtIndex(index);
+                refreshedCollection.serializedObject.ApplyModifiedProperties();
+                refreshedCollection.serializedObject.Update();
+
+                RebuildCollectionContent(content, refreshedCollection, elementType);
+            })
+            {
+                text = "Remove"
+            };
+
+            header.Add(title);
+            header.Add(removeButton);
+            row.Add(header);
+
+            var elementProperty = collectionProperty.serializedObject.FindProperty(elementPath);
+            if (elementProperty != null)
+            {
                 var elementEditor = CreateReferenceEditor(elementProperty, elementType, $"Element {index}");
                 row.Add(elementEditor);
-
-                content.Add(row);
             }
+
+            return row;
         }
 
         private static ChoiceModel BuildChoiceModel(SerializedProperty targetProperty, Type baseType)
@@ -395,12 +519,136 @@ namespace InspectorAttributes.Editor
 
         private static Type? GetFieldType(SerializedProperty property)
         {
-            var hostType = property.serializedObject.targetObject.GetType();
-            var candidate = hostType.GetField(property.propertyPath, Public | NonPublic | Instance);
-            if (candidate != null) return candidate.FieldType;
+            if (property.propertyType == SerializedPropertyType.ManagedReference
+                && TryGetTypeFromManagedTypename(property.managedReferenceFieldTypename, out var managedFieldType))
+            {
+                return managedFieldType;
+            }
 
-            // Fallback for a nested paths "foo.bar.Array.data[0]"
+            var hostType = property.serializedObject.targetObject.GetType();
+
+            var direct = hostType.GetField(property.propertyPath, Public | NonPublic | Instance);
+            if (direct != null) return direct.FieldType;
+
+            if (TryResolveFieldTypeFromParentProperty(property, out var fromParent))
+            {
+                return fromParent;
+            }
+
             return ResolveFieldTypeFromPath(hostType, property.propertyPath);
+        }
+
+        private static bool TryResolveFieldTypeFromParentProperty(SerializedProperty property, [NotNullWhen(true)] out Type? fieldType)
+        {
+            fieldType = null;
+
+            var parentPath = GetParentPropertyPath(property.propertyPath);
+            if (string.IsNullOrEmpty(parentPath)) return false;
+
+            var parentProperty = property.serializedObject.FindProperty(parentPath);
+            if (parentProperty == null) return false;
+
+            Type? parentType;
+            if (parentProperty.propertyType == SerializedPropertyType.ManagedReference)
+            {
+                parentType = parentProperty.managedReferenceValue?.GetType();
+
+                if (parentType == null
+                    && TryGetTypeFromManagedTypename(parentProperty.managedReferenceFieldTypename, out var declaredParentType))
+                {
+                    parentType = declaredParentType;
+                }
+            }
+            else
+            {
+                parentType = GetFieldType(parentProperty);
+            }
+
+            if (parentType == null) return false;
+
+            var childToken = GetLastPathToken(property.propertyPath);
+            if (string.IsNullOrEmpty(childToken)) return false;
+
+            if (childToken.Contains("[", StringComparison.Ordinal))
+            {
+                if (parentType.IsArray)
+                {
+                    fieldType = parentType.GetElementType();
+                    return fieldType != null;
+                }
+
+                if (parentType.IsGenericType)
+                {
+                    fieldType = parentType.GetGenericArguments().FirstOrDefault();
+                    return fieldType != null;
+                }
+
+                return false;
+            }
+
+            var field = GetFieldInHierarchy(parentType, childToken);
+            if (field == null) return false;
+
+            fieldType = field.FieldType;
+            return true;
+        }
+
+        private static bool TryGetTypeFromManagedTypename(string? managedTypename, [NotNullWhen(true)] out Type? type)
+        {
+            if (string.IsNullOrWhiteSpace(managedTypename))
+            {
+                type = null;
+                return false;
+            }
+
+            if (CachedTypes.TryGetValue(managedTypename, out var cached))
+            {
+                type = cached;
+                return type != null;
+            }
+
+            var splitIndex = managedTypename.IndexOf(' ');
+            if (splitIndex <= 0 || splitIndex >= managedTypename.Length - 1)
+            {
+                CachedTypes[managedTypename] = null;
+                type = null;
+                return false;
+            }
+
+            var assemblyName = managedTypename[..splitIndex];
+            var fullTypeName = managedTypename[(splitIndex + 1)..];
+            var assemblyQualifiedName = $"{fullTypeName}, {assemblyName}";
+
+            type = Type.GetType(assemblyQualifiedName, throwOnError: false);
+            CachedTypes[managedTypename] = type;
+            return type != null;
+        }
+
+        private static string GetParentPropertyPath(string propertyPath)
+        {
+            if (string.IsNullOrEmpty(propertyPath)) return string.Empty;
+
+            var lastDot = propertyPath.LastIndexOf('.');
+            return lastDot < 0 ? string.Empty : propertyPath[..lastDot];
+        }
+
+        private static string GetLastPathToken(string propertyPath)
+        {
+            if (string.IsNullOrEmpty(propertyPath)) return string.Empty;
+
+            var lastDot = propertyPath.LastIndexOf('.');
+            return lastDot < 0 ? propertyPath : propertyPath[(lastDot + 1)..];
+        }
+
+        private static System.Reflection.FieldInfo? GetFieldInHierarchy(Type type, string fieldName)
+        {
+            for (var current = type; current != null; current = current.BaseType)
+            {
+                var field = current.GetField(fieldName, Public | NonPublic | Instance);
+                if (field != null) return field;
+            }
+
+            return null;
         }
 
         private static Type? ResolveFieldTypeFromPath(Type hostType, string propertyPath)
@@ -498,6 +746,7 @@ namespace InspectorAttributes.Editor
         private static void OnScriptsReloaded()
         {
             CachedImplementations.Clear();
+            CachedTypes.Clear();
         }
 
         private sealed class ChoiceModel

@@ -42,4 +42,13 @@ namespace Generic.Samples
     {
         string IData.Value => "Second option";
     }
+
+    [Serializable]
+    internal sealed class NestedDataOption : IData
+    {
+        [InspectableReference]
+        [SerializeReference] private IData _inner = default!;
+
+        string IData.Value => _inner.Value;
+    }
 }

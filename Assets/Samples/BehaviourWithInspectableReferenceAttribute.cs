@@ -1,15 +1,21 @@
 using System;
 using InspectorAttributes;
+using JetBrains.Annotations;
 using Samples.References;
 using UnityEngine;
 
+// ReSharper disable once CheckNamespace
 namespace Generic.Samples
 {
     internal sealed class BehaviourWithInspectableReferenceAttribute : MonoBehaviour
     {
+        [Header("Custom menu for SerializeReference")]
         [InspectableReference]
         [SerializeReference] private IData _reference = default!;
+        [InspectableReference]
+        [SerializeReference] private IData[] _references = default!;
 
+        [Header("Default Unity's Enum as example")]
         [SerializeField] private MyEnum _enum = MyEnum.A;
 
         private void OnEnable()
@@ -20,11 +26,14 @@ namespace Generic.Samples
             }
 
             _ = _enum;
+            _ = _references;
         }
 
         private enum MyEnum
         {
-            A, B, C
+            [UsedImplicitly] A,
+            [UsedImplicitly] B,
+            [UsedImplicitly] C
         }
     }
 

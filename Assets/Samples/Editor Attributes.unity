@@ -167,16 +167,16 @@ MonoBehaviour:
   _value: 0
   _value2: 0
   _reference1:
-    rid: 6599094081264287785
+    rid: 6599094457590874858
   _reference2:
-    rid: 6599094081264287786
+    rid: 6599094457590874859
   references:
     version: 2
     RefIds:
-    - rid: 6599094081264287785
+    - rid: 6599094457590874858
       type: {class: MyType, ns: Generic.Samples, asm: Assembly-CSharp}
       data: 
-    - rid: 6599094081264287786
+    - rid: 6599094457590874859
       type: {class: MyTypeWithData, ns: Generic.Samples, asm: Assembly-CSharp}
       data:
         _data: Cyka!
@@ -222,6 +222,83 @@ MonoBehaviour:
       data:
         _inner:
           rid: 6599094081264287787
+--- !u!1 &747930371
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 747930373}
+  - component: {fileID: 747930372}
+  m_Layer: 0
+  m_Name: Serialize Reference Attribute With Loops
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!114 &747930372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 747930371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5b98db1548b48138b4b78bc11bb0951, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Generic.Samples.BehaviourWithLoopsInInspectableReferenceAttribute
+  _start:
+    rid: 6599094457590874862
+  _nodes:
+  - rid: 6599094457590874860
+  - rid: 6599094457590874861
+  - rid: 6599094457590874863
+  - rid: 6599094457590874864
+  references:
+    version: 2
+    RefIds:
+    - rid: 6599094457590874860
+      type: {class: AdvancedNode, ns: Generic.Samples, asm: Assembly-CSharp}
+      data:
+        _another:
+          rid: 6599094457590874862
+    - rid: 6599094457590874861
+      type: {class: AdvancedNode, ns: Generic.Samples, asm: Assembly-CSharp}
+      data:
+        _another:
+          rid: 6599094457590874860
+    - rid: 6599094457590874862
+      type: {class: SimpleNode, ns: Generic.Samples, asm: Assembly-CSharp}
+      data: 
+    - rid: 6599094457590874863
+      type: {class: AdvancedNode, ns: Generic.Samples, asm: Assembly-CSharp}
+      data:
+        _another:
+          rid: 6599094457590874864
+    - rid: 6599094457590874864
+      type: {class: AdvancedNode, ns: Generic.Samples, asm: Assembly-CSharp}
+      data:
+        _another:
+          rid: 6599094457590874863
+--- !u!4 &747930373
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 747930371}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1023420806
 GameObject:
   m_ObjectHideFlags: 0
@@ -396,4 +473,5 @@ SceneRoots:
   - {fileID: 1023420807}
   - {fileID: 1450003573}
   - {fileID: 258504255}
+  - {fileID: 747930373}
   - {fileID: 1574793946}

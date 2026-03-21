@@ -465,26 +465,39 @@ namespace InspectorAttributes.Editor
 
             if (!iterator.Next(enterChildren: true)) yield break;
 
+            var visitedManagedIds = new HashSet<long>();
             long id = 0;
+
+            var enterChildren = true;
             do
             {
                 if (iterator.propertyType != SerializedPropertyType.ManagedReference) continue;
 
-                var value = iterator.managedReferenceValue;
-                if (value == null) continue;
+                var managedId = iterator.managedReferenceId;
+                if (!visitedManagedIds.Add(managedId))
+                {
+                    enterChildren = false;
+                }
+                else
+                {
+                    var value = iterator.managedReferenceValue;
+                    if (value == null) continue;
 
-                var valueType = value.GetType();
-                if (!baseType.IsAssignableFrom(valueType)) continue;
+                    var valueType = value.GetType();
+                    if (!baseType.IsAssignableFrom(valueType)) continue;
 
-                id++;
-                yield return new ExistingReferenceCandidate(
-                    id,
-                    iterator.propertyPath,
-                    valueType,
-                    value,
-                    iterator.managedReferenceId);
+                    id++;
+                    yield return new ExistingReferenceCandidate
+                    (
+                        id,
+                        iterator.propertyPath,
+                        valueType,
+                        value,
+                        managedId
+                    );
+                }
             }
-            while (iterator.Next(enterChildren: true));
+            while (iterator.Next(enterChildren));
         }
 
         private static bool IsInspectableBaseType(Type type) => type.IsInterface || type.IsAbstract;

@@ -9,6 +9,7 @@ namespace Generic.Core.FinalStateMachine
 {
     public abstract partial class StateMachine
     {
+        [PublicAPI]
         public sealed class Immutable : StateMachine
         {
             private Immutable(IEnumerable<KeyValuePair<Key, IState>> transitions)

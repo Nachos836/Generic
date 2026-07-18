@@ -6,6 +6,7 @@ namespace Generic.Core.FinalStateMachine
 {
     public abstract partial class StateMachine
     {
+        [PublicAPI]
         public sealed class Frozen : StateMachine
         {
             internal Frozen(IState current, IReadOnlyDictionary<Key, IState> transitions)

@@ -3,9 +3,10 @@ using JetBrains.Annotations;
 
 namespace Generic.Core
 {
+    [PublicAPI]
     public static class Disposable
     {
-        public static readonly IDisposable Empty = EmptyDisposable.Instance;
+        public static IDisposable Empty { get; } = EmptyDisposable.Instance;
 
         [MustDisposeResource]
         public static IDisposable Create(Action disposeAction)
@@ -22,7 +23,7 @@ namespace Generic.Core
         [MustDisposeResource]
         private sealed class EmptyDisposable : IDisposable
         {
-            public static readonly IDisposable Instance = new EmptyDisposable();
+            public static IDisposable Instance { get; } = new EmptyDisposable();
 
             private EmptyDisposable() { }
 
@@ -73,6 +74,7 @@ namespace Generic.Core
             }
         }
 
+        [PublicAPI]
         [MustDisposeResource]
         public sealed class Bag : IDisposable
         {

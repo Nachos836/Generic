@@ -10,6 +10,7 @@ namespace Generic.Core.FinalStateMachine
 {
     public abstract partial class StateMachine
     {
+        [PublicAPI]
         public sealed class Mutable : StateMachine
         {
             private readonly ConcurrentDictionary<Key, IState> _transitions = new ();
@@ -39,9 +40,9 @@ namespace Generic.Core.FinalStateMachine
             public Mutable AddTransition<TTrigger>(IState from, IState to)
             {
                 var key = Key.Create<TTrigger>(from);
-                if (_transitions.TryAdd(key, to) is false) throw new ArgumentException($"Transition {typeof(TTrigger).Name} is already added!");
-
-                return this;
+                return _transitions.TryAdd(key, to)
+                    ? this
+                    : throw new ArgumentException($"Transition {typeof(TTrigger).Name} is already added!");
             }
         }
     }

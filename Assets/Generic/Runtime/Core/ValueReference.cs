@@ -5,19 +5,13 @@ using JetBrains.Annotations;
 
 namespace Generic.Core
 {
+    [PublicAPI]
     public sealed class ValueReference<T> where T : struct
     {
         private T? _value;
 
-        public ValueReference(T value)
-        {
-            Value = value;
-        }
-
-        public ValueReference()
-        {
-            Value = null;
-        }
+        public ValueReference(T value) => Value = value;
+        public ValueReference() => Value = null;
 
         [MustUseReturnValue]
         public bool TryGetValue([NotNullWhen(returnValue: true)] out T? value)

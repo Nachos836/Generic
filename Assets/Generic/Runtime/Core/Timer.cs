@@ -2,10 +2,12 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Cysharp.Threading.Tasks.Linq;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace Generic.Core
 {
+    [PublicAPI]
     public readonly struct Timer
     {
         private readonly TimeSpan _duration;

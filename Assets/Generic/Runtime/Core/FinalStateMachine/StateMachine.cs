@@ -13,6 +13,7 @@ using JetBrains.Annotations;
 
 namespace Generic.Core.FinalStateMachine
 {
+    [PublicAPI]
     [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
     public abstract partial class StateMachine
     {

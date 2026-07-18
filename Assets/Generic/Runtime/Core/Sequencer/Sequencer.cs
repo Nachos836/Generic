@@ -3,9 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Functional.Async;
+using JetBrains.Annotations;
 
 namespace Generic.Core.Sequencer
 {
+    [PublicAPI]
     [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
     public sealed class Sequencer
     {

@@ -3,12 +3,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using Functional.Core.Outcome;
 using JetBrains.Annotations;
 
 namespace Generic.Core
 {
+    [PublicAPI]
     [Obsolete("WIP: Use on your own risk!")]
     public sealed class MPMCEventBus : IDisposable
     {
@@ -24,7 +24,7 @@ namespace Generic.Core
             return Disposable.CreateWithState
             (
                 state: new Subscription(index, _subscribers),
-                disposeAction: subscription => subscription.List[subscription.Index] = null
+                disposeAction: static subscription => subscription.List[subscription.Index] = null
             );
         }
 

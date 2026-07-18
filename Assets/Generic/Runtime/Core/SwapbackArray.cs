@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace Generic.Core
 {
+    [PublicAPI]
     [Obsolete("WIP: Use on your own risk!")]
     public struct SwapbackArray<T>
     {
@@ -97,8 +98,10 @@ namespace Generic.Core
                 _index = -1;
             }
 
+            [UsedImplicitly]
             public readonly ref readonly T Current => ref _readOnlyView[_index]!;
 
+            [UsedImplicitly]
             public bool MoveNext()
             {
                 ++_index;

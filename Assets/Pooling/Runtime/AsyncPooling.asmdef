@@ -2,8 +2,16 @@
     "name": "AsyncPooling",
     "rootNamespace": "",
     "references": [
+        "GUID:148b9497abf05ab4182762ab24770896",
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "GUID:5c01796d064528144a599661eaab93a6"
+        "GUID:5c01796d064528144a599661eaab93a6",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:8baa6eabecd47164e94a1eb92b18f394",
+        "GUID:4f5c0c83dfd6a0743834baba2b4de79e",
+        "GUID:2665a8d13d1b3f18800f46e256720795",
+        "GUID:9c6dda6c7922c624cb7ea9a7f1c7d54a",
+        "GUID:dade192bce6283141ab2563dd99e022e"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

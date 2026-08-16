@@ -2,17 +2,35 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
 namespace Generic.Core
 {
     [PublicAPI]
-    [Obsolete("WIP: Use on your own risk!")]
+    [StructLayout(LayoutKind.Sequential)]
     public struct SwapbackArray<T>
     {
         private T[] _items;
 
-        public int Count { get; private set; }
+        public int Count
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private set;
+        }
+
+        public int Capacity
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _items.Length;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => ResizeIfNeeded(value);
+        }
 
         public SwapbackArray(int capacity = 16)
         {
@@ -23,7 +41,7 @@ namespace Generic.Core
         public SwapbackArray(ReadOnlySpan<T> items)
         {
             _items = new T[items.Length];
-            Count = items.Length;
+            Count = _items.Length;
 
             items.CopyTo(_items);
         }
@@ -31,9 +49,15 @@ namespace Generic.Core
         public SwapbackArray(ICollection<T> items)
         {
             _items = new T[items.Count];
-            Count = items.Count;
+            Count = _items.Length;
 
             items.CopyTo(_items, 0);
+        }
+
+        public SwapbackArray(T[] items)
+        {
+            _items = new T[items.Length];
+            Count = _items.Length;
         }
 
         [MustDisposeResource]
@@ -51,6 +75,35 @@ namespace Generic.Core
             Count = 0;
         }
 
+        /// <summary>
+        /// Sets the length of this list, increasing the capacity if necessary.
+        /// </summary>
+        /// <remarks>Does not clear newly allocated bytes.</remarks>
+        /// <param name="length">The new length of this list.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ResizeUninitialized(int length) => ResizeIfNeeded(length);
+
+        /// <summary>
+        /// The element at a given index.
+        /// </summary>
+        /// <param name="index">An index into this list.</param>
+        /// <value>The value to store at the `index`.</value>
+        /// <exception cref="IndexOutOfRangeException">Thrown if `index` is out of bounds.</exception>
+        public T this[int index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _items[index];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _items[index] = value;
+        }
+
+        public IEnumerable<T> this[Range range]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _items[range];
+        }
+
         public readonly Enumerator GetEnumerator() => new (_items.AsSpan());
 
         private void RemoveAt(int index)
@@ -65,12 +118,14 @@ namespace Generic.Core
             Count--;
         }
 
-        private void ResizeIfNeeded(int capacity)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ResizeIfNeeded(int newCapacity)
         {
-            if (_items.Length >= capacity) return;
+            if (_items.Length >= newCapacity) return;
 
-            var newCapacity = Math.Max(_items.Length * 2, capacity);
-            Array.Resize(ref _items, newCapacity);
+            newCapacity = Math.Max(Capacity * 2, newCapacity);
+            Capacity = newCapacity;
+            Array.Resize(ref _items, Capacity);
         }
 
         public struct RemoveHandler : IDisposable

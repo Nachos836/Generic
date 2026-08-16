@@ -1,4 +1,6 @@
-﻿using System;
+﻿#pragma warning disable UAC1004
+
+using System;
 using UnityEngine;
 
 namespace Generic.Samples

@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.generic",
 	"displayName": "Unity Code Snippets",
-	"version": "0.10.0",
+	"version": "0.11.0",
 	"unity": "6000.5",
 	"description": "Function style helpers and misc stuff",
 	"keywords": ["Code", "Patterns"],

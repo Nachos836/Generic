@@ -4,7 +4,6 @@ using InspectorAttributes;
 using Samples.References;
 using UnityEngine;
 
-// ReSharper disable once CheckNamespace
 namespace Generic.Samples
 {
     internal sealed class BehaviourWithLoopsInInspectableReferenceAttribute : MonoBehaviour
@@ -18,6 +17,7 @@ namespace Generic.Samples
         private void OnEnable()
         {
             _ = _nodes;
+            _ = _start;
         }
     }
 

@@ -3,13 +3,15 @@
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Cysharp.Threading.Tasks.Linq;
+using JetBrains.Annotations;
 
-// ReSharper disable CheckNamespace
 namespace Pooling
 {
+    [PublicAPI]
     public sealed class AsyncPool<T> : IDisposable
     {
         private readonly Func<CancellationToken, UniTask<T>> _toCreate;
@@ -40,10 +42,8 @@ namespace Pooling
             Func<TState, int, CancellationToken, UniTask<T[]>> bulkCreate,
             CancellationToken cancellation = default
         ) {
-            var items = _items;
-
             return bulkCreate.Invoke(state, amount, cancellation)
-                .ContinueWith(results => items.PushRange(results));
+                .ContinueWith(_items.PushRange);
         }
 
         public async UniTask<ObjectHandler<T>> GetAsync
@@ -226,11 +226,12 @@ namespace Pooling
                     var left = amount - obtained;
                     if (left == 0) return;
 
+                    var toCreate = _toCreate;
                     bulkCreate ??= (_, count) => UniTaskAsyncEnumerable.Create<T>(async (localWriter, token) =>
                     {
                         for (var i = 0; i < count && token.IsCancellationRequested == false; ++i)
                         {
-                            var candidate = await _toCreate(token);
+                            var candidate = await toCreate(token);
                             await localWriter.YieldAsync(candidate);
                         }
                     });
@@ -303,18 +304,36 @@ namespace Pooling
         }
     }
 
+    [PublicAPI]
     public struct ObjectHandler<T> : IDisposable
     {
         private readonly AsyncPool<T> _pool;
+        private readonly T _value;
         private bool _disposed;
 
-        public readonly T Value;
+        public readonly T Value
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)] get
+            {
+                #if DEBUG || ENABLE_UNITY_COLLECTIONS_CHECKS
+                {
+                    return _disposed is false
+                        ? _value
+                        : throw new ObjectDisposedException(nameof(ObjectHandler<T>));
+                }
+                #else
+                {
+                    return _value;
+                }
+                #endif
+            }
+        }
 
         internal ObjectHandler(AsyncPool<T> pool, T value)
         {
             _disposed = false;
             _pool = pool;
-            Value = value;
+            _value = value;
         }
 
         public void Dispose()

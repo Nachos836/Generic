@@ -9,6 +9,13 @@ using JetBrains.Annotations;
 namespace Generic.Core
 {
     [PublicAPI]
+    public static class SwapbackArray
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SwapbackArray<T> AsSwapback<T>(this T[] array) => array;
+    }
+
+    [PublicAPI]
     [StructLayout(LayoutKind.Sequential)]
     public struct SwapbackArray<T>
     {
@@ -83,6 +90,8 @@ namespace Generic.Core
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ResizeUninitialized(int length) => ResizeIfNeeded(length);
 
+        public T[] AsArray() => this;
+
         /// <summary>
         /// The element at a given index.
         /// </summary>
@@ -98,12 +107,19 @@ namespace Generic.Core
             set => _items[index] = value;
         }
 
-        public IEnumerable<T> this[Range range]
+        public T[] this[Range range]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _items[range];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator T[](SwapbackArray<T> income) => income._items;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator SwapbackArray<T>(T[] array) => new (array);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Enumerator GetEnumerator() => new (_items.AsSpan());
 
         private void RemoveAt(int index)

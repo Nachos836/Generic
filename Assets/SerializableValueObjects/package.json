@@ -1,8 +1,8 @@
 {
 	"name": "com.nachos836.serializable-value-objects",
 	"displayName": "Serializable Value Objects",
-	"version": "0.8.6",
-	"unity": "2022.3",
+	"version": "0.9.0",
+	"unity": "6000.5",
 	"description": "Set of Serializable Value Objects with UI Toolkit in mind",
 	"keywords": ["Editor", "Serialization", "UIToolkit"],
 	"license": "MIT",
@@ -20,21 +20,7 @@
 		"revision": "master"
 	},
 	"dependencies": {
-		"org.nuget.system.collections.immutable": "10.0.3",
 		"com.nachos836.dot-net-compat": "https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat"
 	},
-	"scopedRegistries": [
-		{
-			"name": "OpenUPM",
-			"url": "https://package.openupm.com",
-			"scopes": [
-				"package.openupm.com",
-				"org.nuget.system.buffers",
-				"org.nuget.system.collections.immutable",
-				"org.nuget.system.memory",
-				"org.nuget.system.numerics.vectors",
-				"org.nuget.system.runtime.compilerservices.unsafe"
-			]
-		}
-	]
+	"scopedRegistries": []
 }

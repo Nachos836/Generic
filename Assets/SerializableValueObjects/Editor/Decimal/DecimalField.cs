@@ -8,6 +8,7 @@ using UnityEngine.UIElements;
 
 namespace SerializableValueObjects.Editor.Decimal
 {
+    /// <inheritdoc />
     /// <summary>
     /// Makes a text field for entering decimals
     /// </summary>

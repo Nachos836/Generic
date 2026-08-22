@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using UnityEditor;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace SerializableValueObjects.Editor.TimeSpan
 
     [Serializable]
     [CustomPropertyDrawer(typeof(SerializableTimeSpan))]
+    [SuppressMessage("Serialization", "UAC1002:Inheritance hierarchy incomplete serialization")]
     internal sealed class SerializableTimeSpanDrawer : PropertyDrawer
     {
         [SerializeField] private VisualTreeAsset _propertyGUI = default!;

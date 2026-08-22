@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -12,6 +13,7 @@ namespace SerializableValueObjects.Editor.Dictionary
 {
     [Serializable]
     [CustomPropertyDrawer(typeof(SerializableDictionary<,>), true)]
+    [SuppressMessage("Serialization", "UAC1002:Inheritance hierarchy incomplete serialization")]
     internal sealed class SerializableDictionaryDrawer : PropertyDrawer
     {
         private const string DuplicatedSubclass = "duplicated";

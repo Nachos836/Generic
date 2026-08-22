@@ -3,7 +3,7 @@
 // ReSharper disable UnusedParameter.Local
 
 // Members MUST be public (so other assemblies could reach members)
-// It's not the only meant to be using by CLR
+// It's meant to be using by CLR exclusively
 namespace System.Runtime.CompilerServices
 {
     public sealed class RequiredMemberAttribute : Attribute { }

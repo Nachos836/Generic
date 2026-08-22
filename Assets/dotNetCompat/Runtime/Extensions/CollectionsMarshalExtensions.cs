@@ -18,9 +18,7 @@ namespace dotNetCompat.Extensions
     {
         [MethodImpl(AggressiveInlining)]
         public static ReadOnlySpan<T> AsReadOnlySpan<T>(this List<T> list)
-        {
-            return new ReadOnlySpan<T>(new ListCastHelper(list).GetArray<T>(), 0, list.Count);
-        }
+            => new(new ListCastHelper(list).GetArray<T>(), 0, list.Count);
 
         /// <summary>
         /// Returns a reference to the 0th element of <paramref name="array"/>. If the array is empty, returns a reference to where the 0th element
@@ -32,7 +30,8 @@ namespace dotNetCompat.Extensions
         /// if the caller wishes to write to the returned reference.
         /// </remarks>
         [MethodImpl(AggressiveInlining)]
-        public static ref T GetArrayDataReference<T>(T[] array) => ref Unsafe.As<byte, T>(ref GetArrayDataReference(Unsafe.As<Array>(array)));
+        public static ref T GetArrayDataReference<T>(T[] array)
+            => ref Unsafe.As<byte, T>(ref GetArrayDataReference(Unsafe.As<Array>(array)));
 
         /// <summary>
         /// Returns a reference to the 0th element of <paramref name="array"/>. If the array is empty, returns a reference to where the 0th element

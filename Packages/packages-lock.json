@@ -11,9 +11,7 @@
       "version": "file:../Assets/dotNetCompat",
       "depth": 0,
       "source": "local",
-      "dependencies": {
-        "org.nuget.system.runtime.compilerservices.unsafe": "6.1.2"
-      }
+      "dependencies": {}
     },
     "com.nachos836.functional": {
       "version": "https://github.com/Nachos836/Functional.git?path=Assets/Functional",
@@ -92,7 +90,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.27",
+      "version": "2.0.28",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -162,13 +160,6 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
-    },
-    "org.nuget.system.runtime.compilerservices.unsafe": {
-      "version": "6.1.2",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://package.openupm.com"
     },
     "com.unity.modules.animation": {
       "version": "1.0.0",

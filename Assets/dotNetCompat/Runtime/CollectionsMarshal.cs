@@ -31,7 +31,7 @@ namespace System.Runtime.InteropServices
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<T> AsSpan<T>(List<T>? list)
         {
-            Span<T> span = default;
+            Span<T> span = Span<T>.Empty;
             if (list is null) return span;
 
             var listData = Unsafe.As<List<T>, ListDataHelper<T>>(ref list);
@@ -94,10 +94,7 @@ namespace System.Runtime.InteropServices
         /// </remarks>
         public static void SetCount<T>(List<T> list, int count)
         {
-            if (count < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(count), "Non-negative number required.");
-            }
+            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count), "Non-negative number required.");
 
             // list._version++;
             ref var listData = ref Unsafe.As<List<T>, ListDataHelper<T>>(ref list);

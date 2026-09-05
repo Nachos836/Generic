@@ -1,17 +1,16 @@
 ﻿#nullable enable
 
 using System;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
+using Unity.Collections;
 using UnityEngine;
 
 namespace Pooling.Bulk
 {
     [PublicAPI]
-    public interface IPooledOperations
+    public interface IPooledOperations<in TPooled> where TPooled : MonoBehaviour
     {
-        UniTask Get(Span<GameObject> instances, CancellationToken cancellation = default);
-        UniTask Release(Span<GameObject> instances, CancellationToken cancellation = default);
+        Action<TPooled[]>? AdditionalWarmupAction { get; }
+        Action<NativeArray<EntityId>.ReadOnly, Range>? CustomGetAction { get; }
     }
 }

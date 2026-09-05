@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.pooling",
 	"displayName": "Unity Object Pooling",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"unity": "6000.5",
 	"description": "Async Pooling solution for Unity",
 	"keywords": ["Pool", "Async"],

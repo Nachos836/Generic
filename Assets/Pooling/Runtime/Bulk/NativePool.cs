@@ -25,19 +25,24 @@ namespace Pooling.Bulk
         public static UniTask<NativePool<TPooled, TPooledOperationRunner>> CreateAsync<TPooled, TPooledOperationRunner>
         (
             NativePoolServiceScene nativePoolServiceScene,
+            TPooledOperationRunner operationRunner,
             TPooled prototype,
             int requestedCapacity,
             int requestedParallelism = -1,
             CancellationToken cancellation = default
         )
             where TPooled : MonoBehaviour
-            where TPooledOperationRunner : struct, IPooledOperations
+            where TPooledOperationRunner : struct, IPooledOperations<TPooled>
         {
-            return NativePool<TPooled, TPooledOperationRunner>.CreateAsync(nativePoolServiceScene,
-                                                                           prototype,
-                                                                           requestedCapacity,
-                                                                           requestedParallelism,
-                                                                           cancellation);
+            return NativePool<TPooled, TPooledOperationRunner>.CreateAsync
+            (
+                nativePoolServiceScene,
+                operationRunner,
+                prototype,
+                requestedCapacity,
+                requestedParallelism,
+                cancellation
+            );
         }
     }
 
@@ -47,7 +52,7 @@ namespace Pooling.Bulk
     /// </summary>
     public sealed class NativePool<TPooled, TPooledOperationRunner> : IDisposable
         where TPooled : MonoBehaviour
-        where TPooledOperationRunner : struct, IPooledOperations
+        where TPooledOperationRunner : struct, IPooledOperations<TPooled>
     {
         private readonly Scene _scene;
         private readonly TPooled _prototype;
@@ -61,12 +66,14 @@ namespace Pooling.Bulk
         private SwapbackArray<TPooled> _freeInstances;
 
         private NativePoolServiceScene.Handle _serviceSceneHandle;
+        private TPooledOperationRunner _operationRunner;
 
         private bool _disposed;
 
         internal static async UniTask<NativePool<TPooled, TPooledOperationRunner>> CreateAsync
         (
             NativePoolServiceScene nativePoolServiceScene,
+            TPooledOperationRunner operationRunner,
             TPooled prototype,
             int requestedCapacity,
             int requestedParallelism = -1,
@@ -122,19 +129,24 @@ namespace Pooling.Bulk
 
             UnityEngine.Object.Destroy(rootSample);
 
-            return new NativePool<TPooled, TPooledOperationRunner>(scene,
-                                                                   immutablePrototype,
-                                                                   parallelism,
-                                                                   freeTransforms,
-                                                                   freeEntities,
-                                                                   jobTransforms,
-                                                                   jobEntities,
-                                                                   instantiateParameters,
-                                                                   serviceSceneHandle);
+            return new NativePool<TPooled, TPooledOperationRunner>
+            (
+                operationRunner,
+                scene,
+                immutablePrototype,
+                parallelism,
+                freeTransforms,
+                freeEntities,
+                jobTransforms,
+                jobEntities,
+                instantiateParameters,
+                serviceSceneHandle
+            );
         }
 
         private NativePool
         (
+            TPooledOperationRunner operationRunner,
             Scene scene,
             TPooled prototype,
             int requestedParallelism,
@@ -145,6 +157,7 @@ namespace Pooling.Bulk
             InstantiateParameters[] instantiateParameters,
             NativePoolServiceScene.Handle serviceSceneHandle
         ) {
+            _operationRunner = operationRunner;
             _scene = scene;
             _prototype = prototype;
             _parallelism = requestedParallelism;
@@ -187,6 +200,8 @@ namespace Pooling.Bulk
                     var (instances, offset) = operation.Result;
                     for (var index = 0; index != instances.Length; ++index)
                     {
+                        _operationRunner.AdditionalWarmupAction?.Invoke(instances);
+
                         var instance = instances[index];
                         var place = index * _parallelism + offset;
                         _freeEntities[place] = instance.gameObject.GetEntityId();
@@ -207,7 +222,7 @@ namespace Pooling.Bulk
             in NativeArray<Vector3>.ReadOnly positions,
             in NativeArray<Quaternion>.ReadOnly rotations,
             in NativeArray<Vector3>.ReadOnly scales,
-            List<TPooled> instances,
+            List<TPooled>? instances = null,
             JobHandle dependency = default
         ) {
             CheckIfDisposed();
@@ -224,9 +239,20 @@ namespace Pooling.Bulk
                 Rotations = rotations,
                 Scales = scales
             }.Schedule(_jobTransforms, dependency);
-            GameObject.SetGameObjectsActive(_jobEntities.AsReadOnlySpan()[..amount], active: true);
 
-            instances.AddRange(_freeInstances[..amount]);
+            if (_operationRunner.CustomGetAction is { } action)
+            {
+                action(_jobEntities.AsReadOnly(), ..amount);
+            }
+            else
+            {
+                GameObject.SetGameObjectsActive(_jobEntities.AsReadOnlySpan()[..amount], active: true);
+            }
+
+            if (instances is not null)
+            {
+                instances.AddRange(_freeInstances[..amount]);
+            }
 
             return initializationJob;
         }

@@ -11,7 +11,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Pool;
 
-namespace Samples.Pooling
+namespace Generic.Samples.Pooling
 {
     internal sealed class PoolRoot : MonoBehaviour
     {
@@ -27,6 +27,7 @@ namespace Samples.Pooling
         private NativeArray<Quaternion>? _rotations;
         private NativeArray<Vector3>? _scales;
         private List<SpawnedObject>? _obtainedInstances;
+        private SpawnedObjectOperations _objectsOperations;
         private PooledObject<List<SpawnedObject>>? _instancesHandler;
 
         // ReSharper disable once Unity.IncorrectMethodSignature
@@ -35,10 +36,15 @@ namespace Samples.Pooling
         {
             _enabled = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken, CancellationToken.None);
             _poolServiceScene = new NativePoolServiceScene();
-            _pool = await NativePool.CreateAsync<SpawnedObject, SpawnedObjectOperations>(_poolServiceScene,
-                                                                                         _prototype,
-                                                                                         _maxCapacity,
-                                                                                         cancellation: _enabled.Token);
+            _objectsOperations = new SpawnedObjectOperations();
+            _pool = await NativePool.CreateAsync
+            (
+                _poolServiceScene,
+                _objectsOperations,
+                _prototype,
+                _maxCapacity,
+                cancellation: _enabled.Token
+            );
              _instancesHandler = ListPool<SpawnedObject>.Get(out _obtainedInstances);
         }
 

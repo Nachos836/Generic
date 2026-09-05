@@ -1,26 +1,20 @@
-﻿using System;
-using System.Threading;
-using Cysharp.Threading.Tasks;
+﻿#nullable enable
+
+using System;
 using Pooling.Bulk;
+using Unity.Collections;
 using UnityEngine;
 
-namespace Samples.Pooling
+namespace Generic.Samples.Pooling
 {
     internal sealed class SpawnedObject : MonoBehaviour
     {
 
     }
 
-    internal readonly struct SpawnedObjectOperations : IPooledOperations
+    internal readonly struct SpawnedObjectOperations : IPooledOperations<SpawnedObject>
     {
-        public UniTask Get(Span<GameObject> instances, CancellationToken cancellation = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public UniTask Release(Span<GameObject> instances, CancellationToken cancellation = default)
-        {
-            throw new NotImplementedException();
-        }
+        public Action<SpawnedObject[]>? AdditionalWarmupAction => null;
+        public Action<NativeArray<EntityId>.ReadOnly, Range>? CustomGetAction => null;
     }
 }

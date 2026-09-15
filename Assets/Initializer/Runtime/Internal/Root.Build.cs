@@ -14,17 +14,15 @@ namespace Initializer
             if (_instance == this) throw new InvalidOperationException("Root should be set only once!");
 
             _instance = Enable(this);
-
-            Debug.Log("[ROOT] Build Awake is called!");
+            _instance.Logger?.Log("[ROOT] Build Awake is called!");
         }
 
         private void OnDestroy()
         {
             if (_instance != this) throw new InvalidOperationException("Root is not set!");
 
+            _instance.Logger?.Log("[ROOT] Build OnDestroy is called!");
             _instance = Disable(this);
-
-            Debug.Log("[ROOT] Build OnDestroy is called!");
         }
     }
 }

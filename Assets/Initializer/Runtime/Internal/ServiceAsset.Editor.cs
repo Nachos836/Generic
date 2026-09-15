@@ -1,8 +1,8 @@
-﻿using System;
-
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 
 #nullable enable
+
+using System;
 
 namespace Initializer
 {

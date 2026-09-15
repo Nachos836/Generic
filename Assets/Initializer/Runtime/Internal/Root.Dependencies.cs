@@ -7,10 +7,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Unity.Scripting.LifecycleManagement;
 using UnityEditor;
 using UnityEngine;
 
 using static System.Reflection.BindingFlags;
+
 using Object = UnityEngine.Object;
 
 namespace Initializer
@@ -21,14 +23,8 @@ namespace Initializer
     {
         private static readonly List<ServiceAsset> InstancesCache = new ();
 
-        internal static IReadOnlyCollection<Type> AllPotentialServicesTypes { get; } = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(static assembly =>
-            {
-                try { return assembly.GetTypes(); }
-                catch { return Array.Empty<Type>(); }
-            })
-            .Where(static type => type.IsAbstract is false && typeof(ServiceAsset).IsAssignableFrom(type))
-            .ToArray();
+        private static TypeCache.TypeCollection? _allPotentialServicesTypesCache;
+        internal static TypeCache.TypeCollection AllPotentialServicesTypes => _allPotentialServicesTypesCache ??= TypeCache.GetTypesDerivedFrom<ServiceAsset>();
 
         internal List<ServiceAsset> Services => _services;
 
@@ -67,9 +63,9 @@ namespace Initializer
                 }
             }
 
-            if (TryResolveDependencies(_services))
+            if (TryResolveDependencies(_services, Logger))
             {
-                SortDependencies(_services);
+                SortDependencies(_services, Logger);
             }
 
             EditorUtility.SetDirty(this);
@@ -87,22 +83,22 @@ namespace Initializer
                 }
             }
 
-            if (TryResolveDependencies(_services))
+            if (TryResolveDependencies(_services, Logger))
             {
-                SortDependencies(_services);
+                SortDependencies(_services, Logger);
             }
 
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssets();
         }
 
-        private static bool TryResolveDependencies(in List<ServiceAsset> services)
+        private static bool TryResolveDependencies(in List<ServiceAsset> services, in ILogger? logger)
         {
             if (services.Count == 0) return false;
 
             if (services.Distinct().Count() != services.Count)
             {
-                Debug.LogError("[ROOT] Duplicated service detected. Ensure all services are unique!");
+                logger?.Log(LogType.Error, message: "[ROOT] Duplicated service detected. Ensure all services are unique!");
 
                 return false;
             }
@@ -118,11 +114,14 @@ namespace Initializer
                 {
                     var dependencyType = field.FieldType;
 
-                    var dependency = services.SingleOrDefault(candidate => dependencyType.IsInstanceOfType(candidate));
+                    var dependency = services.SingleOrDefault(dependencyType.IsInstanceOfType);
                     if (dependency == null)
                     {
-                        Debug.LogErrorFormat("[ROOT] Could not resolve dependency {0} in service {1}",
-                            dependencyType.Name, service.name);
+                        if (logger is { logEnabled: true })
+                        {
+                            logger.LogFormat(LogType.Error, "[ROOT] Could not resolve dependency {0} in service {1}",
+                                dependencyType.Name, service.name);
+                        }
 
                         return false;
                     }
@@ -135,26 +134,27 @@ namespace Initializer
             return true;
         }
 
-        private static void SortDependencies(List<ServiceAsset> services)
+        private static void SortDependencies(List<ServiceAsset> services, in ILogger? logger)
         {
             if (services.Count == 0) return;
+
             if (services.Any(static service => service == null))
             {
-                Debug.LogError("[ROOT] Null service detected in services. Ensure all services are set!");
+                logger?.Log(LogType.Error, message: "[ROOT] Null service detected in services. Ensure all services are set!");
                 return;
             }
 
-            TopologicalSort(services);
+            TopologicalSort(services, in logger);
         }
 
-        private static void TopologicalSort<T>(List<T> items) where T : class
+        private static void TopologicalSort<T>(List<T> items, in ILogger? logger) where T : class
         {
             var inDegree = items.ToDictionary(static item => item, static _ => 0);
             var graph = items.ToDictionary(static item => item, static _ => new List<T>());
 
             foreach (var item in items)
             {
-                if (TryGetDependencies(item, out var dependencies) is false) continue;
+                if (TryGetDependencies(logger, item, out var dependencies) is false) continue;
 
                 foreach (var dependency in dependencies)
                 {
@@ -193,42 +193,58 @@ namespace Initializer
                 return;
             }
 
-            Debug.LogError("[ROOT] Cycle detected in services, sort failed.");
+            logger?.Log(LogType.Error, message: "[ROOT] Cycle detected in services, sort failed.");
         }
 
-        private static bool TryGetDependencies<T>(T service, [NotNullWhen(returnValue: true)] out IReadOnlyCollection<T>? dependencies) where T : class
+        private static bool TryGetDependencies<T>(ILogger? logger, T service, [NotNullWhen(returnValue: true)] out IEnumerable<T>? dependencies) where T : class
         {
             var fields = service.GetType()
                 .GetFields(BindingFlags.Instance | Public | NonPublic)
                 .Where(static field => field.IsPublic || field.GetCustomAttribute<SerializeField>() != null)
                 .Where(static filed => typeof(T).IsAssignableFrom(filed.FieldType));
-            using var fieldsEnumerator = fields.GetEnumerator();
+            var fieldsEnumerator = fields.GetEnumerator();
 
             if (fieldsEnumerator.MoveNext() is false)
             {
+                fieldsEnumerator.Dispose();
                 dependencies = null;
                 return false;
             }
 
-            var dependenciesList = new List<T>();
-            do
-            {
-                var dependency = (T?) fieldsEnumerator.Current?.GetValue(service);
-                if (dependency == null)
-                {
-                    Debug.LogErrorFormat("[ROOT] Null dependency {0} detected in {1}!",
-                        fieldsEnumerator.Current?.Name, service.GetType().Name);
-
-                    dependencies = null;
-                    return false;
-                }
-
-                dependenciesList.Add(dependency);
-
-            } while (fieldsEnumerator.MoveNext());
-
-            dependencies = dependenciesList;
+            dependencies = GatherDependencies();
             return true;
+
+            IEnumerable<T> GatherDependencies()
+            {
+                try
+                {
+                    do
+                    {
+                        var dependency = (T?) fieldsEnumerator.Current?.GetValue(service);
+                        if (dependency == null)
+                        {
+                            if (logger is { logEnabled: true })
+                            {
+                                logger.LogFormat(LogType.Assert, " [ROOT] Null dependency {0} detected in {1}!", fieldsEnumerator.Current?.Name, service.GetType().Name);
+                            }
+                        }
+
+                        yield return dependency!;
+
+                    } while (fieldsEnumerator.MoveNext());
+                }
+                finally
+                {
+                    fieldsEnumerator.Dispose();
+                }
+            }
+        }
+
+        [ClearCacheBetweenCodeLoads]
+        private static void Cleanup()
+        {
+            InstancesCache.Clear();
+            _allPotentialServicesTypesCache = null;
         }
     }
 }

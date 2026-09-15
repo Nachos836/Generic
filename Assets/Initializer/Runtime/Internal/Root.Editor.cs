@@ -68,14 +68,13 @@ namespace Initializer
             {
                 if (EditorApplication.isPlayingOrWillChangePlaymode is false) return false;
 
-                Debug.Log("[ROOT] EditorAwake is called!");
-
                 foreach (ref var candidate in PlayerSettings.GetPreloadedAssets().AsSpan())
                 {
                     var initializable = candidate as Root;
                     if (!initializable) continue;
 
                     instance = initializable;
+                    instance.Logger?.Log("[ROOT] EditorAwake is called!");
                     return true;
                 }
 

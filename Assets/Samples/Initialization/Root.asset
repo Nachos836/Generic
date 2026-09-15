@@ -24,18 +24,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18a1e493baa8446b96117b35e31bc60d, type: 3}
   m_Name: DummyService7
   m_EditorClassIdentifier: 
---- !u!114 &-5698496596763404179
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a6027fc231d3407394e24a0dfe2bda9d, type: 3}
-  m_Name: DummyService3
-  m_EditorClassIdentifier: 
 --- !u!114 &-3819978648763966996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -61,18 +49,6 @@ MonoBehaviour:
   m_Name: DummyService2
   m_EditorClassIdentifier: 
   _service: {fileID: -3819978648763966996}
---- !u!114 &-1812721734392602087
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6dd711521a84c03a5672e596a812dba, type: 3}
-  m_Name: DummyService10
-  m_EditorClassIdentifier: 
 --- !u!114 &-454418051415452694
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116,9 +92,9 @@ MonoBehaviour:
   - {fileID: 5956477798308571578}
   - {fileID: -3819978648763966996}
   - {fileID: 1029087853191941184}
-  - {fileID: -1812721734392602087}
   - {fileID: -454418051415452694}
-  - {fileID: -5698496596763404179}
+  - {fileID: 9132038874424592943}
+  - {fileID: 1660902279283302270}
   - {fileID: -2973332606863154168}
 --- !u!114 &1029087853191941184
 MonoBehaviour:
@@ -132,6 +108,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e440c21db2934ff1b7bc2aae1aa170fe, type: 3}
   m_Name: DummyService9
   m_EditorClassIdentifier: 
+--- !u!114 &1660902279283302270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6027fc231d3407394e24a0dfe2bda9d, type: 3}
+  m_Name: DummyService3
+  m_EditorClassIdentifier: Assembly-CSharp::Generic.Samples.Initialization.Services.DummyService3
 --- !u!114 &5956477798308571578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -144,3 +132,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 019993e169c644e082194062e568234f, type: 3}
   m_Name: DummyService4
   m_EditorClassIdentifier: 
+--- !u!114 &9132038874424592943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6dd711521a84c03a5672e596a812dba, type: 3}
+  m_Name: DummyService10
+  m_EditorClassIdentifier: Assembly-CSharp::Generic.Samples.Initialization.Services.DummyService10

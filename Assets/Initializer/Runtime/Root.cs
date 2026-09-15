@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using dotNetCompat.Extensions;
 using JetBrains.Annotations;
+using Unity.Scripting.LifecycleManagement;
 using UnityEngine;
 
 namespace Initializer
@@ -18,6 +19,11 @@ namespace Initializer
         [SerializeField] private List<ServiceAsset> _services = new ();
 
         private static Root? _instance;
+
+        /// <summary>
+        /// You can provide your own custom logger or set it to <see langword="null"/> to disable it completely;
+        /// </summary>
+        [PublicAPI] public ILogger? Logger { private get; set; } = Debug.unityLogger;
 
         /// <summary>
         /// Controverts the main design philosophy! <br/>
@@ -68,7 +74,7 @@ namespace Initializer
         [MustUseReturnValue]
         private static Root Enable(in Root root)
         {
-            Debug.Log("[ROOT] Enable is called!");
+            root.Logger?.Log("[ROOT] Enable is called!");
 
             foreach (ref readonly var service in root._services.AsReadOnlySpan())
             {
@@ -84,7 +90,7 @@ namespace Initializer
         [MustUseReturnValue]
         private static Root? Disable(in Root root)
         {
-            Debug.Log("[ROOT] Disable is called!");
+            root.Logger?.Log("[ROOT] Disable is called!");
 
             foreach (ref readonly var service in root._services.AsReadOnlySpan())
             {
@@ -95,6 +101,12 @@ namespace Initializer
             }
 
             return null;
+        }
+
+        [ClearCacheBetweenCodeLoads]
+        private static void ClearInstance()
+        {
+            _instance = null;
         }
     }
 }

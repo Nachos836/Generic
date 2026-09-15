@@ -11,9 +11,15 @@ namespace Generic.Core.Sequencer
     public interface IStage
     {
         [PublicAPI]
-        public interface WithTransition
+        public interface WithTransition : IStage
         {
             UniTask<AsyncResult<IStage>> TransitAsync(CancellationToken cancellation = default);
+        }
+
+        [PublicAPI]
+        public interface WithDataReceiver<T> : IStage
+        {
+            void Receive(in T data);
         }
     }
 }

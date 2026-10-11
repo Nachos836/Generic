@@ -1,0 +1,4 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd">
+    <ui:Button name="WarmupButton" text="Warmup"/>
+    <ui:Button name="GetButton" text="Get"/>
+</ui:UXML>

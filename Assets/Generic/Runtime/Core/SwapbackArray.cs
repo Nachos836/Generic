@@ -65,15 +65,16 @@ namespace Generic.Core
         {
             _items = new T[items.Length];
             Count = _items.Length;
+
+            items.CopyTo(_items, 0);
         }
 
-        [MustDisposeResource]
-        public RemoveHandler Add(T item)
+        public void Add(T item)
         {
             ResizeIfNeeded(Count + 1);
             _items[Count] = item;
 
-            return new RemoveHandler(this, Count++);
+            Count++;
         }
 
         public void Clear()
@@ -113,6 +114,8 @@ namespace Generic.Core
             get => _items[range];
         }
 
+        public ReadOnlySpan<T> AsSpan(int start, int length) => _items.AsSpan(start, length);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator T[](SwapbackArray<T> income) => income._items;
 
@@ -120,7 +123,7 @@ namespace Generic.Core
         public static implicit operator SwapbackArray<T>(T[] array) => new (array);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Enumerator GetEnumerator() => new (_items.AsSpan());
+        public readonly ReadOnlySpan<T>.Enumerator GetEnumerator() => ((ReadOnlySpan<T>) _items.AsSpan()[..Count]).GetEnumerator();
 
         private void RemoveAt(int index)
         {
@@ -142,43 +145,6 @@ namespace Generic.Core
             newCapacity = Math.Max(Capacity * 2, newCapacity);
             Capacity = newCapacity;
             Array.Resize(ref _items, Capacity);
-        }
-
-        public struct RemoveHandler : IDisposable
-        {
-            private readonly int _index;
-            private SwapbackArray<T> _collection;
-
-            internal RemoveHandler(SwapbackArray<T> collection, int index)
-            {
-                _collection = collection;
-                _index = index;
-            }
-
-            public void Dispose() => _collection.RemoveAt(_index);
-        }
-
-        public ref struct Enumerator
-        {
-            private readonly ReadOnlySpan<T> _readOnlyView;
-            private int _index;
-
-            internal Enumerator(ReadOnlySpan<T> readOnlyView)
-            {
-                _readOnlyView = readOnlyView;
-                _index = -1;
-            }
-
-            [UsedImplicitly]
-            public readonly ref readonly T Current => ref _readOnlyView[_index]!;
-
-            [UsedImplicitly]
-            public bool MoveNext()
-            {
-                ++_index;
-
-                return _index < _readOnlyView.Length - 1;
-            }
         }
     }
 }

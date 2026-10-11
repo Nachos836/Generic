@@ -26,7 +26,6 @@ namespace Generic.Samples.Pooling
         private NativeArray<Vector3>? _positions;
         private NativeArray<Quaternion>? _rotations;
         private NativeArray<Vector3>? _scales;
-        private List<SpawnedObject>? _obtainedInstances;
         private SpawnedObjectOperations _objectsOperations;
         private PooledObject<List<SpawnedObject>>? _instancesHandler;
 
@@ -45,18 +44,17 @@ namespace Generic.Samples.Pooling
                 _maxCapacity,
                 cancellation: _enabled.Token
             );
-             _instancesHandler = ListPool<SpawnedObject>.Get(out _obtainedInstances);
         }
 
         [ContextMenu(nameof(WarmUp))]
-        private void WarmUp()
+        internal void WarmUp()
         {
             _pool?.WarmupAsync(_warmupTimeBudget, destroyCancellationToken)
                 .Forget();
         }
 
         [ContextMenu(nameof(Spawn))]
-        private void Spawn()
+        internal void Spawn()
         {
             _positions?.Dispose();
             _positions = PopulatePositions(_spawnAmount);
@@ -65,12 +63,14 @@ namespace Generic.Samples.Pooling
             _scales?.Dispose();
             _scales = PopulateScales(_spawnAmount);
 
-            _pool?.Get(_spawnAmount,
-                       _positions.Value.AsReadOnly(),
-                       _rotations.Value.AsReadOnly(),
-                       _scales.Value.AsReadOnly(),
-                       _obtainedInstances!)
-                   .Complete();
+            _pool?.GetAsync
+            (
+                _spawnAmount,
+                _positions.Value.AsReadOnly(),
+                _rotations.Value.AsReadOnly(),
+                _scales.Value.AsReadOnly(),
+                frameBudget: TimeSpan.FromSeconds(5)
+            ).Forget();
         }
 
         [ContextMenu(nameof(Release))]

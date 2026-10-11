@@ -1,6 +1,8 @@
-﻿#if DEVELOPMENT_BUILD || !UNITY_EDITOR
+﻿#if DEBUG || !UNITY_EDITOR
+// ReSharper disable RedundantUsingDirective
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
+// ReSharper enable RedundantUsingDirective
 #endif
 
 using UnityEngine;
@@ -14,7 +16,7 @@ namespace Debug.Runtime
         #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         [SerializeField] private AssetReferenceGameObject _debugConsole;
 
-#   if DEVELOPMENT_BUILD && !UNITY_EDITOR
+#   if DEBUG && !UNITY_EDITOR
 
         private bool _consoleWasLoaded;
 

@@ -1,7 +1,7 @@
 {
 	"name": "com.nachos836.pooling",
 	"displayName": "Unity Object Pooling",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"unity": "6000.5",
 	"description": "Async Pooling solution for Unity",
 	"keywords": ["Pool", "Async"],
@@ -20,7 +20,8 @@
 		"revision": "master"
 	},
 	"dependencies": {
-		"com.cysharp.unitask": "2.5.11"
+		"com.cysharp.unitask": "2.5.11",
+		"com.nachos836.dot-net-compat" : "https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat"
 	},
 	"scopedRegistries": [
 		{

@@ -1,12 +1,14 @@
 ﻿#nullable enable
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using dotNetCompat.Extensions;
 using JetBrains.Annotations;
 using Unity.Burst;
 using Unity.Collections;
@@ -17,8 +19,8 @@ using UnityEngine.Jobs;
 using UnityEngine.Pool;
 using UnityEngine.SceneManagement;
 
-using Object = UnityEngine.Object;
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace Pooling.Bulk
 {
@@ -34,7 +36,6 @@ namespace Pooling.Bulk
             TPooled prototype,
             int requestedCapacity,
             int requestedParallelism = -1,
-            int stashLayer = -1,
             CancellationToken cancellation = default
         )
             where TPooled : MonoBehaviour
@@ -47,7 +48,6 @@ namespace Pooling.Bulk
                 prototype,
                 requestedCapacity,
                 requestedParallelism,
-                stashLayer,
                 cancellation
             );
         }
@@ -65,13 +65,11 @@ namespace Pooling.Bulk
         private readonly TPooled _prototype;
         private readonly int _parallelism;
         private readonly InstantiateParameters[] _instantiateParameter;
+
         /// <summary> Sibling-index paths from instance root to each top-most <see cref="SensitiveLogicRoot"/>. Empty when none. </summary>
-        /// <summary> Sibling-index paths from instance root to each top-most <see cref="SensitiveLogicRoot"/>. Empty when none. </summary>
-        private readonly int[][] _sensitivePaths;
-        /// <summary> Sibling-index paths to collider-owning GameObjects warmed up on the stash layer. Empty when stashing is disabled. </summary>
-        private readonly int[][] _stashPaths;
-        /// <summary> Original layers for <see cref="_stashPaths"/>, restored after warmup. </summary>
-        private readonly int[] _stashLayers;
+        private NativeList<FixedList64Bytes<int>> _sensitivePaths;
+        /// <summary> Stashed GameObjects: original layer plus sibling-index path. Empty when nothing is stashed. </summary>
+        private NativeList<StashEntry> _stashEntries;
 
         private NativeList<TransformHandle> _freeTransforms;
         private NativeList<EntityId> _freeEntities;
@@ -91,13 +89,11 @@ namespace Pooling.Bulk
             TPooled prototype,
             int requestedCapacity,
             int requestedParallelism,
-            int stashLayer,
             CancellationToken cancellation
         ) {
             if (cancellation.IsCancellationRequested) throw new OperationCanceledException();
-            if (prototype ==null) throw new ArgumentNullException(nameof(prototype));
+            if (prototype == null) throw new ArgumentNullException(nameof(prototype));
             if (requestedCapacity <= 0) throw new ArgumentOutOfRangeException(nameof(requestedCapacity));
-            if (stashLayer >= 0) ValidateStashLayer(stashLayer);
 
             var rawParallelism = requestedParallelism > 0 ? requestedParallelism : JobsUtility.JobWorkerCount;
             var parallelism = math.ceilpow2(math.min(rawParallelism, requestedCapacity));
@@ -105,79 +101,115 @@ namespace Pooling.Bulk
             var capacityPerRoot = math.max(1, totalCapacity / parallelism);
 
             var serviceSceneHandle = nativePoolServiceScene.AcquireSceneHandle();
-            var instantiatePrototype = await Object.InstantiateAsync
-            (
-                prototype,
-                position: new Vector3(x: 0, y: -999999, z: 0),
-                rotation: Quaternion.identity,
-                new InstantiateParameters
+            GameObject? prototypeGameObject = null;
+            Scene scene = default;
+            var sensitivePaths = new NativeList<FixedList64Bytes<int>>(Allocator.Persistent);
+            var stashEntries = new NativeList<StashEntry>(Allocator.Persistent);
+            try
+            {
+                var instantiatePrototype = await Object.InstantiateAsync
+                (
+                    prototype,
+                    position: new Vector3(x: 0, y: -999999, z: 0),
+                    rotation: Quaternion.identity,
+                    new InstantiateParameters
+                    {
+                        originalImmutable = true,
+                        scene = serviceSceneHandle.Scene
+                    },
+                    cancellation
+                );
+                var immutablePrototype = instantiatePrototype.Single();
+                prototypeGameObject = immutablePrototype.gameObject;
+                prototypeGameObject.name = prototype.name;
+                prototypeGameObject.SetActive(false);
+
+                var prototypeRoot = prototypeGameObject.transform;
+                using (ListPool<SensitiveLogicRoot>.Get(out var markers))
                 {
-                    originalImmutable = true,
-                    scene = serviceSceneHandle.Scene
-                },
-                cancellation
-            );
-            var immutablePrototype = instantiatePrototype.Single();
-            var prototypeGameObject = immutablePrototype.gameObject;
-            prototypeGameObject.name = prototype.name;
-            prototypeGameObject.SetActive(false);
+                    prototypeRoot.GetComponentsInChildren(includeInactive: true, markers);
 
-            var sensitivePaths = CollectSensitivePaths(prototypeGameObject.transform);
-            foreach (var path in sensitivePaths)
-            {
-                Resolve(prototypeGameObject.transform, path).gameObject.SetActive(false);
-            }
+                    CollectSensitivePaths(prototypeRoot, markers, sensitivePaths);
+                    StashColliders(prototypeRoot, markers, stashEntries); // flips layers: clones inherit them
 
-            var (stashPaths, stashLayers) = StashColliders(prototypeGameObject.transform, stashLayer);
+                    foreach (var path in sensitivePaths)
+                    {
+                        Resolve(prototypeRoot, path).gameObject.SetActive(false);
+                    }
 
-            var rootSample = new GameObject { isStatic = true };
-            var scene = SceneManager.CreateScene($"[Pool] {prototypeGameObject.name}");
-            var bucketRoots = await Object.InstantiateAsync(rootSample, parallelism, new InstantiateParameters
-            {
-                parent = null,
-                scene = scene,
-                worldSpace = false,
-                originalImmutable = true
-            }, cancellation);
+                    // Authoring data is fully consumed: clones are completely born without the marker.
+                    // Immediate is safe: it is a scene copy, not an asset, and WarmupAsync may run this very frame.
+                    foreach (var marker in markers)
+                    {
+                        Object.DestroyImmediate(marker);
+                    }
+                }
 
-            var instantiateParameters = new InstantiateParameters[parallelism];
-            for (var i = 0; i < parallelism; ++i)
-            {
-                var root = bucketRoots[i];
-                root.name = $"Bucket #{i:00} [{i * capacityPerRoot :0000} .. {(i + 1) * capacityPerRoot :0000}]";
-                instantiateParameters[i] = new InstantiateParameters
+                scene = SceneManager.CreateScene($"[Pool] {prototypeGameObject.name}");
+                var rootSample = new GameObject { isStatic = true };
+                GameObject[] bucketRoots;
+                try
                 {
-                    parent = root.GetComponent<Transform>(),
-                    scene = scene,
-                    worldSpace = false,
-                    originalImmutable = true
-                };
+                    bucketRoots = await Object.InstantiateAsync(rootSample, parallelism, new InstantiateParameters
+                    {
+                        parent = null,
+                        scene = scene,
+                        worldSpace = false,
+                        originalImmutable = true
+                    }, cancellation);
+                }
+                finally
+                {
+                    Object.Destroy(rootSample);
+                }
+
+                var instantiateParameters = new InstantiateParameters[parallelism];
+                for (var i = 0; i < parallelism; ++i)
+                {
+                    var root = bucketRoots[i];
+                    root.name = $"Bucket #{i:00} [{i * capacityPerRoot :0000} .. {(i + 1) * capacityPerRoot :0000}]";
+                    instantiateParameters[i] = new InstantiateParameters
+                    {
+                        parent = root.GetComponent<Transform>(),
+                        scene = scene,
+                        worldSpace = false,
+                        originalImmutable = true
+                    };
+                }
+
+                // No awaits below: nothing can be interrupted after these allocations.
+                var freeTransforms = new NativeList<TransformHandle>(requestedCapacity, Allocator.Persistent);
+                var freeEntities = new NativeList<EntityId>(freeTransforms.Capacity, Allocator.Persistent);
+                var jobTransforms = new TransformAccessArray(freeTransforms.Capacity, desiredJobCount: parallelism);
+                var jobEntities = new NativeList<EntityId>(freeTransforms.Capacity, Allocator.Persistent);
+                var sensitiveRoots = new NativeList<EntityId>(freeTransforms.Capacity * sensitivePaths.Length, Allocator.Persistent);
+
+                return new NativePool<TPooled, TPooledOperationRunner>
+                (
+                    operationRunner,
+                    scene,
+                    immutablePrototype,
+                    parallelism,
+                    freeTransforms,
+                    freeEntities,
+                    jobTransforms,
+                    jobEntities,
+                    sensitiveRoots,
+                    sensitivePaths,
+                    stashEntries,
+                    instantiateParameters,
+                    serviceSceneHandle
+                );
             }
-            var freeTransforms = new NativeList<TransformHandle>(requestedCapacity, Allocator.Persistent);
-            var freeEntities = new NativeList<EntityId>(freeTransforms.Capacity, Allocator.Persistent);
-            var jobTransforms = new TransformAccessArray(freeTransforms.Capacity, desiredJobCount: parallelism);
-            var jobEntities = new NativeList<EntityId>(freeTransforms.Capacity, Allocator.Persistent);
-            var sensitiveRoots = new NativeList<EntityId>(freeTransforms.Capacity * sensitivePaths.Length, Allocator.Persistent);
-
-            Object.Destroy(rootSample);
-
-            return new NativePool<TPooled, TPooledOperationRunner>
-            (
-                operationRunner,
-                scene,
-                immutablePrototype,
-                parallelism,
-                freeTransforms,
-                freeEntities,
-                jobTransforms,
-                jobEntities,
-                sensitiveRoots,
-                sensitivePaths,
-                stashPaths,
-                stashLayers,
-                instantiateParameters,
-                serviceSceneHandle
-            );
+            catch
+            {
+                sensitivePaths.Dispose();
+                stashEntries.Dispose();
+                if (prototypeGameObject != null) Object.Destroy(prototypeGameObject);
+                if (scene.IsValid() && scene.isLoaded) SceneManager.UnloadSceneAsync(scene);
+                serviceSceneHandle.Dispose();
+                throw;
+            }
         }
 
         private NativePool
@@ -185,86 +217,82 @@ namespace Pooling.Bulk
             TPooledOperationRunner operationRunner,
             Scene scene,
             TPooled prototype,
-            int requestedParallelism,
+            int parallelism,
             NativeList<TransformHandle> freeTransforms,
             NativeList<EntityId> freeEntities,
             TransformAccessArray jobTransforms,
             NativeList<EntityId> jobEntities,
             NativeList<EntityId> sensitiveRoots,
-            int[][] sensitivePaths,
-            int[][] stashPaths,
-            int[] stashLayers,
+            NativeList<FixedList64Bytes<int>> sensitivePaths,
+            NativeList<StashEntry> stashEntries,
             InstantiateParameters[] instantiateParameter,
             NativePoolServiceScene.Handle serviceSceneHandle
         ) {
             _operationRunner = operationRunner;
             _scene = scene;
             _prototype = prototype;
-            _parallelism = requestedParallelism;
+            _parallelism = parallelism;
             _freeTransforms = freeTransforms;
             _freeEntities = freeEntities;
             _jobTransforms = jobTransforms;
             _jobEntities = jobEntities;
             _sensitiveRoots = sensitiveRoots;
             _sensitivePaths = sensitivePaths;
-            _stashPaths = stashPaths;
-            _stashLayers = stashLayers;
+            _stashEntries = stashEntries;
             _instantiateParameter = instantiateParameter;
             _serviceSceneHandle = serviceSceneHandle;
         }
 
         public async UniTask WarmupAsync(TimeSpan timeBudget, CancellationToken cancellation = default)
         {
+            CheckIfDisposed();
             if (timeBudget < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeBudget));
 
             var step = timeBudget / _parallelism;
             var formerBudget = AsyncInstantiateOperation.GetIntegrationTimeMS();
             var desired = _freeTransforms.Capacity;
             var elementsPerRoot = desired / _parallelism;
+            var restorePlan = CreateRestorePlan(desired);
+            var spawnDelay = TimeSpan.Zero;
             try
             {
                 AsyncInstantiateOperation.SetIntegrationTimeMS((float) step.TotalMilliseconds);
-                var operations = new UniTask<(TPooled[] Instances, int Offset)>[_parallelism];
+                using var operations = ArrayPool<UniTask<(TPooled[] Items, int Offset)>>.Shared.RentSegment(_parallelism);
 
                 for (var index = 0; index != _parallelism; ++index)
                 {
                     var parameter = _instantiateParameter[index];
                     var offset = index;
-                    var instantiating = Object.InstantiateAsync(_prototype, elementsPerRoot, parameter, cancellation);
-                    operations[index] = instantiating.ToUniTask(timing: PlayerLoopTiming.Initialization, cancellationToken: cancellation)
-                                                     .ContinueWith(result => (result, offset));
+
+                    var operation = UniTask.Delay(spawnDelay, delayType: DelayType.Realtime, PlayerLoopTiming.Initialization, cancellation, cancelImmediately: true)
+                        .ContinueWith(() => Object.InstantiateAsync(_prototype, elementsPerRoot, parameter, cancellation)
+                                                  .ToUniTask(timing: PlayerLoopTiming.Initialization, cancellationToken: cancellation, cancelImmediately: true)
+                                                  .ContinueWith(result => (result, offset)));
+
+                    operations.Values[index] = operation;
+
+                    spawnDelay += step;
                 }
 
-                var rootsPerInstance = _sensitivePaths.Length;
-                _sensitiveRoots.ResizeUninitialized(desired * rootsPerInstance);
-                var stashedPerInstance = _stashPaths.Length;
-                var stashed = stashedPerInstance == 0 ? Array.Empty<GameObject>() : new GameObject[desired * stashedPerInstance];
-                await foreach (var operation in UniTask.WhenEach(operations))
+                _sensitiveRoots.ResizeUninitialized(desired * _sensitivePaths.Length);
+                _freeEntities.ResizeUninitialized(desired);
+                _freeTransforms.ResizeUninitialized(desired);
+
+                var instantiateStream = operations.CanProvideArray(out var tasks)
+                    ? UniTask.WhenEach(tasks)
+                    : UniTask.WhenEach(operations.Values);
+                await foreach (var operation in instantiateStream)
                 {
                     var (instances, offset) = operation.Result;
                     _operationRunner.AdditionalWarmupAction?.Invoke(instances);
 
                     for (var index = 0; index != instances.Length; ++index)
                     {
-                        var instance = instances[index];
-                        var place = index * _parallelism + offset;
-                        _freeEntities[place] = instance.gameObject.GetEntityId();
-                        _freeTransforms[place] = instance.transformHandle;
-
-                        for (var inner = 0; inner != rootsPerInstance; ++inner)
-                        {
-                            var sensitive = Resolve(instance.transform, _sensitivePaths[inner]);
-                            _sensitiveRoots[place * rootsPerInstance + inner] = sensitive.gameObject.GetEntityId();
-                        }
-
-                        for (var inner = 0; inner != stashedPerInstance; ++inner)
-                        {
-                            stashed[place * stashedPerInstance + inner] = Resolve(instance.transform, _stashPaths[inner]).gameObject;
-                        }
+                        RegisterInstance(instances[index], place: index * _parallelism + offset, restorePlan);
                     }
                 }
 
-                await PreActivateAsync(chunk: elementsPerRoot, stashed, cancellation);
+                await PreActivateAsync(chunk: elementsPerRoot, cancellation);
 
                 // Base roots are guaranteed inactive here: flipping activeSelf on children is callback-free.
                 // From now on the very first Get activates the whole hierarchy in one wave.
@@ -272,6 +300,9 @@ namespace Pooling.Bulk
             }
             finally
             {
+                // Everything is inactive here: layer change is filter-refresh-free. Only collected instances are in the plan.
+                RestoreLayers(restorePlan);
+                DisposePlan(restorePlan);
                 AsyncInstantiateOperation.SetIntegrationTimeMS(formerBudget);
             }
         }
@@ -342,124 +373,166 @@ namespace Pooling.Bulk
             }
         }
 
-        /// <summary>
-        /// Pays first-activation costs (Awake, renderer registration, PhysX shape creation, shader warmup)
-        /// during warmup instead of the first <see cref="Get"/>.
-        /// </summary>
-        private async UniTask PreActivateAsync(int chunk, GameObject[] stashed, CancellationToken cancellation)
+        /// <summary> Registers one freshly instantiated clone: pool slot, sensitive roots, and stashed owners. </summary>
+        private void RegisterInstance(TPooled instance, int place, NativeHashMap<int, NativeList<EntityId>> restorePlan)
+        {
+            var root = instance.transform;
+            _freeEntities[place] = instance.gameObject.GetEntityId();
+            _freeTransforms[place] = instance.transformHandle;
+
+            var rootsPerInstance = _sensitivePaths.Length;
+            for (var inner = 0; inner != rootsPerInstance; ++inner)
+            {
+                var sensitive = Resolve(root, _sensitivePaths.ElementAt(inner));
+                _sensitiveRoots[place * rootsPerInstance + inner] = sensitive.gameObject.GetEntityId();
+            }
+
+            for (var inner = 0; inner != _stashEntries.Length; ++inner)
+            {
+                ref readonly var entry = ref _stashEntries.ElementAt(inner);
+                var owners = restorePlan[entry.OriginalLayer]; // copy shares the buffer
+                owners.AddNoResize(Resolve(root, entry.Path).gameObject.GetEntityId());
+            }
+        }
+
+        /// <summary> Pre-sized "original layer → owners" map: capacity is exact, so registration never reallocates. </summary>
+        private NativeHashMap<int, NativeList<EntityId>> CreateRestorePlan(int desired)
+        {
+            Span<int> perLayer = stackalloc int[32];
+            perLayer.Clear();
+
+            var groups = 0;
+            foreach (var entry in _stashEntries)
+            {
+                if (perLayer[entry.OriginalLayer]++ == 0) ++groups;
+            }
+
+            var plan = new NativeHashMap<int, NativeList<EntityId>>(math.max(1, groups), Allocator.Persistent);
+            for (var layer = 0; layer != perLayer.Length; ++layer)
+            {
+                if (perLayer[layer] == 0) continue;
+
+                plan.Add(layer, new NativeList<EntityId>(desired * perLayer[layer], Allocator.Persistent));
+            }
+            return plan;
+        }
+
+        private async UniTask PreActivateAsync(int chunk, CancellationToken cancellation)
         {
             var total = _freeEntities.Length;
-            var restored = 0;
-            try
+            for (var offset = 0; offset < total && cancellation.IsCancellationRequested is false; offset += chunk)
             {
-                for (var offset = 0; offset < total && cancellation.IsCancellationRequested is false; offset += chunk)
+                var count = math.min(chunk, total - offset);
+
+                GameObject.SetGameObjectsActive(_freeEntities.AsReadOnlySpan().Slice(offset, count), active: true);
+                try
                 {
-                    var count = math.min(chunk, total - offset);
-
-                    GameObject.SetGameObjectsActive(_freeEntities.AsReadOnlySpan().Slice(offset, count), active: true);
-                    try
-                    {
-                        if (await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellation)
-                                .SuppressCancellationThrow()) return;
-                    }
-                    finally
-                    {
-                        GameObject.SetGameObjectsActive(_freeEntities.AsReadOnlySpan().Slice(offset, count),
-                            active: false);
-                        // Inactive objects have no live PhysX shapes: layer change is filter-refresh free.
-                        RestoreLayers(stashed, offset, count);
-                        restored = offset + count;
-                    }
-
-                    if (await UniTask.Yield(PlayerLoopTiming.Initialization, cancellation)
-                            .SuppressCancellationThrow()) return;
+                    if (await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, cancellation)
+                        .SuppressCancellationThrow()) return;
                 }
-            }
-            finally
-            {
-                // Never leave not-yet-warmed instances on the stash layer: they would be collision-less forever.
-                RestoreLayers(stashed, restored, total - restored);
+                finally
+                {
+                    GameObject.SetGameObjectsActive(_freeEntities.AsReadOnlySpan().Slice(offset, count), active: false);
+                }
+
+                if (await UniTask.Yield(PlayerLoopTiming.Initialization, cancellation)
+                    .SuppressCancellationThrow()) return;
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void RestoreLayers(GameObject[] stashed, int offset, int count)
+        private static void RestoreLayers(NativeHashMap<int, NativeList<EntityId>> plan)
         {
-            var perInstance = _stashLayers.Length;
-            if (perInstance == 0 || count <= 0) return;
+            if (plan.IsEmpty) return;
 
-            for (var place = offset; place != offset + count; ++place)
+            var largest = 0;
+            foreach (var pair in plan)
             {
-                var start = place * perInstance;
-                for (var k = 0; k != perInstance; ++k)
+                largest = math.max(largest, pair.Value.Length);
+            }
+
+            using var _ = ListPool<Object>.Get(out var writeBuffer);
+            var readBuffer = Unsafe.As<List<GameObject>>(writeBuffer);
+            writeBuffer.Capacity = math.max(writeBuffer.Capacity, largest);
+
+            foreach (var pair in plan)
+            {
+                writeBuffer.Clear();
+                Resources.EntityIdsToObjectList(pair.Value.AsArray(), writeBuffer);
+
+                // TODO: swap for a batch API once Unity exposes one — the plan is already "layer → entities".
+                var originalLayer = pair.Key;
+                foreach (ref readonly var owner in readBuffer.AsReadOnlySpan())
                 {
-                    stashed[start + k].layer = _stashLayers[k];
+                    owner.layer = originalLayer;
                 }
             }
         }
 
-        private static void ValidateStashLayer(int layer)
+        private static void DisposePlan(NativeHashMap<int, NativeList<EntityId>> plan)
         {
-            if ((uint) layer > 31) throw new ArgumentOutOfRangeException(nameof(layer));
-
-            // Self-collision included: all instances are warmed up overlapping each other.
-            for (var other = 0; other != 32; ++other)
+            foreach (var pair in plan)
             {
-                if (Physics.GetIgnoreLayerCollision(layer, other)) continue;
+                pair.Value.Dispose();
+            }
+            plan.Dispose();
+        }
 
-                throw new ArgumentException($"Stash layer '{LayerMask.LayerToName(layer)}' ({layer}) must ignore collisions with every layer, " +
-                                            $"but collides with '{LayerMask.LayerToName(other)}' ({other}).", nameof(layer));
+        /// <summary> Collects paths to top-most markers only: nested ones are switched off together with their ancestor. </summary>
+        private static void CollectSensitivePaths(Transform root, List<SensitiveLogicRoot> markers, NativeList<FixedList64Bytes<int>> paths)
+        {
+            foreach (ref readonly var marker in markers.AsReadOnlySpan())
+            {
+                var target = marker.transform;
+                if (target == root)
+                    throw new InvalidOperationException($"{nameof(SensitiveLogicRoot)} must not be placed on the pooled root itself: '{root.name}'");
+
+                if (IsUnderSensitiveRoot(root, target.parent)) continue;
+
+                paths.Add(PathOf(root, target));
             }
         }
 
         /// <summary>
-        /// Collects colliders explicitly declared by <see cref="SensitiveLogicRoot.StashedColliders"/>,
-        /// remembers their original layers and moves them to <paramref name="stashLayer"/>. Instances inherit it on cloning.
+        /// Runs once on the immutable prototype copy: moves declared owners to their marker's stash layer
+        /// and records where they are and which layer to give back.
         /// </summary>
-        private static (int[][] Paths, int[] Layers) StashColliders(Transform root, int stashLayer)
+        private static void StashColliders(Transform root, List<SensitiveLogicRoot> markers, NativeList<StashEntry> entries)
         {
-            var markers = root.GetComponentsInChildren<SensitiveLogicRoot>(includeInactive: true);
-            if (markers.Length == 0) return (Array.Empty<int[]>(), Array.Empty<int>());
+            if (markers.Count == 0) return;
 
-            var owners = new List<GameObject>();
-            var visited = new HashSet<GameObject>();
+            using var _ = HashSetPool<GameObject>.Get(out var visited);
             foreach (var marker in markers)
             {
+                var stash = marker.StashLayer;
                 foreach (var collider in marker.StashedColliders)
                 {
                     if (collider == null) continue;
 
                     var owner = collider.gameObject;
-                    if (owner.transform.IsChildOf(root) is false)
+                    // First marker wins: a second visit would read the stash layer as "original".
+                    if (visited.Add(owner) is false) continue;
+
+                    var target = owner.transform;
+                    if (target.IsChildOf(root) is false)
                         throw new InvalidOperationException($"Stashed collider '{owner.name}' of '{marker.name}' is outside of the pooled hierarchy '{root.name}'");
 
-                    if (IsUnderSensitiveRoot(root, owner.transform))
+                    if (IsUnderSensitiveRoot(root, target))
                     {
                         Debug.LogWarning($"[Pool] Stashed collider '{owner.name}' is inside a sensitive subtree and is skipped.", marker);
                         continue;
                     }
 
-                    if (visited.Add(owner)) owners.Add(owner);
+                    var original = owner.layer;
+                    if (original == stash) continue;
+
+                    entries.Add(new StashEntry(original, PathOf(root, target)));
+                    owner.layer = stash;
                 }
             }
-
-            if (owners.Count == 0) return (Array.Empty<int[]>(), Array.Empty<int>());
-            if (stashLayer < 0)
-                throw new ArgumentException($"'{root.name}' declares {owners.Count} stashed collider owner(s), but no stash layer was provided.", nameof(stashLayer));
-
-            var paths = new int[owners.Count][];
-            var layers = new int[owners.Count];
-            for (var i = 0; i != owners.Count; ++i)
-            {
-                var owner = owners[i];
-                paths[i] = PathOf(root, owner.transform);
-                layers[i] = owner.layer;
-                owner.layer = stashLayer;
-            }
-
-            return (paths, layers);
         }
 
+        /// <summary> <paramref name="target"/> itself or any ancestor below <paramref name="root"/> carries a marker. </summary>
+        /// <remarks> Precondition: <paramref name="target"/> is <paramref name="root"/> or its descendant. </remarks>
         private static bool IsUnderSensitiveRoot(Transform root, Transform target)
         {
             for (var current = target; current != root; current = current.parent)
@@ -469,12 +542,16 @@ namespace Pooling.Bulk
             return false;
         }
 
-        private static int[] PathOf(Transform root, Transform target)
+        private static FixedList64Bytes<int> PathOf(Transform root, Transform target)
         {
             var depth = 0;
             for (var current = target; current != root; current = current.parent) ++depth;
 
-            var path = new int[depth];
+            var path = new FixedList64Bytes<int>();
+            if (depth > path.Capacity)
+                throw new InvalidOperationException($"'{target.name}' is {depth} levels deep in '{root.name}', max supported is {path.Capacity}");
+
+            path.Length = depth;
             for (var current = target; current != root; current = current.parent)
             {
                 path[--depth] = current.GetSiblingIndex();
@@ -482,49 +559,13 @@ namespace Pooling.Bulk
             return path;
         }
 
-        private static int[][] CollectSensitivePaths(Transform root)
-        {
-            var markers = root.GetComponentsInChildren<SensitiveLogicRoot>(includeInactive: true);
-            if (markers.Length == 0) return Array.Empty<int[]>();
-
-            using var pathsHandler = ListPool<int[]>.Get(out var paths);
-            paths.Capacity = markers.Length;
-            using var bufferHandler = ListPool<int>.Get(out var buffer);
-            buffer.Capacity = 8;
-
-            foreach (var marker in markers)
-            {
-                var target = marker.transform;
-                if (target == root) throw new InvalidOperationException($"{nameof(SensitiveLogicRoot)} must not be placed on the pooled root itself: '{root.name}'");
-
-                buffer.Clear();
-                var isTopMost = true;
-                for (var current = target; current != root; current = current.parent)
-                {
-                    if (current != target && current.TryGetComponent<SensitiveLogicRoot>(out _))
-                    {
-                        isTopMost = false;
-                        break;
-                    }
-                    buffer.Add(current.GetSiblingIndex());
-                }
-
-                if (isTopMost is false) continue;
-
-                buffer.Reverse();
-                paths.Add(buffer.ToArray());
-            }
-
-            return paths.ToArray();
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Transform Resolve(Transform root, int[] path)
+        private static Transform Resolve(Transform root, in FixedList64Bytes<int> path)
         {
             var current = root;
-            foreach (var index in path)
+            foreach (ref readonly var child in path.AsReadOnlySpan())
             {
-                current = current.GetChild(index);
+                current = current.GetChild(child);
             }
             return current;
         }
@@ -562,15 +603,14 @@ namespace Pooling.Bulk
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ActivateEntities(int offset, int count)
         {
+            var candidates = offset..(offset + count);
             if (_operationRunner.CustomGetAction is { } action)
             {
-                action(_jobEntities.AsReadOnly(), offset..(offset + count));
+                action(_jobEntities.AsReadOnly(), candidates);
             }
             else
             {
-                var entities = _jobEntities.AsReadOnlySpan()
-                    .Slice(offset, count);
-                GameObject.SetGameObjectsActive(entities, active: true);
+                GameObject.SetGameObjectsActive(_jobEntities.AsReadOnlySpan()[candidates], active: true);
             }
         }
 
@@ -580,13 +620,15 @@ namespace Pooling.Bulk
 
             _disposed = true;
 
-            Object.Destroy(_prototype);
+            if (_prototype != null) Object.Destroy(_prototype.gameObject);
 
             _freeTransforms.Dispose();
             _jobTransforms.Dispose();
             _freeEntities.Dispose();
             _jobEntities.Dispose();
             _sensitiveRoots.Dispose();
+            _sensitivePaths.Dispose();
+            _stashEntries.Dispose();
 
             if (_scene.isLoaded)
             {
@@ -605,6 +647,18 @@ namespace Pooling.Bulk
         private void CheckIfDisposed()
         {
             if (_disposed) throw new ObjectDisposedException(nameof(NativePool<TPooled, TPooledOperationRunner>));
+        }
+
+        private readonly struct StashEntry
+        {
+            public readonly int OriginalLayer;
+            public readonly FixedList64Bytes<int> Path; // sibling-index path from instance root to the owner
+
+            public StashEntry(int originalLayer, FixedList64Bytes<int> path)
+            {
+                OriginalLayer = originalLayer;
+                Path = path;
+            }
         }
 
         [BurstCompile]

@@ -65,7 +65,7 @@ namespace dotNetCompat.Extensions
             [FieldOffset(0)] private readonly StrongBox<Array> _strongBox;
 
             [MethodImpl(AggressiveInlining)]
-            public T[] GetArray<T>() => (T[]) _strongBox.Value;
+            public T[] GetArray<T>() => Unsafe.As<T[]>(_strongBox.Value);
 
             public ListCastHelper(IList list)
             {

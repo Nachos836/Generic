@@ -27,12 +27,10 @@ namespace InspectorAttributes.Editor.RequiredAttribute
             {
                 var isMissing = IsValueMissing(@event.changedProperty);
 
-                // Красим фон в полупрозрачный красный, если значения нет
                 propertyField.style.backgroundColor = isMissing
                     ? new StyleColor(new Color(1f, 0f, 0f, 0.15f))
                     : new StyleColor(StyleKeyword.Null);
 
-                // Добавляем красную рамку для заметности
                 propertyField.style.borderTopColor = isMissing ? Color.red : new StyleColor(StyleKeyword.Null);
                 propertyField.style.borderBottomColor = isMissing ? Color.red : new StyleColor(StyleKeyword.Null);
                 propertyField.style.borderLeftColor = isMissing ? Color.red : new StyleColor(StyleKeyword.Null);

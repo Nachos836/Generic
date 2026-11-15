@@ -166,8 +166,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoolRoot
   _prototype: {fileID: -5414353714807107621, guid: f7f5095c3551541448125f133eb4cc97, type: 3}
-  _maxCapacity: 102400
-  _spawnAmount: 22000
+  _maxCapacity: 10240
+  _spawnAmount: 2200
   _warmupTimeBudget:
     _displayUnit: 2
     _ticks: 50000000

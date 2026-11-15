@@ -22,11 +22,12 @@ namespace Generic.Samples
         }
 
 #if UNITY_EDITOR
-        partial class Drawer
+        internal partial class Drawer
         {
             private partial void ApplyCustomUIProcessing(ref VisualElement defaultRoot, ref VisualElement customRoot)
             {
                 defaultRoot.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+                customRoot.Add(new Label("Custom UI"));
             }
         }
 #endif

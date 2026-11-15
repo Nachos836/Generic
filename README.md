@@ -44,3 +44,8 @@ https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat
 ```
 https://github.com/Nachos836/Generic.git?path=Assets/Initializer
 ```
+
+(OPTIONAL) If you want to install NativeRefCollections add the following URL:
+```
+https://github.com/Nachos836/Generic.git?path=Assets/NativeRefCollections
+```

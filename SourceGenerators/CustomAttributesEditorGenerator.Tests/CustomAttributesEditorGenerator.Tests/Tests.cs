@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using InspectorAttributes;
+﻿using InspectorAttributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using NUnit.Framework;
@@ -42,19 +41,33 @@ public sealed class Tests
             
             """;
         var syntaxTree = CSharpSyntaxTree.ParseText(source);
-        var references = new[]
-        {
-            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(ConditionalAttribute).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(UnityEngine.MonoBehaviour).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(ButtonAttribute).Assembly.Location)
-        };
+        var platformAssemblies = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+        if (string.IsNullOrEmpty(platformAssemblies))
+            throw new InvalidOperationException("Runtime assembly paths are unavailable.");
+
+        var references = platformAssemblies
+            .Split(Path.PathSeparator)
+            .Concat(
+            [
+                typeof(ButtonDrawerGenerator).Assembly.Location,
+                typeof(UnityEngine.MonoBehaviour).Assembly.Location,
+                typeof(ButtonAttribute).Assembly.Location,
+                typeof(JetBrains.Annotations.UsedImplicitlyAttribute).Assembly.Location
+            ])
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(static path => MetadataReference.CreateFromFile(path));
         var compilation = CSharpCompilation.Create(
             assemblyName: "TestAssembly",
             syntaxTrees: [syntaxTree],
             references: references,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
         );
+
+        var inputErrors = compilation.GetDiagnostics()
+            .Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ToArray();
+
+        Assert.That(inputErrors, Is.Empty, string.Join(Environment.NewLine, inputErrors.Select(static diagnostic => diagnostic.ToString())));
 
         _driver.RunGeneratorsAndUpdateCompilation(compilation, out var newCompilation, out var diagnostics);
 

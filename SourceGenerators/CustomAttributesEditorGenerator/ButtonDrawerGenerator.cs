@@ -1,6 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CustomAttributesEditorGenerator;
@@ -12,58 +14,54 @@ public sealed class ButtonDrawerGenerator : IIncrementalGenerator
 {
     void IIncrementalGenerator.Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var candidateMethods = context.SyntaxProvider.CreateSyntaxProvider
-        (
-            predicate: static (node, token) =>
+        var analyzedMethods = context.SyntaxProvider.ForAttributeWithMetadataName(
+            fullyQualifiedMetadataName: CodeGenerator.ButtonAttributeFullName,
+            predicate: static (node, _) => node is MethodDeclarationSyntax,
+            transform: static (attributeContext, cancellationToken) => ButtonAnalysis.Analyze(attributeContext, cancellationToken))
+                .WithTrackingName("AnalyzeButtonMethods");
+
+        var diagnostics = analyzedMethods.Where(static result => result.Diagnostic is not null)
+            .Select(static (result, _) => result.Diagnostic!);
+
+        context.RegisterSourceOutput(diagnostics, static (productionContext, diagnostic) => productionContext.ReportDiagnostic(diagnostic));
+
+        var validMethods = analyzedMethods.Where(static result => result.Model is not null)
+            .Select(static (result, _) => result.Model!)
+            .WithComparer(EqualityComparer<DrawerModel>.Default)
+            .WithTrackingName("ButtonModels");
+
+        var owners = validMethods.Collect()
+            .SelectMany(static (models, cancellationToken) =>
             {
-                if (token.IsCancellationRequested) return false;
+                var result = ImmutableArray.CreateBuilder<DrawerModel>();
+                var grouping = models.GroupBy(static model => model.Identity, StringComparer.Ordinal)
+                    .OrderBy(static group => group.Key, StringComparer.Ordinal);
 
-                return node is MethodDeclarationSyntax { AttributeLists.Count: > 0 };
-            },
-            transform: static (context, token) => context.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax) context.Node, token)
+                foreach (var group in grouping)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-        ).Where(static symbol => symbol != null)
-            .WithTrackingName("CandidateMethods");
+                    var owner = group.First();
 
-        var attributeTypeProvider = context.CompilationProvider
-            .Select(static (compilation, _) => compilation.GetTypeByMetadataName(CodeGenerator.ButtonAttributeFullName));
-        var methodsWithButton = candidateMethods
-            .Combine(attributeTypeProvider)
-            .Where(static income =>
-            {
-                var method = income.Left;
-                var attributeSymbol = income.Right;
-                if (method is null || attributeSymbol is null) return false;
+                    var buttons = group.SelectMany(static model => model.Buttons)
+                        .OrderBy(static button => button.Name, StringComparer.Ordinal)
+                        .ToImmutableArray();
 
-                return method.GetAttributes()
-                    .Any(data =>
+                    result.Add(new DrawerModel
                     {
-                        var candidate = data.AttributeClass!;
-                        var left = candidate.ContainingNamespace;
-                        var right = attributeSymbol.ContainingNamespace;
-                        if (SymbolEqualityComparer.Default.Equals(left, right))
-                        {
-                            return candidate.Name == attributeSymbol.Name;
-                        }
-
-                        return false;
+                        Identity = owner.Identity,
+                        NamespaceName = owner.NamespaceName,
+                        OwnerName = owner.OwnerName,
+                        RequiresCustomUI = owner.RequiresCustomUI,
+                        Buttons = buttons
                     });
+                }
+
+                return result.ToImmutable();
             })
-            .Select(static (pair, token) => token.IsCancellationRequested ? null : pair.Left)
-            .WithTrackingName("MethodsWithButtonAttribute");
+            .WithComparer(EqualityComparer<DrawerModel>.Default)
+            .WithTrackingName("DrawerModels");
 
-        var grouped = methodsWithButton
-            .Where(static symbol => symbol is not null)
-            .Collect()
-            .SelectMany(static (methods, token) =>
-            {
-                if (token.IsCancellationRequested) return [];
-
-                return methods.Cast<IMethodSymbol>()
-                    .GroupBy(static symbol => symbol.ContainingType, SymbolEqualityComparer.Default);
-            })
-            .WithTrackingName("GroupMethodsByOwner");
-
-        context.RegisterSourceOutput(grouped, CodeGenerator.GenerateDrawer);
+        context.RegisterSourceOutput(owners, CodeGenerator.GenerateDrawer);
     }
 }

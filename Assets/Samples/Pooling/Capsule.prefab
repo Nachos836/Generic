@@ -228,6 +228,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: AsyncPooling::Pooling.SensitiveLogicRoot
   _stashedColliders:
   - {fileID: 8309589160513592761}
-  <StashLayer>k__BackingField:
+  _stashLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 4

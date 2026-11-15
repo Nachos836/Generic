@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.Globalization;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -10,81 +11,74 @@ namespace CustomAttributesEditorGenerator.Components;
 
 internal static class CodeGenerator
 {
-    public const string ButtonAttributeFullName = $"{nameof(InspectorAttributes)}.{nameof(InspectorAttributes.ButtonAttribute)}";
-    public const string CustomProcessingAttributeName = $"{nameof(InspectorAttributes.ApplyCustomUIProcessingAttribute)}";
+    public const string ButtonAttributeFullName = $"{nameof(InspectorAttributes)}." +
+                                                  $"{nameof(InspectorAttributes.ButtonAttribute)}";
 
-    private static readonly Version Version = new(1, 0, 0);
+    private static Version Version { get; } = new(major: 1, minor: 0, build: 0);
 
-    public static void GenerateDrawer(SourceProductionContext productionContext, IGrouping<ISymbol?, IMethodSymbol> methods)
+    public static void GenerateDrawer(SourceProductionContext productionContext, DrawerModel model)
     {
-        if (methods.Key is not INamedTypeSymbol container) return;
+        productionContext.CancellationToken.ThrowIfCancellationRequested();
 
-        var hasPartialDeclaration = container.DeclaringSyntaxReferences
-            .Select(static syntaxReference => syntaxReference.GetSyntax())
-            .OfType<ClassDeclarationSyntax>()
-            .Any(static declarationSyntax => declarationSyntax.Modifiers
-                .Any(static token => token.IsKind(PartialKeyword)));
+        var ownerName = model.OwnerName;
+        const string drawerName = "Drawer";
 
-        if (hasPartialDeclaration is false)
-        {
-            var location = container.Locations.FirstOrDefault() ?? Location.None;
-            productionContext.ReportDiagnostic(Diagnostic.Create
-            (
-                Diagnostics.MissingPartialDescriptor,
-                location,
-                messageArgs: container.Name
-            ));
-
-            return;
-        }
-
-        var detectCustomUIProcessing = container.GetAttributes()
-            .Any(static attribute => attribute.AttributeClass!.Name.Equals(CustomProcessingAttributeName));
-
-        var ownerName = container.Name.Replace("global::", "")
-            .Replace('<', '_')
-            .Replace('>', '_');
-        var drawerName = "Drawer";
-
-        var buttonDefineKey = ownerName + "RequireButton";
-        var customUIDefineKey = ownerName + "RequireCustomUIProcessing";
+        // These symbols are local to the generated source file.
+        const string buttonDefineKey = "INSPECTOR_BUTTONS_REQUIRED";
+        const string customUIDefineKey = "INSPECTOR_CUSTOM_UI_REQUIRED";
 
         var inspectorGUI = Method.CreateInspectorGUIMethod();
-        var buttonsDetectedPartialMethod = Method.CreateWhenButtonAttributeDetectedPartialMethod(buttonDefineKey);
-        var buttonsDetectedMethod = Method.CreateWhenButtonAttributeDetectedMethod(ownerName, methods);
-        var whenCustomUIProcessingRequired = Method.CreateWhenCustomAttributeDetectedPartialMethod(customUIDefineKey);
-        var whenCustomUIProcessingSkipped = Method.CreateWhenCustomAttributeMissedPartialMethod(customUIDefineKey);
+        var buttonsDeclaration = Method.CreateWhenButtonAttributeDetectedPartialMethod(buttonDefineKey);
+        var buttonsImplementation = Method.CreateWhenButtonAttributeDetectedMethod(ownerName, model.Buttons);
 
-        var drawerClass = Class.CreateClass(drawerName,
+        var customUI = model.RequiresCustomUI
+            ? Method.CreateWhenCustomAttributeDetectedPartialMethod(customUIDefineKey)
+            : Method.CreateWhenCustomAttributeMissedPartialMethod(customUIDefineKey);
+
+        var drawerClass = Class.CreateClass
+        (
+            drawerName,
             modifiers: [InternalKeyword, SealedKeyword, PartialKeyword],
             baseTypes: [nameof(UnityEditor.Editor)],
-            attributes: [
+            attributes:
+            [
                 ("ExcludeFromCodeCoverage", []),
                 ("DebuggerNonUserCode", []),
                 ("GeneratedCode", Args: ["CustomAttributesEditorGenerator", Version.ToString()]),
-                ("CustomEditor", Args: [ ParseTypeName(ownerName) ])
-            ]);
-        var shortDrawerClass = Class.CreateClass(drawerName,
+                ("CustomEditor", Args: [ParseTypeName(ownerName)])
+            ]
+        );
+
+        var shortDrawerClass = Class.CreateClass
+        (
+            drawerName,
             modifiers: [PartialKeyword],
             baseTypes: [],
-            attributes: []);
-        var ownerClass = Class.CreateClass(ownerName,
+            attributes: []
+        );
+
+        var ownerClass = Class.CreateClass
+        (
+            ownerName,
             modifiers: [PartialKeyword],
             baseTypes: [],
-            attributes: [
+            attributes:
+            [
                 ("ExcludeFromCodeCoverage", []),
                 ("DebuggerNonUserCode", []),
                 ("GeneratedCode", Args: ["CustomAttributesEditorGenerator", Version.ToString()])
-            ]);
-        var shortOwnerClass = Class.CreateClass(ownerName,
+            ]
+        );
+
+        var shortOwnerClass = Class.CreateClass
+        (
+            ownerName,
             modifiers: [PartialKeyword],
             baseTypes: [],
-            attributes: []);
+            attributes: []
+        );
 
-        var @namespace = Namespace.CreateNamespace(container.ContainingNamespace.ToDisplayString());
-
-        var compilation = CompilationUnit();
-        var ownerCompilation = compilation
+        var ownerCompilation = CompilationUnit()
             .AddUsings(
                 Using.System.CodeDom.Compiler.Value,
                 Using.System.Diagnostics.Value,
@@ -93,36 +87,96 @@ internal static class CodeGenerator
                 Using.Unity.Engine.UIElements.Value)
             .AddHeaderWithDefinitions(
                 buttonDefineKey,
-                detectCustomUIProcessing ? customUIDefineKey : null)
+                model.RequiresCustomUI ? customUIDefineKey : null)
             .AddGenericFooter();
-        var shortOwnerCompilation = compilation
+
+        var buttonsCompilation = CompilationUnit()
             .AddUsings(
                 Using.Unity.Editor.Value,
                 Using.Unity.Engine.UIElements.Value)
             .AddGenericHeader()
             .AddGenericFooter();
 
-        var ownerSourceCode = ownerCompilation
-            .AddNamespace(@namespace
-                .AddClass(ownerClass
-                    .AddClass(drawerClass
-                        .AddMethod(inspectorGUI)
-                        .AddMethod(buttonsDetectedPartialMethod)
-                        .AddMethod(detectCustomUIProcessing
-                            ? whenCustomUIProcessingRequired
-                            : whenCustomUIProcessingSkipped))));
+        var ownerDeclaration = ownerClass.AddClass(drawerClass
+            .AddMethod(inspectorGUI)
+            .AddMethod(buttonsDeclaration)
+            .AddMethod(customUI));
 
-        var drawerSourceCode = shortOwnerCompilation
-            .AddNamespace(@namespace
-                .AddClass(shortOwnerClass
-                    .AddClass(shortDrawerClass
-                        .AddMethod(buttonsDetectedMethod))));
+        var buttonsDeclarationContainer = shortOwnerClass.AddClass(shortDrawerClass
+            .AddMethod(buttonsImplementation));
 
-        productionContext.AddSource($"{ownerName}.g.cs", ownerSourceCode
-            .NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
-                .ToFullString());
-        productionContext.AddSource($"{ownerName}.buttons.g.cs", drawerSourceCode
-            .NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
-                .ToFullString());
+        var ownerSource = AddOwner
+        (
+            ownerCompilation,
+            model.NamespaceName,
+            ownerDeclaration
+        );
+
+        var buttonsSource = AddOwner
+        (
+            buttonsCompilation,
+            model.NamespaceName,
+            buttonsDeclarationContainer
+        );
+
+        var hintPrefix = CreateHintPrefix(model.Identity);
+
+        productionContext.CancellationToken.ThrowIfCancellationRequested();
+
+        productionContext.AddSource
+        (
+            hintName: $"{hintPrefix}.g.cs",
+            ownerSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
+                .ToFullString()
+        );
+
+        productionContext.AddSource
+        (
+            hintName: $"{hintPrefix}.buttons.g.cs",
+            buttonsSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
+                .ToFullString()
+        );
+    }
+
+    private static CompilationUnitSyntax AddOwner
+    (
+        CompilationUnitSyntax compilation,
+        string namespaceName,
+        ClassDeclarationSyntax owner
+    ) {
+        return namespaceName.Length == 0
+            ? compilation.AddMembers(owner)
+            : compilation.AddNamespace(Namespace.CreateNamespace(namespaceName).AddClass(owner));
+    }
+
+    private static string CreateHintPrefix(string identity)
+    {
+        const int readableNameLimit = 32;
+
+        var nameStart = identity.LastIndexOf('.') + 1;
+        var readableNameLength = Math.Min(identity.Length - nameStart, readableNameLimit);
+
+        var builder = new StringBuilder("InspectorButtons_");
+        for (var index = 0; index < readableNameLength; index++)
+        {
+            var character = identity[nameStart + index];
+            var isAsciiLetterOrDigit = character is >= 'A' and <= 'Z'
+                or >= 'a' and <= 'z'
+                or >= '0' and <= '9';
+
+            builder.Append(isAsciiLetterOrDigit ? character : '_');
+        }
+
+        builder.Append('_');
+
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(identity));
+
+        foreach (var value in hash)
+        {
+            builder.Append(value.ToString("x1", CultureInfo.InvariantCulture));
+        }
+
+        return builder.ToString();
     }
 }

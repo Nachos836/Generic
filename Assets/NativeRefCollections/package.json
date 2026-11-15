@@ -1,0 +1,26 @@
+{
+	"name": "com.nachos836.native-ref-collections",
+	"displayName": "Unity Native Ref Collections",
+	"version": "0.0.1",
+	"unity": "6000.6",
+	"description": "Set of a wrappers around the Unity Native collections which allows non-copying access to the data",
+	"keywords": ["Native Collections"],
+	"license": "MIT",
+	"documentationUrl": "https://github.com/Nachos836/Generic",
+	"changelogUrl": "https://github.com/Nachos836/Generic/releases",
+	"licensesUrl": "https://github.com/Nachos836/Generic/blob/master/LICENSE",
+	"author": {
+		"name": "Sergey Shevchuk",
+		"email": "DEV_SergeyShevchuk@proton.me",
+		"url": "https://github.com/Nachos836"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Nachos836/Generic.git",
+		"revision": "master"
+	},
+	"dependencies": {
+		"com.unity.collections": "6.6.0"
+	},
+	"scopedRegistries": []
+}

@@ -171,45 +171,31 @@ namespace InspectorAttributes.Editor.RequiredAttribute
             return info.source is PackageSource.Embedded or PackageSource.Local;
         }
 
-        private static bool CheckComponents(MonoBehaviour[] components, string contextName, bool isPrefabAsset)
+        private static bool CheckComponents(ReadOnlySpan<MonoBehaviour> components, string contextName, bool isPrefabAsset)
         {
             var allValid = true;
 
-            foreach (var candidate in components)
+            foreach (ref readonly var candidate in components)
             {
                 if (candidate == null) continue;
 
                 var type = candidate.GetType();
-                var fields = type.GetFields(bindingAttr: Instance | Public | NonPublic);
-
-                foreach (var field in fields)
+                foreach (var field in type.GetFields(bindingAttr: Instance | Public | NonPublic))
                 {
                     if (Attribute.IsDefined(field, typeof(InspectorAttributes.RequiredAttribute)) is false) continue;
 
                     var value = field.GetValue(candidate);
-                    var isMissing = false;
+                    var isMissing = value == null
+                                 || value.Equals(null)
+                                 || field.FieldType == typeof(string)
+                                 && string.IsNullOrEmpty((string)value);
 
-                    if (value == null)
-                    {
-                        isMissing = true;
-                    }
-                    else if (value.Equals(null))
-                    {
-                        isMissing = true;
-                    }
-                    else if (field.FieldType == typeof(string) && string.IsNullOrEmpty((string)value))
-                    {
-                        isMissing = true;
-                    }
+                    if (!isMissing) continue;
 
-                    if (isMissing)
-                    {
-                        allValid = false;
+                    allValid = false;
+                    var objectPath = isPrefabAsset ? contextName + " -> " + GetPath(candidate.transform) : GetPath(candidate.transform);
 
-                        var objectPath = isPrefabAsset ? contextName + " -> " + GetPath(candidate.transform) : GetPath(candidate.transform);
-
-                        Debug.LogError($"[Required] Field <b>'{field.Name}'</b> is missing on: <b>{objectPath}</b> (Context: {contextName})", candidate);
-                    }
+                    Debug.LogErrorFormat(candidate, "[Required] Field <b>'{0}'</b> is missing on: <b>{1}</b> (Context: {2})", field.Name, objectPath, contextName);
                 }
             }
 

@@ -1,0 +1,26 @@
+{
+	"name": "com.nachos836.inventory",
+	"displayName": "Unity Source Generated Inventory",
+	"version": "0.0.1",
+	"unity": "6000.6",
+	"description": "Game Inventory implementation using Burst, R3, and Roslyn Generator",
+	"keywords": ["Attributes", "Source Generator"],
+	"license": "MIT",
+	"documentationUrl": "https://github.com/Nachos836/Generic",
+	"changelogUrl": "https://github.com/Nachos836/Generic/releases",
+	"licensesUrl": "https://github.com/Nachos836/Generic/blob/master/LICENSE",
+	"author": {
+		"name": "Sergey Shevchuk",
+		"email": "DEV_SergeyShevchuk@proton.me",
+		"url": "https://github.com/Nachos836"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Nachos836/Generic.git",
+		"revision": "master"
+	},
+    "dependencies": {
+        "com.nachos836.dot-net-compat" : "https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat"
+    },
+	"scopedRegistries": []
+}

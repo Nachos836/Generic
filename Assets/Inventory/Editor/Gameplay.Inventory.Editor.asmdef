@@ -1,0 +1,18 @@
+{
+    "name": "Gameplay.Inventory.Editor",
+    "rootNamespace": "Gameplay.Inventory.Editor",
+    "references": [
+        "GUID:148b9497abf05ab4182762ab24770896"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

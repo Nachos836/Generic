@@ -104,7 +104,11 @@ internal static class Header
             trivia.Add(Trivia(DefineDirectiveTrivia(definitionKey, isActive: true)));
             trivia.Add(LineFeed);
         }
-        trivia.Add(HardLineFeed);
+
+        if (definitionKeys.Length > 0)
+        {
+            trivia.Add(HardLineFeed);
+        }
 
         return compilation.WithLeadingTrivia(trivia);
     }
@@ -249,12 +253,12 @@ internal static class Method
             // var root = new VisualElement();
             LocalDeclarationStatement(VariableDeclaration(IdentifierName("var"))
                 .WithVariables(SingletonSeparatedList( VariableDeclarator(Identifier("root"))
-                    .WithInitializer(EqualsValueClause(ObjectCreationExpression( IdentifierName(nameof(UnityEngine.UIElements.VisualElement)))
+                    .WithInitializer(EqualsValueClause(ObjectCreationExpression(IdentifierName(nameof(UnityEngine.UIElements.VisualElement)))
                         .WithArgumentList(ArgumentList())))))),
             // var defaultRoot = new VisualElement();
             LocalDeclarationStatement(VariableDeclaration(IdentifierName("var"))
                 .WithVariables(SingletonSeparatedList( VariableDeclarator(Identifier("defaultRoot"))
-                    .WithInitializer(EqualsValueClause(ObjectCreationExpression( IdentifierName(nameof(UnityEngine.UIElements.VisualElement)))
+                    .WithInitializer(EqualsValueClause(ObjectCreationExpression(IdentifierName(nameof(UnityEngine.UIElements.VisualElement)))
                         .WithArgumentList(ArgumentList())))))),
             // var customRoot = new VisualElement();
             LocalDeclarationStatement(VariableDeclaration(IdentifierName("var"))

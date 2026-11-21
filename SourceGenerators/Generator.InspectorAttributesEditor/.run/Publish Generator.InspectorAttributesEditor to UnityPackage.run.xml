@@ -1,0 +1,10 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Publish Generator.InspectorAttributesEditor to UnityPackage" type="DotNetFolderPublish" factoryName="Publish to folder">
+    <riderPublish configuration="Release" platform="Any CPU" target_folder="$PROJECT_DIR$/../../Assets/InspectorAttributes/Runtime/Roslyn/" target_framework="netstandard2.0" uuid_high="-1690779510809935305" uuid_low="-7503333690898906593">
+      <runtimes>
+        <item value="Portable" />
+      </runtimes>
+    </riderPublish>
+    <method v="2" />
+  </configuration>
+</component>

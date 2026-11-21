@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <IsRoslynComponent>true</IsRoslynComponent>
+        <PackageId>CustomAttributes.SourceGenerator</PackageId>
+
+        <GenerateDependencyFile>false</GenerateDependencyFile>
+        <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+
+        <Optimize>true</Optimize>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+
+        <Deterministic>true</Deterministic>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- "4.10.0 is the latest working version for Unity 6000.6.*" -->
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" PrivateAssets="all" ExcludeAssets="runtime" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.10.0" PrivateAssets="all" ExcludeAssets="runtime" />
+    </ItemGroup>
+
+    <Import Project="..\Shared.UnityBridge\Shared.UnityBridge.projitems" Label="Shared" />
+    <Import Project="..\Shared.DotNetCompatibility\Shared.DotNetCompatibility.projitems" Label="Shared" />
+    <Import Project="..\Shared.Generator\Shared.Generator.projitems" Label="Shared" />
+    <Import Project="..\Shared.AST\Shared.AST.projitems" Label="Shared" />
+    
+    <Target Name="SetVersionFromPackageJson" BeforeTargets="GetAssemblyVersion;GenerateAssemblyInfo">
+        <PropertyGroup>
+            <!-- Getting UnityPackage JSON -->
+            <UnityPackageJsonPath>$(MSBuildProjectDirectory)\..\..\Assets\InspectorAttributes\package.json</UnityPackageJsonPath>
+        </PropertyGroup>
+
+        <!-- Read and fetch "version" inside the file -->
+        <PropertyGroup Condition="Exists('$(UnityPackageJsonPath)')">
+            <PackageJsonContent>$([System.IO.File]::ReadAllText('$(UnityPackageJsonPath)'))</PackageJsonContent>
+            <PackageVersion>$([System.Text.RegularExpressions.Regex]::Match($(PackageJsonContent), '"version"\s*:\s*"([^"]+)"').Groups[1].Value)</PackageVersion>
+        </PropertyGroup>
+
+        <!-- Transfer found version into MSBuild -->
+        <PropertyGroup Condition="'$(PackageVersion)' != ''">
+            <Version>$(PackageVersion)</Version>
+            <AssemblyVersion>$(PackageVersion)</AssemblyVersion>
+            <FileVersion>$(PackageVersion)</FileVersion>
+        </PropertyGroup>
+</Target>
+    
+
+
+</Project>

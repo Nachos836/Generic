@@ -9,4 +9,4 @@ The Roslyn source generators that ship inside this repository's packages, with t
 
 - `Generator.InspectorAttributesEditor` — writes inspector drawers for `[Button]` methods of the InspectorAttributes package.
 - `Generator.InspectorAttributesEditor.Tests` — runs the generator against source code the way the editor's compiler does.
-- Shared projects — code that every generator imports as source: the language of blocks, the Roslyn syntax helpers, the Unity type stubs, the compiler polyfills and the common generator parts.
+- Shared projects — code that every generator imports as source: the language of blocks, the Unity type stubs, the compiler polyfills and the common generator parts.

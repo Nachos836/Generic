@@ -37,7 +37,7 @@ internal abstract class Scope<TNext> where TNext : class
         return Next;
     }
 
-    public TNext IfDirective(string symbol, bool when = true) => IfDirective(Blocks.Id(symbol), when);
+    public TNext IfDirective(string symbol, bool when = true) => IfDirective(new Expr(IdentifierName(symbol)), when);
 
     public TNext IfDirective(Expr condition, bool when = true)
     {

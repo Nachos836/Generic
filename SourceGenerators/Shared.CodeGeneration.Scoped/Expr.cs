@@ -106,7 +106,9 @@ internal sealed class Expr
 
     internal static PatternSyntax Pattern(ExpressionSyntax node)
     {
-        return node is IdentifierNameSyntax { Identifier.Text: "_" } ? DiscardPattern() : ConstantPattern(node);
+        return node is IdentifierNameSyntax { Identifier.Text: "_" }
+            ? DiscardPattern()
+            : ConstantPattern(Precedence.AtLeast(node, Precedence.Shift));
     }
 
     internal static SeparatedSyntaxList<ArgumentSyntax> Arguments(IReadOnlyList<Arg>? arguments)

@@ -109,7 +109,8 @@ internal sealed class BodyScope : Statements
     internal static StatementSyntax Statement(Action<BodyScope> body, bool braced)
     {
         var (block, closed) = Build(body);
-        return braced || block.Statements.Count != 1 || closed ? block : block.Statements[0];
+        var keepsBraces = braced || closed || block.Statements.Count != 1 || block.Statements[0] is IfStatementSyntax;
+        return keepsBraces ? block : block.Statements[0];
     }
 
     internal static List<StatementSyntax> Section(Lead lead, Action<BodyScope> body)

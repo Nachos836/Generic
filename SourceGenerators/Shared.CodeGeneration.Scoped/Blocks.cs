@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -37,8 +38,20 @@ internal static class Blocks
     public static Expr Lit(uint value, bool when = true) => Number(Literal(value), when);
     public static Expr Lit(long value, bool when = true) => Number(Literal(value), when);
     public static Expr Lit(ulong value, bool when = true) => Number(Literal(value), when);
-    public static Expr Lit(float value, bool when = true) => Number(Literal(value), when);
-    public static Expr Lit(double value, bool when = true) => Number(Literal(value), when);
+
+    public static Expr Lit(float value, bool when = true)
+    {
+        if (float.IsNaN(value) || float.IsInfinity(value)) return NonFinite(SyntaxKind.FloatKeyword, value, when);
+        return Number(Literal(value.ToString("R", CultureInfo.InvariantCulture) + "F", value), when);
+    }
+
+    public static Expr Lit(double value, bool when = true)
+    {
+        if (double.IsNaN(value) || double.IsInfinity(value)) return NonFinite(SyntaxKind.DoubleKeyword, value, when);
+
+        var text = value.ToString("R", CultureInfo.InvariantCulture);
+        return Number(Literal(text.IndexOfAny(['.', 'E']) < 0 ? text + "D" : text, value), when);
+    }
 
     public static Expr Lit(bool value, bool when = true)
     {
@@ -70,7 +83,7 @@ internal static class Blocks
     public static Expr Cast(TypeRef type, Expr value, bool when = true)
     {
         return When(when && type.Node is not null && value.Node is not null,
-            () => CastExpression(type.Node!, Precedence.AtLeast(value.Node!, Precedence.Unary)));
+            () => CastExpression(type.Node!, Precedence.CastOperand(value.Node!)));
     }
 
     public static Expr TypeOf(TypeRef type, bool when = true)
@@ -125,6 +138,13 @@ internal static class Blocks
     private static Expr Number(Microsoft.CodeAnalysis.SyntaxToken literal, bool when)
     {
         return When(when, () => LiteralExpression(SyntaxKind.NumericLiteralExpression, literal));
+    }
+
+    private static Expr NonFinite(SyntaxKind keyword, double value, bool when)
+    {
+        var member = double.IsNaN(value) ? "NaN" : value > 0 ? "PositiveInfinity" : "NegativeInfinity";
+        return When(when, () => MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+            PredefinedType(Token(keyword)), IdentifierName(member)));
     }
 
     private static Expr When(bool when, System.Func<ExpressionSyntax> create) => when ? new(create()) : Expr.Empty;

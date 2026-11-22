@@ -15,7 +15,17 @@ internal static class Renderer
 
     public static string Render(CompilationUnitSyntax unit)
     {
-        return InsertGaps(unit.NormalizeWhitespace(Indentation, LineBreak, elasticTrivia: true)).ToFullString();
+        var normalized = unit.NormalizeWhitespace(Indentation, LineBreak, elasticTrivia: true);
+        return TrimBeforeMissingTokens(InsertGaps(normalized)).ToFullString();
+    }
+
+    private static SyntaxNode TrimBeforeMissingTokens(SyntaxNode root)
+    {
+        var tokens = root.DescendantTokens()
+            .Where(static token => token.GetNextToken(includeZeroWidth: true).IsMissing);
+        return root.ReplaceTokens(tokens, static (original, _) => original.WithTrailingTrivia(
+            original.TrailingTrivia.Reverse().SkipWhile(static item => item.IsKind(SyntaxKind.WhitespaceTrivia))
+                .Reverse()));
     }
 
     private static SyntaxNode InsertGaps(SyntaxNode root)
@@ -32,27 +42,30 @@ internal static class Renderer
 
     private static List<SyntaxTrivia> WithGaps(SyntaxToken token, HashSet<SyntaxToken> gapTokens)
     {
-        var previousLine = token.GetPreviousToken(includeZeroWidth: true).TrailingTrivia.ToFullString();
+        var previous = token.GetPreviousToken(includeZeroWidth: true);
+        var opensScope = previous == default || previous.IsKind(SyntaxKind.OpenBraceToken);
         var trivia = new List<SyntaxTrivia>();
 
         foreach (var item in token.LeadingTrivia)
         {
-            if (IsGap(item)) AddBlankLine(trivia, previousLine);
+            if (IsGap(item)) AddBlankLine(trivia, previous.TrailingTrivia.ToFullString(), opensScope);
             trivia.Add(item);
         }
 
-        if (gapTokens.Contains(token)) AddBlankLine(trivia, previousLine);
+        if (gapTokens.Contains(token)) AddBlankLine(trivia, previous.TrailingTrivia.ToFullString(), opensScope);
         return trivia;
     }
 
-    private static void AddBlankLine(List<SyntaxTrivia> trivia, string previousLine)
+    private static void AddBlankLine(List<SyntaxTrivia> trivia, string previousLine, bool opensScope)
     {
         var lineStart = trivia.Count;
         while (lineStart > 0 && trivia[lineStart - 1].IsKind(SyntaxKind.WhitespaceTrivia)) lineStart--;
 
-        var textBefore =
-            previousLine + string.Concat(trivia.Take(lineStart).Select(static item => item.ToFullString()));
-        if (textBefore.Replace(" ", string.Empty).Replace(Indentation, string.Empty).EndsWith(BlankLine)) return;
+        var textBefore = string.Concat(trivia.Take(lineStart).Select(static item => item.ToFullString()));
+        if (opensScope && textBefore.Trim().Length == 0) return;
+
+        var squeezed = (previousLine + textBefore).Replace(" ", string.Empty).Replace(Indentation, string.Empty);
+        if (squeezed.EndsWith(BlankLine)) return;
 
         trivia.Insert(lineStart, EndOfLine(LineBreak));
     }

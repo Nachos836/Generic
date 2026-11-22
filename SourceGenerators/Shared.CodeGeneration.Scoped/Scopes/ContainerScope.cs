@@ -20,13 +20,13 @@ internal abstract class ContainerScope<TNext> : DeclarationScope<TNext> where TN
     public TNext Using(string name, bool when = true)
     {
         if (when) Usings.Add(Lead.Attach(UsingDirective(Names.Qualified(name))));
-        return Next;
+        return Skip();
     }
 
     public TNext UsingStatic(string name, bool when = true)
     {
         if (when) Usings.Add(Lead.Attach(UsingDirective(Token(SyntaxKind.StaticKeyword), null, Names.Qualified(name))));
-        return Next;
+        return Skip();
     }
 
     public TNext Namespace(string name, Action<NamespaceScope> body, bool when = true)

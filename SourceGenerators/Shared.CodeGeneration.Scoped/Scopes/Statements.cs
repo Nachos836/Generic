@@ -80,7 +80,7 @@ internal abstract class Statements : Scope<BodyScope>
     private protected BodyScope Add(StatementSyntax statement)
     {
         Sink.Add(Lead.Attach(statement));
-        return Next;
+        return Skip();
     }
 
     private BodyScope Modifier(SyntaxKind keyword, bool when)

@@ -69,7 +69,7 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
     private protected TNext AddMember(MemberDeclarationSyntax member)
     {
         Add(Lead.Attach(member));
-        return Next;
+        return Skip();
     }
 
     private protected TNext Modifier(SyntaxKind keyword, bool when)

@@ -51,6 +51,16 @@ public sealed class RenderingTests
             .Class("A", static _ => { }).EndIfDirective()), "#if true\nclass A\n{\n}\n#endif");
         yield return Case("GapAfterOpenBrace", static () => InType(static type => type.Gap().Field(T("int"), "a")),
             Expected.InType("int a;"));
+        yield return Case("ExplicitForStaysOnItsMember", static () => InType(static type => type
+            .ExplicitFor(T("I")).Field(T("int"), "f").Method(T("void"), "M", static _ => { })),
+            Expected.InType("int f;\nvoid M();"));
+        yield return Case("PrefixesStayBeforeNamespace", static () => Code.File(static file => file
+            .Public().Attribute("A").Namespace("N", static scope => scope.Class("Inner", static _ => { }))
+            .Class("Outer", static _ => { })), "namespace N\n{\n    class Inner\n    {\n    }\n}\n\nclass Outer\n{\n}");
+        yield return Case("PrefixesStayBeforeUsing", static () => Code.File(static file => file
+            .Public().Using("System").Class("A", static _ => { })), "using System;\n\nclass A\n{\n}");
+        yield return Case("StatementPrefixesStayBeforeStatement", static () => InBody(static body => body
+            .Ref().Do(Id("a").Call()).Var("y", Id("z"))), Expected.InBody("a();\nvar y = z;"));
     }
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)

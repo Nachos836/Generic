@@ -39,6 +39,7 @@ internal sealed class SwitchScope : Scope<SwitchScope>
     private SwitchScope AddSection(SwitchLabelSyntax label, Action<BodyScope> body)
     {
         _sections.Add(SwitchSection(SingletonList(Lead.Attach(label)), List(BodyScope.BuildSection(Lead, body))));
+        Lead.DropPrefixes();
         return this;
     }
 }

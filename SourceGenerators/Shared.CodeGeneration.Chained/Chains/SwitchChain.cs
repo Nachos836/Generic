@@ -45,7 +45,7 @@ internal sealed class SwitchChain<TOuter> : Chain<SwitchChain<TOuter>> where TOu
     internal SwitchChain<TOuter> AddSection(SwitchLabelSyntax label, List<StatementSyntax> statements, bool active)
     {
         if (active) _sections.Add(SwitchSection(SingletonList(label), List(statements)));
-        return this;
+        return DropPrefixes();
     }
 
     private CaseChain<TOuter> OpenSection(SwitchLabelSyntax label, bool active)

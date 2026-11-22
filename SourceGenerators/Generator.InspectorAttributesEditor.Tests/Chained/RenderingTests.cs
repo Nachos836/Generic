@@ -98,6 +98,9 @@ public sealed class RenderingTests
         yield return Case("DisabledCaseWritesNoModifier", static () => InBody(static body => body.Switch(Id("x"))
                 .Case(Lit(1), false).Ref().EndCase().Case(Lit(2)).Var("y", Lit(1)).EndCase().EndSwitch()),
             Expected.InBody("switch (x)\n{\n    case 2:\n        var y = 1;\n}"));
+        yield return Case("CasePrefixesStayInCase", static () => InBody(static body => body.Switch(Id("x"))
+                .Case(Lit(1)).Break().Ref().EndCase().Case(Lit(2)).Var("y", Lit(1)).EndCase().EndSwitch()),
+            Expected.InBody("switch (x)\n{\n    case 1:\n        break;\n    case 2:\n        var y = 1;\n}"));
     }
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)

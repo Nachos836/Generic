@@ -100,6 +100,14 @@ public sealed class RenderingTests
         yield return Case("BlankLineFollowsStatementBlock", static () => InBody(static body => body
                 .If(Id("a"), static then => then.Return()).Break()),
             Expected.InBody("if (a)\n{\n    return;\n}\n\nbreak;"));
+        yield return Case("OperatorExplicitFor", static () => InType(static type => type.Static()
+                .ExplicitFor(T("I", [T("C")])).Operator(T("C"), Add, static signature => signature
+                    .Param(T("C"), "a").Param(T("C"), "b").Arrow(Id("a")))),
+            Expected.InType("static C I<C>.operator +(C a, C b) => a;"));
+        yield return Case("ConversionExplicitFor", static () => InType(static type => type.Static()
+                .ExplicitFor(T("I")).Conversion(ConversionKind.Explicit, T("int"), static signature => signature
+                    .Param(T("C"), "c").Arrow(Lit(0)))),
+            Expected.InType("static explicit I.operator int(C c) => 0;"));
         yield return Case("CoalesceWithThrow", static () => OfExpression(Id("a").Assign(Id("b")
             .Coalesce(ThrowExpression(New(T("E")))))), Expected.OfExpression("a = b ?? throw new E()"));
         yield return Case("AsBeforeLess", static () => OfExpression(Id("a").Assign(Id("o").As(T("C"))

@@ -121,16 +121,16 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
         bool when = true)
     {
         if (when is false || returnType.Node is null) return Skip();
-        return AddOperator(OperatorDeclaration(returnType.Node, Token(Declarations.MapOperatorToken(@operator))),
-            signature);
+        return AddOperator(OperatorDeclaration(returnType.Node, Token(Declarations.MapOperatorToken(@operator)))
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface()), signature);
     }
 
     public TSelf Operator(TypeRef returnType, UnaryOperator @operator, Action<OperatorScope> signature,
         bool when = true)
     {
         if (when is false || returnType.Node is null) return Skip();
-        return AddOperator(OperatorDeclaration(returnType.Node, Token(Declarations.MapOperatorToken(@operator))),
-            signature);
+        return AddOperator(OperatorDeclaration(returnType.Node, Token(Declarations.MapOperatorToken(@operator)))
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface()), signature);
     }
 
     public TSelf Conversion(ConversionKind kind, TypeRef type, Action<OperatorScope> signature, bool when = true)
@@ -138,7 +138,8 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
         if (when is false || type.Node is null) return Skip();
 
         var keyword = kind == ConversionKind.Implicit ? SyntaxKind.ImplicitKeyword : SyntaxKind.ExplicitKeyword;
-        return AddOperator(ConversionOperatorDeclaration(Token(keyword), type.Node), signature);
+        return AddOperator(ConversionOperatorDeclaration(Token(keyword), type.Node)
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface()), signature);
     }
 
     internal TypeDeclarationSyntax Complete(TypeDeclarationSyntax declaration)

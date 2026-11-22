@@ -1,0 +1,75 @@
+using NUnit.Framework;
+using Shared.CodeGeneration.Chained;
+using static Generator.InspectorAttributesEditor.Tests.Chained.Snippets;
+using static Shared.CodeGeneration.Chained.BinaryOperator;
+using static Shared.CodeGeneration.Chained.Blocks;
+
+namespace Generator.InspectorAttributesEditor.Tests.Chained;
+
+public sealed class RenderingTests
+{
+    [TestCaseSource(nameof(Cases))]
+    public void RendersValidCSharp(Func<string> actual, string expected) => CodeAssert.AreEqual(expected, actual());
+
+    [Test]
+    public void GapAtFileStartWritesNoBlankLine()
+    {
+        Assert.That(Code.File().Gap().Class("A").EndClass().EndFile(), Does.StartWith("class A"));
+    }
+
+    [Test]
+    public void DefineAfterUsingIsRejected()
+    {
+        Assert.Throws<InvalidOperationException>(static () => Code.File().Using("System").Define("X"));
+    }
+
+    [Test]
+    public void ArmBeforeOmittedSeparatorHasNoTrailingSpace()
+    {
+        var text = OfExpression(Id("x").Switch()
+            .IfDirective("A").Arm(Lit(1), Id("a")).ElseDirective().Arm(Lit(1), Id("b")).EndIfDirective().EndSwitch());
+
+        Assert.That(text.Split('\n'), Has.None.EndsWith(" "));
+    }
+
+    private static IEnumerable<TestCaseData> Cases()
+    {
+        yield return Case("DoubleWholeNumber", static () => OfExpression(Lit(1.0)), Expected.OfExpression("1D"));
+        yield return Case("DoubleFraction", static () => OfExpression(Lit(1.5)), Expected.OfExpression("1.5"));
+        yield return Case("Float", static () => OfExpression(Lit(2.0f)), Expected.OfExpression("2F"));
+        yield return Case("FloatNaN", static () => OfExpression(Lit(float.NaN)), Expected.OfExpression("float.NaN"));
+        yield return Case("DoubleInfinity", static () => OfExpression(Lit(double.NegativeInfinity)),
+            Expected.OfExpression("double.NegativeInfinity"));
+        yield return Case("NegativeReceiver", static () => OfExpression(Lit(-1).Dot("CompareTo").Call([Id("x")])),
+            Expected.OfExpression("(-1).CompareTo(x)"));
+        yield return Case("CastOfNegative", static () => OfExpression(Cast(T("E"), Lit(-1))),
+            Expected.OfExpression("(E)(-1)"));
+        yield return Case("CastOfAddress", static () => OfExpression(Cast(T("P"), AddressOf(Id("x")))),
+            Expected.OfExpression("(P)(&x)"));
+        yield return Case("UnbracedIfKeepsElse", static () => InBody(static body => body
+                .If(Id("a"), braced: false).If(Id("b"), braced: false).Return().EndIf()
+                .Else().Break().EndIf()),
+            Expected.InBody("if (a)\n{\n    if (b)\n        return;\n}\nelse\n{\n    break;\n}"));
+        yield return Case("IsWithBinaryPattern", static () => OfExpression(Id("x").Is(Id("A").Binary(Or, Id("B")))),
+            Expected.OfExpression("x is (A || B)"));
+        yield return Case("IfDirectiveKeyword", static () => Code.File().IfDirective("true").Class("A").EndClass()
+            .EndIfDirective().EndFile(), "#if true\nclass A\n{\n}\n#endif");
+        yield return Case("GapAfterOpenBrace", static () => InType(static type => type.Gap().Field(T("int"), "a")),
+            Expected.InType("int a;"));
+        yield return Case("ExplicitForStaysOnItsMember", static () => InType(static type => type
+            .ExplicitFor(T("I")).Field(T("int"), "f").Method(T("void"), "M").EndMethod()),
+            Expected.InType("int f;\nvoid M();"));
+        yield return Case("PrefixesStayBeforeNamespace", static () => Code.File().Public().Attribute("A")
+            .Namespace("N").Class("Inner").EndClass().EndNamespace().Class("Outer").EndClass().EndFile(),
+            "namespace N\n{\n    class Inner\n    {\n    }\n}\n\nclass Outer\n{\n}");
+        yield return Case("PrefixesStayBeforeUsing", static () => Code.File().Public().Using("System").Class("A")
+            .EndClass().EndFile(), "using System;\n\nclass A\n{\n}");
+        yield return Case("StatementPrefixesStayBeforeStatement", static () => InBody(static body => body
+            .Ref().Do(Id("a").Call()).Var("y", Id("z"))), Expected.InBody("a();\nvar y = z;"));
+    }
+
+    private static TestCaseData Case(string name, Func<string> actual, string expected)
+    {
+        return new TestCaseData(actual, Expected.ConvertToTabs(expected)).SetArgDisplayNames(name);
+    }
+}

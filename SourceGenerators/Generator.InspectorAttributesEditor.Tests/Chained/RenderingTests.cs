@@ -167,6 +167,11 @@ public sealed class RenderingTests
                 .Comment("DoWhile").DoWhile(false).EndDoWhile(Id("a"))
                 .Var("x", Lit(1))),
             Expected.InBody("// For\n// While\n// DoWhile\nvar x = 1;"));
+        yield return Case("EmptyDoWhileConditionKeepsTrivia", static () => InBody(static body => body
+                .Var("y", Lit(0)).Gap().Comment("Keep").IfDirective("X").DoWhile().Break().EndDoWhile(Id("a", false))
+                .Var("x", Lit(1)).EndIfDirective().Return()),
+            "class C\n{\n    void M()\n    {\n        var y = 0;\n\n        // Keep\n#if X\n        var x = 1;\n" +
+            "#endif\n        return;\n    }\n}");
         yield return Case("DisabledBlocksKeepComments", static () => InBody(static body => body
                 .Comment("Using").Using("s", Id("x"), false).EndUsing()
                 .Comment("Lock").Lock(Id("x"), false).EndLock()

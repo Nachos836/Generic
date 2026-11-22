@@ -16,6 +16,7 @@ internal interface IMemberHost
 internal interface IStatementHost
 {
     void AddStatement(StatementSyntax statement);
+    void RestoreLeading(Leading leading);
 }
 
 internal sealed class Opening

@@ -125,6 +125,8 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
         Lead.DropPrefixes();
     }
 
+    void IStatementHost.RestoreLeading(Leading leading) => Lead.Restore(leading);
+
     private protected TSelf Add(StatementSyntax statement)
     {
         _statements.Add(Lead.Attach(statement));
@@ -259,7 +261,16 @@ internal abstract class BlockChain<TSelf, TOuter> : StatementChain<TSelf>
     private protected TOuter Close(Func<BlockSyntax, StatementSyntax> build, bool active = true)
     {
         var statement = build(BuildBlock());
-        if (_active && active) _outer.AddStatement(_leading.Apply(statement));
+
+        if (_active && active)
+        {
+            _outer.AddStatement(_leading.Apply(statement));
+        }
+        else
+        {
+            _outer.RestoreLeading(_leading);
+        }
+
         return _outer;
     }
 }

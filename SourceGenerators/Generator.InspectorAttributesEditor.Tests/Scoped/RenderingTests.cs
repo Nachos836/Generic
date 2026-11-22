@@ -18,6 +18,12 @@ public sealed class RenderingTests
     }
 
     [Test]
+    public void DefineAfterUsingIsRejected()
+    {
+        Assert.Throws<InvalidOperationException>(static () => Code.File(static file => file.Using("System").Define("X")));
+    }
+
+    [Test]
     public void ArmBeforeOmittedSeparatorHasNoTrailingSpace()
     {
         var text = OfExpression(Id("x").Switch(static arms => arms

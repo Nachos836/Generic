@@ -38,17 +38,17 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
 
     public TNext Class(string name, Action<TypeScope> body, bool when = true)
     {
-        return Type(ClassDeclaration(Names.Identifier(name)), name, body, when);
+        return Type(ClassDeclaration(Names.Identifier(name)), new TypeScope(name), body, when);
     }
 
     public TNext Struct(string name, Action<TypeScope> body, bool when = true)
     {
-        return Type(StructDeclaration(Names.Identifier(name)), name, body, when);
+        return Type(StructDeclaration(Names.Identifier(name)), new TypeScope(name), body, when);
     }
 
-    public TNext Interface(string name, Action<TypeScope> body, bool when = true)
+    public TNext Interface(string name, Action<InterfaceScope> body, bool when = true)
     {
-        return Type(InterfaceDeclaration(Names.Identifier(name)), name, body, when);
+        return Type(InterfaceDeclaration(Names.Identifier(name)), new InterfaceScope(), body, when);
     }
 
     public TNext Enum(string name, Action<EnumScope> body, bool when = true)
@@ -84,7 +84,8 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
         return Next;
     }
 
-    private TNext Type(TypeDeclarationSyntax declaration, string name, Action<TypeScope> body, bool when)
+    private TNext Type<TScope>(TypeDeclarationSyntax declaration, TScope scope, Action<TScope> body, bool when)
+        where TScope : MemberScope<TScope>
     {
         if (when is false) return Skip();
 
@@ -92,7 +93,6 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(Lead.TakeModifiers());
 
-        var scope = new TypeScope(name);
         body(scope);
         return AddMember(scope.Complete(declaration));
     }

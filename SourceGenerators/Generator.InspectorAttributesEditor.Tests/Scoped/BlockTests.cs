@@ -53,7 +53,7 @@ public sealed class BlockTests
 
         yield return Case("Class", () => InType(type => type.Class("N", Empty)), Expected.InType("class N\n{\n}"));
         yield return Case("Struct", () => InType(type => type.Struct("N", Empty)), Expected.InType("struct N\n{\n}"));
-        yield return Case("Interface", () => InType(type => type.Interface("N", Empty)),
+        yield return Case("Interface", () => InType(type => type.Interface("N", static _ => { })),
             Expected.InType("interface N\n{\n}"));
         yield return Case("Enum", () => InType(type => type.Enum("E", members => members.EnumMember("A"))),
             Expected.InType("enum E\n{\n    A\n}"));
@@ -254,7 +254,8 @@ public sealed class BlockTests
         yield return Case("Class", () => InType(type => type.Public().Class("N", Empty, false).Field(T("int"), "x")),
             Expected.InType("int x;"));
         yield return Case("Struct", () => InType(type => type.Struct("N", Empty, false)), Expected.InType(""));
-        yield return Case("Interface", () => InType(type => type.Interface("N", Empty, false)), Expected.InType(""));
+        yield return Case("Interface", () => InType(type => type.Interface("N", static _ => { }, false)),
+            Expected.InType(""));
         yield return Case("Enum", () => InType(type => type.Enum("E", static _ => { }, false)), Expected.InType(""));
         yield return Case("EnumUnderlyingType", () => InType(type => type.Enum("E", members => members
             .Inherits(T("ulong"), false).EnumMember("A"))), Expected.InType("enum E\n{\n    A\n}"));

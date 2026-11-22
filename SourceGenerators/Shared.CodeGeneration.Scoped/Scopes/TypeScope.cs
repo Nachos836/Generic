@@ -7,50 +7,38 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Shared.CodeGeneration.Scoped;
 
-internal sealed class TypeScope : DeclarationScope<TypeScope>
+internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf : MemberScope<TSelf>
 {
-    private readonly string _name;
     private readonly List<TypeParameterSyntax> _typeParameters = [];
     private readonly List<BaseTypeSyntax> _baseTypes = [];
     private readonly List<TypeParameterConstraintClauseSyntax> _constraints = [];
     private readonly List<MemberDeclarationSyntax> _members = [];
 
-    internal TypeScope(string name) : base(new()) => _name = name;
+    private protected MemberScope() : base(new())
+    {
+    }
 
-    private protected override TypeScope Next => this;
-
-    public TypeScope TypeParam(string name, Variance variance = Variance.None, bool when = true)
+    public TSelf TypeParam(string name, Variance variance = Variance.None, bool when = true)
     {
         if (when) _typeParameters.Add(Declarations.TypeParameter(name, variance));
-        return this;
+        return Next;
     }
 
-    public TypeScope Inherits(TypeRef type, bool when = true) => BaseType(type, when);
-    public TypeScope Implements(TypeRef type, bool when = true) => BaseType(type, when);
+    public TSelf Implements(TypeRef type, bool when = true) => BaseType(type, when);
 
-    public TypeScope Where(string name, IReadOnlyList<Constraint> constraints, bool when = true)
+    public TSelf Where(string name, IReadOnlyList<Constraint> constraints, bool when = true)
     {
         if (when && Declarations.Constraints(name, constraints) is { } clause) _constraints.Add(clause);
-        return this;
+        return Next;
     }
 
-    public TypeScope ExplicitFor(TypeRef type, bool when = true)
+    public TSelf ExplicitFor(TypeRef type, bool when = true)
     {
         if (when && type.Node is NameSyntax name) Lead.SetExplicitInterface(name);
-        return this;
+        return Next;
     }
 
-    public TypeScope Field(TypeRef type, string name, Expr? value = null, bool when = true)
-    {
-        if (when is false || type.Node is null) return Skip();
-
-        var (modifiers, fieldType) = Declarations.SplitRef(Lead.TakeModifiers(), type.Node);
-        return AddMember(FieldDeclaration(VariableDeclaration(fieldType, SingletonSeparatedList(Variable(name, value))))
-            .WithAttributeLists(Lead.TakeAttributes())
-            .WithModifiers(modifiers));
-    }
-
-    public TypeScope Event(TypeRef type, string name, bool when = true)
+    public TSelf Event(TypeRef type, string name, bool when = true)
     {
         if (when is false || type.Node is null) return Skip();
         return AddMember(
@@ -59,20 +47,7 @@ internal sealed class TypeScope : DeclarationScope<TypeScope>
                 .WithModifiers(Lead.TakeModifiers()));
     }
 
-    public TypeScope Constructor(Action<ConstructorScope> signature, bool when = true)
-    {
-        if (when is false) return Skip();
-
-        var declaration = ConstructorDeclaration(Names.Identifier(_name))
-            .WithAttributeLists(Lead.TakeAttributes())
-            .WithModifiers(Lead.TakeModifiers());
-
-        var scope = new ConstructorScope();
-        signature(scope);
-        return AddMember(scope.Complete(declaration));
-    }
-
-    public TypeScope Method(TypeRef returnType, string name, Action<MethodScope> signature, bool when = true)
+    public TSelf Method(TypeRef returnType, string name, Action<MethodScope> signature, bool when = true)
     {
         if (when is false || returnType.Node is null) return Skip();
 
@@ -107,17 +82,56 @@ internal sealed class TypeScope : DeclarationScope<TypeScope>
 
     private protected override void Add(MemberDeclarationSyntax member) => _members.Add(member);
 
-    private TypeScope BaseType(TypeRef type, bool when)
+    private protected TSelf BaseType(TypeRef type, bool when)
     {
         if (when && type.Node is { } node) _baseTypes.Add(SimpleBaseType(node));
-        return this;
+        return Next;
     }
 
-    private static VariableDeclaratorSyntax Variable(string name, Expr? value)
+    private protected static VariableDeclaratorSyntax Variable(string name, Expr? value)
     {
         var declarator = VariableDeclarator(Names.Identifier(name));
         return value?.Node is { } node ? declarator.WithInitializer(EqualsValueClause(node)) : declarator;
     }
+}
+
+internal sealed class TypeScope : MemberScope<TypeScope>
+{
+    private readonly string _name = default!;
+
+    internal TypeScope(string name) => _name = name;
+
+    private protected override TypeScope Next => this;
+
+    public TypeScope Inherits(TypeRef type, bool when = true) => BaseType(type, when);
+
+    public TypeScope Field(TypeRef type, string name, Expr? value = null, bool when = true)
+    {
+        if (when is false || type.Node is null) return Skip();
+
+        var (modifiers, fieldType) = Declarations.SplitRef(Lead.TakeModifiers(), type.Node);
+        return AddMember(FieldDeclaration(VariableDeclaration(fieldType, SingletonSeparatedList(Variable(name, value))))
+            .WithAttributeLists(Lead.TakeAttributes())
+            .WithModifiers(modifiers));
+    }
+
+    public TypeScope Constructor(Action<ConstructorScope> signature, bool when = true)
+    {
+        if (when is false) return Skip();
+
+        var declaration = ConstructorDeclaration(Names.Identifier(_name))
+            .WithAttributeLists(Lead.TakeAttributes())
+            .WithModifiers(Lead.TakeModifiers());
+
+        var scope = new ConstructorScope();
+        signature(scope);
+        return AddMember(scope.Complete(declaration));
+    }
+}
+
+internal sealed class InterfaceScope : MemberScope<InterfaceScope>
+{
+    private protected override InterfaceScope Next => this;
 }
 
 internal sealed class EnumScope : Scope<EnumScope>

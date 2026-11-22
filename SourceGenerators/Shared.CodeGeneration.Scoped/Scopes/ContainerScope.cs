@@ -43,6 +43,8 @@ internal abstract class ContainerScope<TNext> : DeclarationScope<TNext> where TN
 
 internal sealed class FileScope : ContainerScope<FileScope>
 {
+    private const string DefineAfterCode = "A #define must precede the first using directive and declaration.";
+
     private protected override FileScope Next => this;
 
     public FileScope Nullable(bool when = true)
@@ -53,7 +55,10 @@ internal sealed class FileScope : ContainerScope<FileScope>
 
     public FileScope Define(string symbol, bool when = true)
     {
-        if (when) Lead.AddTrivia(Trivia(DefineDirectiveTrivia(symbol, isActive: true)));
+        if (when is false) return this;
+        if (Usings.Count > 0 || Members.Count > 0) throw new InvalidOperationException(DefineAfterCode);
+
+        Lead.AddTrivia(Trivia(DefineDirectiveTrivia(symbol, isActive: true)));
         return this;
     }
 

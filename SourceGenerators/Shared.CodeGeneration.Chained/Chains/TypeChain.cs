@@ -24,6 +24,14 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
 
     private protected bool Active { get; }
 
+    public TSelf Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
+    public TSelf Protected(bool when = true) => AddModifier(SyntaxKind.ProtectedKeyword, when);
+    public TSelf Virtual(bool when = true) => AddModifier(SyntaxKind.VirtualKeyword, when);
+    public TSelf Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TSelf New(bool when = true) => AddModifier(SyntaxKind.NewKeyword, when);
+    public TSelf Extern(bool when = true) => AddModifier(SyntaxKind.ExternKeyword, when);
+    public TSelf Async(bool when = true) => AddModifier(SyntaxKind.AsyncKeyword, when);
+
     public TSelf TypeParam(string name, Variance variance = Variance.None, bool when = true)
     {
         if (when) _typeParameters.Add(Declarations.BuildTypeParameter(name, variance));
@@ -114,6 +122,10 @@ internal abstract class TypeChain<TSelf> : MemberChain<TSelf> where TSelf : Type
         _name = name;
     }
 
+    public TSelf Const(bool when = true) => AddModifier(SyntaxKind.ConstKeyword, when);
+    public TSelf Volatile(bool when = true) => AddModifier(SyntaxKind.VolatileKeyword, when);
+    public TSelf Required(bool when = true) => AddModifier(SyntaxKind.RequiredKeyword, when);
+
     public TSelf Inherits(TypeRef type, bool when = true) => AddBaseType(type, when);
 
     public TSelf Field(TypeRef type, string name, Expr? value = null, bool when = true)
@@ -170,6 +182,23 @@ internal sealed class StructChain<TOuter> : TypeChain<StructChain<TOuter>> where
     }
 
     public TOuter EndStruct()
+    {
+        Complete(_outer);
+        return _outer;
+    }
+}
+
+internal sealed class RecordChain<TOuter> : TypeChain<RecordChain<TOuter>> where TOuter : class, IMemberHost
+{
+    private readonly TOuter _outer = default!;
+
+    internal RecordChain(TOuter outer, Opening opening, TypeDeclarationSyntax declaration, string name, bool active)
+        : base(opening, declaration, name, active)
+    {
+        _outer = outer;
+    }
+
+    public TOuter EndRecord()
     {
         Complete(_outer);
         return _outer;

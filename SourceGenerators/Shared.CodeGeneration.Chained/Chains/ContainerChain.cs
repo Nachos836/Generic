@@ -12,6 +12,8 @@ internal abstract class ContainerChain<TSelf> : DeclarationChain<TSelf> where TS
     private protected List<UsingDirectiveSyntax> Usings { get; } = [];
     private protected List<MemberDeclarationSyntax> Members { get; } = [];
 
+    public TSelf FileLocal(bool when = true) => AddModifier(SyntaxKind.FileKeyword, when);
+
     public TSelf Using(string name, bool when = true)
     {
         if (when) Usings.Add(Lead.Attach(UsingDirective(Names.Qualify(name))));

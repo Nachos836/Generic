@@ -1,0 +1,65 @@
+using System.Collections.Generic;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Shared.CodeGeneration.Chained.Rendering;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+
+namespace Shared.CodeGeneration.Chained;
+
+internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost where TSelf : DeclarationChain<TSelf>
+{
+    private protected DeclarationChain() : base(new())
+    {
+    }
+
+    public TSelf Attribute(string name, IReadOnlyList<Arg>? arguments = null, bool when = true)
+    {
+        if (when) Lead.AddAttribute(Declarations.BuildAttribute(name, arguments));
+        return Self;
+    }
+
+    public TSelf SplitAttributes(bool when = true)
+    {
+        if (when) Lead.SplitAttributes();
+        return Self;
+    }
+
+    public TSelf Public(bool when = true) => AddModifier(SyntaxKind.PublicKeyword, when);
+    public TSelf Internal(bool when = true) => AddModifier(SyntaxKind.InternalKeyword, when);
+    public TSelf Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
+    public TSelf Static(bool when = true) => AddModifier(SyntaxKind.StaticKeyword, when);
+    public TSelf Readonly(bool when = true) => AddModifier(SyntaxKind.ReadOnlyKeyword, when);
+    public TSelf Sealed(bool when = true) => AddModifier(SyntaxKind.SealedKeyword, when);
+    public TSelf Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TSelf Partial(bool when = true) => AddModifier(SyntaxKind.PartialKeyword, when);
+    public TSelf Unsafe(bool when = true) => AddModifier(SyntaxKind.UnsafeKeyword, when);
+    public TSelf Ref(bool when = true) => AddModifier(SyntaxKind.RefKeyword, when);
+
+    public ClassChain<TSelf> Class(string name, bool when = true)
+    {
+        return new(Self, Open(), ClassDeclaration(Names.CreateIdentifier(name)), name, when);
+    }
+
+    public StructChain<TSelf> Struct(string name, bool when = true)
+    {
+        return new(Self, Open(), StructDeclaration(Names.CreateIdentifier(name)), name, when);
+    }
+
+    public InterfaceChain<TSelf> Interface(string name, bool when = true)
+    {
+        return new(Self, Open(), InterfaceDeclaration(Names.CreateIdentifier(name)), when);
+    }
+
+    public EnumChain<TSelf> Enum(string name, bool when = true)
+    {
+        return new(Self, Open(), EnumDeclaration(Names.CreateIdentifier(name)), when);
+    }
+
+    void IMemberHost.AddMember(MemberDeclarationSyntax member)
+    {
+        Collect(member);
+        Lead.DropPrefixes();
+    }
+
+    private protected abstract void Collect(MemberDeclarationSyntax member);
+}

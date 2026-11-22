@@ -16,7 +16,6 @@ internal static class Names
         {
             return SyntaxFactory.Identifier(default, SyntaxKind.IdentifierToken, name, name.Substring(1), default);
         }
-
         return SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None
             ? SyntaxFactory.Identifier(name)
             : SyntaxFactory.Identifier(default, SyntaxKind.IdentifierToken, Verbatim + name, name, default);
@@ -31,7 +30,6 @@ internal static class Names
         {
             name = QualifiedName(name, IdentifierName(Identifier(segments[index])));
         }
-
         return name;
     }
 }

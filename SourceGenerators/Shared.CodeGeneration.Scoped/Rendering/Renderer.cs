@@ -15,9 +15,7 @@ internal static class Renderer
 
     public static string Render(CompilationUnitSyntax unit)
     {
-        var normalized = unit.NormalizeWhitespace(Indentation, LineBreak, elasticTrivia: true);
-
-        return InsertGaps(normalized).ToFullString();
+        return InsertGaps(unit.NormalizeWhitespace(Indentation, LineBreak, elasticTrivia: true)).ToFullString();
     }
 
     private static SyntaxNode InsertGaps(SyntaxNode root)
@@ -29,7 +27,6 @@ internal static class Renderer
 
         var tokens = root.DescendantTokens()
             .Where(token => gapTokens.Contains(token) || token.LeadingTrivia.Any(IsGap));
-
         return root.ReplaceTokens(tokens, (original, _) => original.WithLeadingTrivia(WithGaps(original, gapTokens)));
     }
 
@@ -45,7 +42,6 @@ internal static class Renderer
         }
 
         if (gapTokens.Contains(token)) AddBlankLine(trivia, previousLine);
-
         return trivia;
     }
 

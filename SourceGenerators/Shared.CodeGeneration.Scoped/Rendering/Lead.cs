@@ -54,7 +54,6 @@ internal sealed class Lead
         SplitAttributes();
         var lists = List(_attributeLists);
         _attributeLists.Clear();
-
         return lists;
     }
 
@@ -62,7 +61,6 @@ internal sealed class Lead
     {
         var modifiers = TokenList(_modifiers);
         _modifiers.Clear();
-
         return modifiers;
     }
 
@@ -70,7 +68,6 @@ internal sealed class Lead
     {
         var name = _explicitInterface;
         _explicitInterface = default;
-
         return name;
     }
 
@@ -89,7 +86,6 @@ internal sealed class Lead
 
         _trivia.Clear();
         _gap = false;
-
         return node;
     }
 
@@ -101,7 +97,6 @@ internal sealed class Lead
         _trivia.Clear();
         _gap = false;
         DropPrefixes();
-
         return token;
     }
 }

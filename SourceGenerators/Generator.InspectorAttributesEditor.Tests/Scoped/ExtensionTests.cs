@@ -21,11 +21,22 @@ internal static class SampleBlocks
         return body.Statement(LabeledStatement(label, EmptyStatement()));
     }
 
-    public static Expr Checked(Expr value)
+    public static BodyScope GoTo(this BodyScope body, string label, bool when = true)
     {
-        return Expression(CheckedExpression(SyntaxKind.CheckedExpression, value.Node!));
+        return body.Statement(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(label)), when);
     }
 
+    public static TypeScope VoidDelegate(this TypeScope type, string name, bool when = true)
+    {
+        return type.Member(DelegateDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)), name), when);
+    }
+
+    public static Expr Checked(Expr value, bool when = true)
+    {
+        return Expression(CheckedExpression(SyntaxKind.CheckedExpression, value.Node!), when);
+    }
+
+    public static TypeRef ObjectType(bool when = true) => Type(PredefinedType(Token(SyntaxKind.ObjectKeyword)), when);
     public static TypeRef Nint() => Type(IdentifierName("nint"));
 }
 
@@ -47,18 +58,13 @@ public sealed class ExtensionTests
 
     private static IEnumerable<TestCaseData> Positive()
     {
-        yield return Case("Type", static () => OfType(Type(PredefinedType(Token(SyntaxKind.ObjectKeyword))).Array()),
-            Expected.OfType("object[]"));
-        yield return Case("Expression", static () => OfExpression(Id("a").Assign(Expression(CheckedExpression(
-            SyntaxKind.CheckedExpression, IdentifierName("b"))).Binary(BinaryOperator.Add, Lit(1)))),
-            Expected.OfExpression("a = checked(b) + 1"));
-        yield return Case("Statement", static () => InBody(static body => body.Comment("Jump").Ref()
-                .Statement(GotoStatement(SyntaxKind.GotoStatement, IdentifierName("end"))).Var("x", Lit(1))),
-            Expected.InBody("// Jump\ngoto end;\nvar x = 1;"));
+        yield return Case("Type", static () => OfType(SampleBlocks.ObjectType().Array()), Expected.OfType("object[]"));
+        yield return Case("Expression", static () => OfExpression(Id("a").Assign(SampleBlocks.Checked(Id("b"))
+            .Binary(BinaryOperator.Add, Lit(1)))), Expected.OfExpression("a = checked(b) + 1"));
+        yield return Case("Statement", static () => InBody(static body => body.Comment("Jump").Ref().GoTo("end")
+            .Var("x", Lit(1))), Expected.InBody("// Jump\ngoto end;\nvar x = 1;"));
         yield return Case("Member", static () => InType(static type => type.Gap().Attribute("A").Public()
-                .Member(DelegateDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)), "D"))
-                .Field(T("int"), "f")),
-            Expected.InType("[A]\npublic delegate void D();\nint f;"));
+            .VoidDelegate("D").Field(T("int"), "f")), Expected.InType("[A]\npublic delegate void D();\nint f;"));
         yield return Case("MetaBlock", static () => InType(static type => type.Constant("A", 1).Constant("B", 2)
                 .Private().Field(T("int"), "f")),
             Expected.InType("public const int A = 1;\npublic const int B = 2;\nprivate int f;"));
@@ -70,17 +76,14 @@ public sealed class ExtensionTests
 
     private static IEnumerable<TestCaseData> FalseCondition()
     {
-        yield return Case("Type", static () => InType(static type => type.Field(Type(IdentifierName("A"), false),
-            "f")), Expected.InType(""));
-        yield return Case("Expression", static () => OfExpression(Id("f").Call([Expression(IdentifierName("a"),
+        yield return Case("Type", static () => InType(static type => type.Field(SampleBlocks.ObjectType(false), "f")),
+            Expected.InType(""));
+        yield return Case("Expression", static () => OfExpression(Id("f").Call([SampleBlocks.Checked(Id("a"),
             false)])), Expected.OfExpression("f()"));
-        yield return Case("Statement", static () => InBody(static body => body.Comment("Keep").Ref()
-                .Statement(BreakStatement(), false).Var("x", Lit(1))),
-            Expected.InBody("// Keep\nvar x = 1;"));
+        yield return Case("Statement", static () => InBody(static body => body.Comment("Keep").Ref().GoTo("end", false)
+            .Var("x", Lit(1))), Expected.InBody("// Keep\nvar x = 1;"));
         yield return Case("Member", static () => InType(static type => type.Comment("Keep").Public()
-                .Member(DelegateDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)), "D"), false)
-                .Field(T("int"), "f")),
-            Expected.InType("// Keep\nint f;"));
+            .VoidDelegate("D", false).Field(T("int"), "f")), Expected.InType("// Keep\nint f;"));
     }
 
     private static TestCaseData Case(string block, Func<string> actual, string expected)

@@ -59,7 +59,8 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
 
     public MethodChain<TSelf> Method(TypeRef returnType, string name, bool when = true)
     {
-        var opening = Open();
+        var active = when && returnType.Node is not null;
+        var opening = Open(active);
         var (modifiers, type) = Declarations.SplitRef(opening.Modifiers, returnType.Node ?? IdentifierName("void"));
         var declaration = MethodDeclaration(type, Names.CreateIdentifier(name))
             .WithAttributeLists(opening.Attributes)
@@ -70,7 +71,7 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
             declaration = declaration.WithExplicitInterfaceSpecifier(ExplicitInterfaceSpecifier(explicitInterface));
         }
 
-        return new(Self, opening.Leading, declaration, when && returnType.Node is not null);
+        return new(Self, opening.Leading, declaration, active);
     }
 
     private protected TSelf AddBaseType(TypeRef type, bool when)
@@ -129,7 +130,7 @@ internal abstract class TypeChain<TSelf> : MemberChain<TSelf> where TSelf : Type
 
     public ConstructorChain<TSelf> Constructor(bool when = true)
     {
-        var opening = Open();
+        var opening = Open(when);
         var declaration = ConstructorDeclaration(Names.CreateIdentifier(_name))
             .WithAttributeLists(opening.Attributes)
             .WithModifiers(opening.Modifiers);

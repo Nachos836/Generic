@@ -103,9 +103,15 @@ internal abstract class Chain<TSelf> where TSelf : Chain<TSelf>
         return chain;
     }
 
-    private protected Opening Open()
+    private protected Opening Open(bool active)
     {
-        return new(Lead.TakeLeading(), Lead.TakeAttributes(), Lead.TakeModifiers(), Lead.TakeExplicitInterface());
+        if (active)
+        {
+            return new(Lead.TakeLeading(), Lead.TakeAttributes(), Lead.TakeModifiers(), Lead.TakeExplicitInterface());
+        }
+
+        Lead.DropPrefixes();
+        return new(new([], false), default, default, default);
     }
 
     private protected TSelf AddModifier(SyntaxKind keyword, bool when)

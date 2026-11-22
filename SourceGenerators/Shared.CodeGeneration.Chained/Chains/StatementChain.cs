@@ -45,20 +45,22 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
 
     public IfChain<TSelf> If(Expr condition, bool braced = true, bool when = true)
     {
-        return new(Self, Open().Leading, condition.Node, braced, when && condition.Node is not null);
+        var active = when && condition.Node is not null;
+        return new(Self, Open(active).Leading, condition.Node, braced, active);
     }
 
     public ForeachChain<TSelf> Foreach(string name, Expr collection, bool when = true)
     {
+        var active = when && collection.Node is not null;
         var header = ForEachStatement(IdentifierName("var"), Names.CreateIdentifier(name),
             collection.Node ?? IdentifierName("_"), Block());
-        return new(Self, Open().Leading, header, when && collection.Node is not null);
+        return new(Self, Open(active).Leading, header, active);
     }
 
     public SwitchChain<TSelf> Switch(Expr value, bool when = true)
     {
-        return new(Self, Open().Leading, SwitchStatement(value.Node ?? IdentifierName("_")),
-            when && value.Node is not null);
+        var active = when && value.Node is not null;
+        return new(Self, Open(active).Leading, SwitchStatement(value.Node ?? IdentifierName("_")), active);
     }
 
     public FixedChain<TSelf> Fixed(TypeRef type, string name, Expr value, bool when = true)
@@ -66,7 +68,7 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
         var active = when && type.Node is not null && value.Node is not null;
         var declarator = Declarations.BuildVariable(name, value);
         var declaration = VariableDeclaration(type.Node ?? IdentifierName("var"), SingletonSeparatedList(declarator));
-        return new(Self, Open().Leading, FixedStatement(declaration, Block()), active);
+        return new(Self, Open(active).Leading, FixedStatement(declaration, Block()), active);
     }
 
     void IStatementHost.AddStatement(StatementSyntax statement)

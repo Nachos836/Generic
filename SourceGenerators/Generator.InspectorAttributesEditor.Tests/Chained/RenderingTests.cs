@@ -66,6 +66,23 @@ public sealed class RenderingTests
             .EndClass().EndFile(), "using System;\n\nclass A\n{\n}");
         yield return Case("StatementPrefixesStayBeforeStatement", static () => InBody(static body => body
             .Ref().Do(Id("a").Call()).Var("y", Id("z"))), Expected.InBody("a();\nvar y = z;"));
+        yield return Case("DisabledTypeKeepsDirective", static () => Code.File().IfDirective("X").Class("A", false)
+            .EndClass().EndIfDirective().Class("B").EndClass().EndFile(), "#if X\n#endif\nclass B\n{\n}");
+        yield return Case("DisabledMethodKeepsComment", static () => InType(static type => type.Comment("Keep")
+            .Method(T("void"), "M", false).EndMethod().Field(T("int"), "f")), Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledNamespaceKeepsDocComment", static () => Code.File().DocComment(Lines("Keep"))
+            .Namespace("N", false).EndNamespace().Class("A").EndClass().EndFile(), "/// Keep\nclass A\n{\n}");
+        yield return Case("DisabledConstructorKeepsGap", static () => InType(static type => type.Field(T("int"), "x")
+            .Gap().Constructor(false).EndConstructor().Field(T("int"), "y")), Expected.InType("int x;\n\nint y;"));
+        yield return Case("DisabledIfKeepsGap", static () => InBody(static body => body.Break()
+            .Gap().If(Id("a"), when: false).Return().EndIf().Return()), Expected.InBody("break;\n\nreturn;"));
+        yield return Case("DisabledForeachKeepsComment", static () => InBody(static body => body.Comment("Keep")
+            .Foreach("i", Id("items"), false).EndForeach().Break()), Expected.InBody("// Keep\nbreak;"));
+        yield return Case("DisabledSwitchKeepsComment", static () => InBody(static body => body.Comment("Keep")
+            .Switch(Id("x"), false).EndSwitch().Break()), Expected.InBody("// Keep\nbreak;"));
+        yield return Case("DisabledFixedKeepsComment", static () => InBody(static body => body.Comment("Keep")
+                .Fixed(T("void").Pointer(), "p", AddressOf(Id("x")), false).EndFixed().Break()),
+            Expected.InBody("// Keep\nbreak;"));
     }
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)

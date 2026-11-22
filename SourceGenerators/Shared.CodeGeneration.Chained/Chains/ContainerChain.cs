@@ -26,8 +26,7 @@ internal abstract class ContainerChain<TSelf> : DeclarationChain<TSelf> where TS
 
     public NamespaceChain<TSelf> Namespace(string name, bool when = true)
     {
-        var opening = Open();
-        return new(Self, opening.Leading, NamespaceDeclaration(Names.Qualify(name)), when);
+        return new(Self, Open(when).Leading, NamespaceDeclaration(Names.Qualify(name)), when);
     }
 
     private protected override void Collect(MemberDeclarationSyntax member) => Members.Add(member);

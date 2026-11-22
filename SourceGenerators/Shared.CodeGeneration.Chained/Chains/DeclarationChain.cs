@@ -37,22 +37,22 @@ internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost wher
 
     public ClassChain<TSelf> Class(string name, bool when = true)
     {
-        return new(Self, Open(), ClassDeclaration(Names.CreateIdentifier(name)), name, when);
+        return new(Self, Open(when), ClassDeclaration(Names.CreateIdentifier(name)), name, when);
     }
 
     public StructChain<TSelf> Struct(string name, bool when = true)
     {
-        return new(Self, Open(), StructDeclaration(Names.CreateIdentifier(name)), name, when);
+        return new(Self, Open(when), StructDeclaration(Names.CreateIdentifier(name)), name, when);
     }
 
     public InterfaceChain<TSelf> Interface(string name, bool when = true)
     {
-        return new(Self, Open(), InterfaceDeclaration(Names.CreateIdentifier(name)), when);
+        return new(Self, Open(when), InterfaceDeclaration(Names.CreateIdentifier(name)), when);
     }
 
     public EnumChain<TSelf> Enum(string name, bool when = true)
     {
-        return new(Self, Open(), EnumDeclaration(Names.CreateIdentifier(name)), when);
+        return new(Self, Open(when), EnumDeclaration(Names.CreateIdentifier(name)), when);
     }
 
     void IMemberHost.AddMember(MemberDeclarationSyntax member)

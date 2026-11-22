@@ -16,16 +16,22 @@ internal static class Renderer
     public static string Render(CompilationUnitSyntax unit)
     {
         var normalized = unit.NormalizeWhitespace(Indentation, LineBreak, elasticTrivia: true);
-        return TrimBeforeMissingTokens(InsertGaps(normalized)).ToFullString();
+        return TrimBeforeAdjoiningTokens(InsertGaps(normalized)).ToFullString();
     }
 
-    private static SyntaxNode TrimBeforeMissingTokens(SyntaxNode root)
+    private static SyntaxNode TrimBeforeAdjoiningTokens(SyntaxNode root)
     {
         var tokens = root.DescendantTokens()
-            .Where(static token => token.GetNextToken(includeZeroWidth: true).IsMissing);
+            .Where(static token => IsAdjoining(token.GetNextToken(includeZeroWidth: true)));
         return root.ReplaceTokens(tokens, static (original, _) => original.WithTrailingTrivia(
             original.TrailingTrivia.Reverse().SkipWhile(static item => item.IsKind(SyntaxKind.WhitespaceTrivia))
                 .Reverse()));
+    }
+
+    private static bool IsAdjoining(SyntaxToken token)
+    {
+        return token.IsMissing || token.Parent is ParameterListSyntax { Parent: BaseMethodDeclarationSyntax } list
+            && token == list.OpenParenToken;
     }
 
     private static SyntaxNode InsertGaps(SyntaxNode root)

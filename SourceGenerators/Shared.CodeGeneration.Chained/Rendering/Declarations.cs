@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -9,6 +10,46 @@ namespace Shared.CodeGeneration.Chained.Rendering;
 
 internal static class Declarations
 {
+    private const string NotOverloadable = "The operator cannot be overloaded.";
+
+    public static SyntaxKind MapOperatorToken(BinaryOperator @operator)
+    {
+        return @operator switch
+        {
+            BinaryOperator.Add => SyntaxKind.PlusToken,
+            BinaryOperator.Subtract => SyntaxKind.MinusToken,
+            BinaryOperator.Multiply => SyntaxKind.AsteriskToken,
+            BinaryOperator.Divide => SyntaxKind.SlashToken,
+            BinaryOperator.Modulo => SyntaxKind.PercentToken,
+            BinaryOperator.LeftShift => SyntaxKind.LessThanLessThanToken,
+            BinaryOperator.RightShift => SyntaxKind.GreaterThanGreaterThanToken,
+            BinaryOperator.Less => SyntaxKind.LessThanToken,
+            BinaryOperator.LessOrEqual => SyntaxKind.LessThanEqualsToken,
+            BinaryOperator.Greater => SyntaxKind.GreaterThanToken,
+            BinaryOperator.GreaterOrEqual => SyntaxKind.GreaterThanEqualsToken,
+            BinaryOperator.Equal => SyntaxKind.EqualsEqualsToken,
+            BinaryOperator.NotEqual => SyntaxKind.ExclamationEqualsToken,
+            BinaryOperator.BitwiseAnd => SyntaxKind.AmpersandToken,
+            BinaryOperator.BitwiseOr => SyntaxKind.BarToken,
+            BinaryOperator.ExclusiveOr => SyntaxKind.CaretToken,
+            _ => throw new ArgumentOutOfRangeException(nameof(@operator), @operator, NotOverloadable)
+        };
+    }
+
+    public static SyntaxKind MapOperatorToken(UnaryOperator @operator)
+    {
+        return @operator switch
+        {
+            UnaryOperator.Plus => SyntaxKind.PlusToken,
+            UnaryOperator.Minus => SyntaxKind.MinusToken,
+            UnaryOperator.Not => SyntaxKind.ExclamationToken,
+            UnaryOperator.BitwiseNot => SyntaxKind.TildeToken,
+            UnaryOperator.Increment => SyntaxKind.PlusPlusToken,
+            UnaryOperator.Decrement => SyntaxKind.MinusMinusToken,
+            _ => throw new ArgumentOutOfRangeException(nameof(@operator), @operator, null)
+        };
+    }
+
     public static (SyntaxTokenList Modifiers, TypeSyntax Type) SplitRef(SyntaxTokenList modifiers, TypeSyntax type)
     {
         var index = modifiers.IndexOf(SyntaxKind.RefKeyword);

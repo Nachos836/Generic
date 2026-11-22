@@ -22,6 +22,22 @@ internal enum BinaryOperator
     Or
 }
 
+internal enum UnaryOperator
+{
+    Plus,
+    Minus,
+    Not,
+    BitwiseNot,
+    Increment,
+    Decrement
+}
+
+internal enum ConversionKind
+{
+    Implicit,
+    Explicit
+}
+
 internal enum Variance
 {
     None,

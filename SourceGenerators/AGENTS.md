@@ -5,6 +5,7 @@
   - Drawer — the nested `Drawer : UnityEditor.Editor` class the generator writes into an owner.
   - Shared project — a `.shproj` whose `.projitems` a generator's `.csproj` imports as source.
   - Pipeline model — a value a generator's incremental pipeline passes between its stages.
+  - Extension block — a block a generator builds from a Roslyn node via a style's `Extensions`.
 
 ---
 
@@ -27,7 +28,7 @@
 > **Purpose:** to keep generated code compiling in the editor and absent from player builds.
 
 - Describe every part of a generator's output with the language of blocks, never as raw text.
-- Call `SyntaxFactory` only inside `Shared.CodeGeneration.*`, never in a generator's own code.
+- Call `SyntaxFactory` only in `Shared.CodeGeneration.*` or a generator's extension blocks.
 - Wrap each generated editor file in `#if UNITY_EDITOR` with `IfDirective` and `EndIfDirective`.
 - Give each pipeline model value equality over all of its fields.
 

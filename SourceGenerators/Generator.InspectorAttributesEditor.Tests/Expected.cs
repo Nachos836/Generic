@@ -10,24 +10,20 @@ internal static class Expected
     public static string OfExpression(string expression) => InBody(expression + ";");
     public static string OfType(string type) => InType(type + " f;");
 
-    public static string Tabs(string text)
+    public static string ConvertToTabs(string text)
     {
-        return string.Join("\n", text.Replace("\r\n", "\n").Split('\n').Select(ToTabs));
+        return string.Join("\n", text.Replace("\r\n", "\n").Split('\n').Select(ConvertLineToTabs));
     }
 
     private static string Wrap(string header, string body)
     {
-        var indented = Indent(body);
-        return indented.Length == 0 ? $"{header}\n{{\n}}" : $"{header}\n{{\n{indented}\n}}";
+        if (body.Length == 0) return $"{header}\n{{\n}}";
+
+        var lines = ConvertToTabs(body).Split('\n').Select(static line => line.Length == 0 ? line : "\t" + line);
+        return $"{header}\n{{\n{string.Join("\n", lines)}\n}}";
     }
 
-    private static string Indent(string text)
-    {
-        if (text.Length == 0) return string.Empty;
-        return string.Join("\n", Tabs(text).Split('\n').Select(static line => line.Length == 0 ? line : "\t" + line));
-    }
-
-    private static string ToTabs(string line)
+    private static string ConvertLineToTabs(string line)
     {
         var tabs = 0;
         while (line.StartsWith(FourSpaces, StringComparison.Ordinal))

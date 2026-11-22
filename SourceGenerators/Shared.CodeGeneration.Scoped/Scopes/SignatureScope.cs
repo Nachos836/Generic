@@ -19,14 +19,14 @@ internal abstract class SignatureScope<TSelf> : Scope<TSelf> where TSelf : Signa
 
     public TSelf Attribute(string name, IReadOnlyList<Arg>? arguments = null, bool when = true)
     {
-        if (when) Lead.AddAttribute(Declarations.Attribute(name, arguments));
+        if (when) Lead.AddAttribute(Declarations.BuildAttribute(name, arguments));
         return Next;
     }
 
-    public TSelf Ref(bool when = true) => Modifier(SyntaxKind.RefKeyword, when);
-    public TSelf In(bool when = true) => Modifier(SyntaxKind.InKeyword, when);
-    public TSelf This(bool when = true) => Modifier(SyntaxKind.ThisKeyword, when);
-    public TSelf Readonly(bool when = true) => Modifier(SyntaxKind.ReadOnlyKeyword, when);
+    public TSelf Ref(bool when = true) => AddModifier(SyntaxKind.RefKeyword, when);
+    public TSelf In(bool when = true) => AddModifier(SyntaxKind.InKeyword, when);
+    public TSelf This(bool when = true) => AddModifier(SyntaxKind.ThisKeyword, when);
+    public TSelf Readonly(bool when = true) => AddModifier(SyntaxKind.ReadOnlyKeyword, when);
 
     public TSelf Param(TypeRef type, string name, Expr? value = null, bool when = true)
     {
@@ -36,7 +36,7 @@ internal abstract class SignatureScope<TSelf> : Scope<TSelf> where TSelf : Signa
             return Next;
         }
 
-        var parameter = Parameter(Names.Identifier(name))
+        var parameter = Parameter(Names.CreateIdentifier(name))
             .WithType(type.Node)
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(Lead.TakeModifiers());
@@ -49,7 +49,7 @@ internal abstract class SignatureScope<TSelf> : Scope<TSelf> where TSelf : Signa
 
     public TSelf Body(Action<BodyScope> body, bool when = true)
     {
-        if (when) _body = BodyScope.Block(body);
+        if (when) _body = BodyScope.BuildBlock(body);
         return Next;
     }
 
@@ -71,7 +71,7 @@ internal abstract class SignatureScope<TSelf> : Scope<TSelf> where TSelf : Signa
             : (TDeclaration)completed.WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
     }
 
-    private TSelf Modifier(SyntaxKind keyword, bool when)
+    private TSelf AddModifier(SyntaxKind keyword, bool when)
     {
         if (when) Lead.AddModifier(keyword);
         return Next;
@@ -87,13 +87,13 @@ internal sealed class MethodScope : SignatureScope<MethodScope>
 
     public MethodScope TypeParam(string name, Variance variance = Variance.None, bool when = true)
     {
-        if (when) _typeParameters.Add(Declarations.TypeParameter(name, variance));
+        if (when) _typeParameters.Add(Declarations.BuildTypeParameter(name, variance));
         return this;
     }
 
     public MethodScope Where(string name, IReadOnlyList<Constraint> constraints, bool when = true)
     {
-        if (when && Declarations.Constraints(name, constraints) is { } clause) _constraints.Add(clause);
+        if (when && Declarations.BuildConstraints(name, constraints) is { } clause) _constraints.Add(clause);
         return this;
     }
 
@@ -119,7 +119,7 @@ internal sealed class ConstructorScope : SignatureScope<ConstructorScope>
         if (when)
         {
             _initializer = ConstructorInitializer(SyntaxKind.ThisConstructorInitializer,
-                ArgumentList(Expr.Arguments(arguments)));
+                ArgumentList(Expr.BuildArguments(arguments)));
         }
 
         return this;

@@ -19,13 +19,13 @@ internal abstract class ContainerScope<TNext> : DeclarationScope<TNext> where TN
 
     public TNext Using(string name, bool when = true)
     {
-        if (when) Usings.Add(Lead.Attach(UsingDirective(Names.Qualified(name))));
+        if (when) Usings.Add(Lead.Attach(UsingDirective(Names.Qualify(name))));
         return Skip();
     }
 
     public TNext UsingStatic(string name, bool when = true)
     {
-        if (when) Usings.Add(Lead.Attach(UsingDirective(Token(SyntaxKind.StaticKeyword), null, Names.Qualified(name))));
+        if (when) Usings.Add(Lead.Attach(UsingDirective(Token(SyntaxKind.StaticKeyword), null, Names.Qualify(name))));
         return Skip();
     }
 
@@ -35,7 +35,7 @@ internal abstract class ContainerScope<TNext> : DeclarationScope<TNext> where TN
 
         var scope = new NamespaceScope();
         body(scope);
-        return AddMember(scope.Complete(NamespaceDeclaration(Names.Qualified(name))));
+        return AddMember(scope.Complete(NamespaceDeclaration(Names.Qualify(name))));
     }
 
     private protected override void Add(MemberDeclarationSyntax member) => Members.Add(member);

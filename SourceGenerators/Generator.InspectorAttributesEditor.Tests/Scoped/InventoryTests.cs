@@ -21,17 +21,19 @@ public sealed class InventoryTests
 
     private static readonly Expr CollectionsChecks = Id("ENABLE_UNITY_COLLECTIONS_CHECKS");
 
+    private static IReadOnlyList<Constraint> ItemConstraints => [Constraint.Unmanaged, T("IItem")];
+
     [Test]
     public void PickableItemIsExpressed()
     {
-        var generated = Code.File(file => file
+        var generated = Code.File(static file => file
             .Nullable()
             .Gap().Using("System").Using("System.Runtime.CompilerServices")
             .Gap().Comment(NamespaceWarning)
-            .Namespace(Namespace, scope => scope
-                .Attribute("CompilerGenerated").Internal().Interface("IPickableItem", type => type
+            .Namespace(Namespace, static scope => scope
+                .Attribute("CompilerGenerated").Internal().Interface("IPickableItem", static type => type
                     .Method(T("void"), "ProvideTo", static method => method.Param(T("Inventory"), "_")))
-                .Attribute("CompilerGenerated").Internal().Interface("IPickableItem", type => type
+                .Attribute("CompilerGenerated").Internal().Interface("IPickableItem", static type => type
                     .TypeParam("TItem", Variance.Out).Implements(T("IPickableItem")).Where("TItem", ItemConstraints)
                     .Method(T("void"), "Accept", static method => method
                         .Param(T("Inventory"), "inventory")
@@ -50,15 +52,15 @@ public sealed class InventoryTests
     [Test]
     public void InventoryIsExpressed()
     {
-        var generated = Code.File(file => file
+        var generated = Code.File(static file => file
             .Nullable()
             .Gap().Using("System").Using("System.Collections.Generic").Using("System.Diagnostics.Contracts")
             .Using("System.Runtime.CompilerServices").Using("NativeRefCollections.Runtime").Using("Unity.Burst")
             .Using("Unity.Collections")
             .Gap().Comment(NamespaceWarning)
-            .Namespace(Namespace, scope => scope
+            .Namespace(Namespace, static scope => scope
                 .Attribute("BurstCompile").SplitAttributes().Attribute("CompilerGenerated")
-                .Public().Sealed().Partial().Class("Inventory", InventoryMembers)));
+                .Public().Sealed().Partial().Class("Inventory", WriteInventoryMembers)));
 
         InventorySample.AssertExpresses(InventorySample.Read("Inventory.cs"), generated);
     }
@@ -66,34 +68,34 @@ public sealed class InventoryTests
     [Test]
     public void ItemIsExpressed()
     {
-        var generated = Code.File(file => file
+        var generated = Code.File(static file => file
             .Nullable()
             .Gap().Using("System").Using("System.Runtime.CompilerServices").Using("System.Runtime.InteropServices")
             .Using("Generic.Samples.GameplayInventory.Concrete").Using("Unity.Burst")
             .Using("Unity.Collections.LowLevel.Unsafe").UsingStatic("System.Runtime.CompilerServices.MethodImplOptions")
             .Gap().Comment(NamespaceWarning)
-            .Namespace(Namespace, scope => scope
+            .Namespace(Namespace, static scope => scope
                 .DocComment(Lines("<summary>",
                     "Visitor for exhaustive matching over the <see cref=\"Item\"/> tagged union.",
                     "Adding a new <see cref=\"IItem\"/> type forces every implementation to handle it.",
                     "</summary>"))
-                .Attribute("CompilerGenerated").Public().Interface("IItemVisitor", type => type
+                .Attribute("CompilerGenerated").Public().Interface("IItemVisitor", static type => type
                     .TypeParam("TResult", Variance.Out)
                     .ForEach(Items, static (members, item) => members
                         .Method(T("TResult"), "Visit", method => method.In().Param(T(item.Type), item.Field))))
                 .Gap().DocComment(Lines("<summary>", "Void-returning visitor (side effects only).", "</summary>"))
-                .Attribute("CompilerGenerated").Public().Interface("IItemVisitor", type => type
+                .Attribute("CompilerGenerated").Public().Interface("IItemVisitor", static type => type
                     .ForEach(Items, static (members, item) => members
                         .Method(T("void"), "Visit", method => method.In().Param(T(item.Type), item.Field))))
                 .Gap().Attribute("BurstCompile").SplitAttributes()
                 .Attribute("StructLayout", [Id("LayoutKind").Dot("Explicit")]).SplitAttributes()
                 .Attribute("CompilerGenerated")
-                .Public().Readonly().Partial().Struct("Item", ItemMembers)
-                .Gap().Attribute("CompilerGenerated").Internal().Static().Class("ItemExtensions", type => type
+                .Public().Readonly().Partial().Struct("Item", WriteItemMembers)
+                .Gap().Attribute("CompilerGenerated").Internal().Static().Class("ItemExtensions", static type => type
                     .Attribute("MethodImpl", [Id("AggressiveInlining")])
                     .Public().Static().Method(T("Item"), "ToUnion", static method => method
                         .TypeParam("TItem").This().Param(T("TItem"), "income").Where("TItem", ItemConstraints)
-                        .Body(static body => ItemBranches(body, static (branch, item) => branch
+                        .Body(static body => WriteItemBranches(body, static (branch, item) => branch
                             .Return(New(T("Item"), [
                                 Id("UnsafeUtility").Dot("As").TypeArgs([T("TItem"), T(item.Type)])
                                     .Call([RefArg(Id("income"))])
@@ -102,9 +104,7 @@ public sealed class InventoryTests
         InventorySample.AssertExpresses(InventorySample.Read("Item.cs"), generated);
     }
 
-    private static IReadOnlyList<Constraint> ItemConstraints => [Constraint.Unmanaged, T("IItem")];
-
-    private static void InventoryMembers(TypeScope type)
+    private static void WriteInventoryMembers(TypeScope type)
     {
         var map = T("NativeRefHashMap", [T("Item").Nested("TypeId"), T("Item")]);
 
@@ -126,77 +126,75 @@ public sealed class InventoryTests
             .Gap().Attribute("MethodImpl", [Id("MethodImplOptions").Dot("AggressiveInlining")])
             .Public().Method(map.Nested("ReadOnly"), "ProvideItems", static method => method
                 .Body(static body => body.Return(Id("_map").Dot("AsReadOnly").Call())))
-            .Gap().Public().Method(T("void"), "Add", static method => ItemMethod(method, withItem: true)
+            .Gap().Public().Method(T("void"), "Add", static method => DeclareItemMethod(method, withItem: true)
                 .Body(static body => body
-                    .Var("id", ItemType()).Var("union", ToUnion())
+                    .Var("id", CallGetType()).Var("union", CallToUnion())
                     .Do(Id("_map").Dot("Add").Call([Id("id"), Id("union")]))
-                    .Gap().Do(ItemsChanged())))
-            .Gap().Public().Method(T("void"), "Remove", static method => ItemMethod(method, withItem: false)
+                    .Gap().Do(InvokeItemsChanged())))
+            .Gap().Public().Method(T("void"), "Remove", static method => DeclareItemMethod(method, withItem: false)
                 .Body(static body => body
-                    .Var("type", ItemType())
-                    .If(Removed(), static then => then.Throw(New(T("KeyNotFoundException"),
+                    .Var("type", CallGetType())
+                    .If(CallRemoveIsFalse(), static then => then.Throw(New(T("KeyNotFoundException"),
                         [Id("type").Dot("ToString").Call()])), braced: false)
-                    .Gap().Do(ItemsChanged())))
+                    .Gap().Do(InvokeItemsChanged())))
             .Gap().Attribute("Pure").Public().Ref().Readonly().Method(T("TItem"), "Read", static method =>
-                ItemMethod(method,
-                    withItem: false).Body(static body => body
-                    .Var("type", ItemType())
+                DeclareItemMethod(method, withItem: false).Body(static body => body
+                    .Var("type", CallGetType())
                     .Ref().Readonly().Var("candidate", Ref(Id("_map").Index([Id("type")])))
                     .Gap().Return(Ref(Id("candidate").Dot("Cast").TypeArgs([T("TItem")]).Call()))))
-            .Gap().Public().Method(T("void"), "Write", static method => ItemMethod(method, withItem: true)
+            .Gap().Public().Method(T("void"), "Write", static method => DeclareItemMethod(method, withItem: true)
                 .Body(static body => body
-                    .Var("type", ItemType()).Var("union", ToUnion())
+                    .Var("type", CallGetType()).Var("union", CallToUnion())
                     .Do(Id("_map").Index([Id("type")]).Assign(Id("union")))
-                    .Gap().Do(ItemsChanged())))
-            .Gap().Public().Method(T("bool"), "TryAdd", static method => ItemMethod(method, withItem: true)
+                    .Gap().Do(InvokeItemsChanged())))
+            .Gap().Public().Method(T("bool"), "TryAdd", static method => DeclareItemMethod(method, withItem: true)
                 .Body(static body => body
-                    .Var("type", ItemType()).Var("union", ToUnion())
+                    .Var("type", CallGetType()).Var("union", CallToUnion())
                     .If(Id("_map").Dot("TryAdd").Call([Id("type"), Id("union")]).Is(Lit(false)),
                         static then => then.Return(Lit(false)), braced: false)
-                    .Gap().Do(ItemsChanged()).Return(Lit(true))))
-            .Gap().Public().Method(T("bool"), "TryRemove", static method => ItemMethod(method, withItem: false)
+                    .Gap().Do(InvokeItemsChanged()).Return(Lit(true))))
+            .Gap().Public().Method(T("bool"), "TryRemove", static method => DeclareItemMethod(method, withItem: false)
                 .Body(static body => body
-                    .Var("type", ItemType())
-                    .If(Removed(), static then => then.Return(Lit(false)), braced: false)
-                    .Gap().Do(ItemsChanged()).Return(Lit(true))))
+                    .Var("type", CallGetType())
+                    .If(CallRemoveIsFalse(), static then => then.Return(Lit(false)), braced: false)
+                    .Gap().Do(InvokeItemsChanged()).Return(Lit(true))))
             .Gap().Attribute("Pure").Public().Ref().Readonly().Method(T("TItem"), "TryRead", static method =>
-                ItemMethod(method,
-                    withItem: false).Body(static body => body
-                    .Var("type", ItemType())
+                DeclareItemMethod(method, withItem: false).Body(static body => body
+                    .Var("type", CallGetType())
                     .Ref().Var("item", Ref(Id("_map").Index([Id("type")])))
                     .If(Id("Unsafe").Dot("IsNullRef").Call([RefArg(Id("item"))]),
                         static then => then.Return(Ref(Id("Unsafe").Dot("NullRef").TypeArgs([T("TItem")]).Call())),
                         braced: false)
                     .Gap().Return(Ref(Id("item").Dot("Cast").TypeArgs([T("TItem")]).Call()))))
-            .Gap().Public().Method(T("bool"), "TryWrite", static method => ItemMethod(method, withItem: true)
+            .Gap().Public().Method(T("bool"), "TryWrite", static method => DeclareItemMethod(method, withItem: true)
                 .Body(static body => body
-                    .Var("type", ItemType())
+                    .Var("type", CallGetType())
                     .If(Id("_map").Dot("ContainsKey").Call([Id("type")]).Is(Lit(false)),
                         static then => then.Return(Lit(false)), braced: false)
-                    .Gap().Var("union", ToUnion())
+                    .Gap().Var("union", CallToUnion())
                     .Do(Id("_map").Index([Id("type")]).Assign(Id("union")))
-                    .Gap().Do(ItemsChanged()).Return(Lit(true))))
-            .Gap().Public().Method(T("void"), "AddOrSet", static method => ItemMethod(method, withItem: true)
+                    .Gap().Do(InvokeItemsChanged()).Return(Lit(true))))
+            .Gap().Public().Method(T("void"), "AddOrSet", static method => DeclareItemMethod(method, withItem: true)
                 .Body(static body => body
-                    .Var("type", ItemType()).Var("union", ToUnion())
+                    .Var("type", CallGetType()).Var("union", CallToUnion())
                     .Gap().Do(Id("_map").Dot("SetValue").Call([InArg(Id("type")), InArg(Id("union"))]))))
             .Gap().Public().Method(T("void"), "Dispose", static method => method.Body(static body => body
                 .Do(Id("_map").Dot("Dispose").Call())
                 .Do(Id("_map").Assign(Default().NullForgiving()))));
     }
 
-    private static MethodScope ItemMethod(MethodScope method, bool withItem)
+    private static MethodScope DeclareItemMethod(MethodScope method, bool withItem)
     {
         return method.TypeParam("TItem").In(withItem).Param(T("TItem"), "item", when: withItem)
             .Where("TItem", ItemConstraints);
     }
 
-    private static Expr ItemType() => Id("Item").Dot("GetType").TypeArgs([T("TItem")]).Call();
-    private static Expr ToUnion() => Id("item").Dot("ToUnion").Call();
-    private static Expr ItemsChanged() => Id("ItemsChanged").NullDot("Invoke").Call();
-    private static Expr Removed() => Id("_map").Dot("Remove").Call([Id("type")]).Is(Lit(false));
+    private static Expr CallGetType() => Id("Item").Dot("GetType").TypeArgs([T("TItem")]).Call();
+    private static Expr CallToUnion() => Id("item").Dot("ToUnion").Call();
+    private static Expr InvokeItemsChanged() => Id("ItemsChanged").NullDot("Invoke").Call();
+    private static Expr CallRemoveIsFalse() => Id("_map").Dot("Remove").Call([Id("type")]).Is(Lit(false));
 
-    private static void ItemMembers(TypeScope type)
+    private static void WriteItemMembers(TypeScope type)
     {
         var privateTypeId = T("PrivateTypeId");
 
@@ -218,7 +216,7 @@ public sealed class InventoryTests
             .Gap().Attribute("MethodImpl", [Id("AggressiveInlining")])
             .Internal().Static().Method(T("TypeId"), "GetType", static method => method
                 .TypeParam("TItem").Where("TItem", ItemConstraints)
-                .Body(static body => ItemBranches(body, static (branch, item) => branch
+                .Body(static body => WriteItemBranches(body, static (branch, item) => branch
                     .Return(New(T("TypeId"), [Cast(T("ulong"), Id("PrivateTypeId").Dot(item.Type))])))))
             .Gap().Attribute("MethodImpl", [Id("AggressiveInlining")])
             .Internal().Static().Method(T("TypeId"), "GetType", static method => method
@@ -230,7 +228,7 @@ public sealed class InventoryTests
             .Gap().Attribute("MethodImpl", [Id("AggressiveInlining")])
             .Internal().Unsafe().Ref().Readonly().Method(T("TItem"), "Cast", static method => method
                 .TypeParam("TItem").Where("TItem", ItemConstraints)
-                .Body(static body => ItemBranches(body, static (branch, item) => branch
+                .Body(static body => WriteItemBranches(body, static (branch, item) => branch
                     .Fixed(T("void").Pointer(), "raw", AddressOf(Id("_" + item.Field)), static block => block
                         .Return(Ref(Id("UnsafeUtility").Dot("ArrayElementAsRef").TypeArgs([T("TItem")])
                             .Call([Id("raw"), Named("index", Lit(0))])))))))
@@ -238,9 +236,10 @@ public sealed class InventoryTests
             .Public().Method(T("TResult"), "Accept", static method => method
                 .TypeParam("TResult").Param(T("IItemVisitor", [T("TResult")]), "visitor")
                 .Body(static body => body.Return(Id("CurrentPrivateTypeId").Switch(static arms => arms
-                    .ForEach(Items, static (scope, item) => scope.Arm(Id("PrivateTypeId").Dot(item.Type), Visit(item)))
+                    .ForEach(Items,
+                        static (scope, item) => scope.Arm(Id("PrivateTypeId").Dot(item.Type), CallVisit(item)))
                     .Gap().IfDirective(CollectionsChecks)
-                    .Arm(Discard(), ThrowExpression(OutOfRange()))
+                    .Arm(Discard(), ThrowExpression(CreateOutOfRange()))
                     .ElseDirective()
                     .Arm(Discard(), Default().NullForgiving())
                     .EndIfDirective()))))
@@ -249,33 +248,35 @@ public sealed class InventoryTests
                 .Param(T("IItemVisitor"), "visitor")
                 .Body(static body => body.Switch(Id("CurrentPrivateTypeId"), static sections => sections
                     .ForEach(Items, static (scope, item) => scope.Case(Id("PrivateTypeId").Dot(item.Type),
-                        section => section.Do(Visit(item)).Break()))
+                        section => section.Do(CallVisit(item)).Break()))
                     .Gap().IfDirective(CollectionsChecks)
-                    .Default(static section => section.Throw(OutOfRange()))
+                    .Default(static section => section.Throw(CreateOutOfRange()))
                     .EndIfDirective())))
             .Gap().Private().Enum("PrivateTypeId", static members => members
                 .Inherits(T("ulong"))
                 .ForEach(Items, static (scope, item) => scope.EnumMember(item.Type, Lit(item.Id))))
-            .Gap().Attribute("BurstCompile").Public().Readonly().Struct("TypeId", TypeIdMembers);
+            .Gap().Attribute("BurstCompile").Public().Readonly().Struct("TypeId", WriteTypeIdMembers);
     }
 
-    private static Expr Visit((string Type, string Field, int Id) item)
+    private static Expr CallVisit((string Type, string Field, int Id) item)
     {
         return Id("visitor").Dot("Visit").Call([InArg(Id("_" + item.Field))]);
     }
 
-    private static Expr OutOfRange()
+    private static Expr CreateOutOfRange()
     {
         return New(T("ArgumentOutOfRangeException"),
             [NameOf(Id("CurrentPrivateTypeId")), Id("CurrentPrivateTypeId"), Lit(UnknownItem)]);
     }
 
-    private static void ItemBranches(BodyScope body, Action<BodyScope, (string Type, string Field, int Id)> branch)
+    private static void WriteItemBranches(BodyScope body,
+        Action<BodyScope, (string Type, string Field, int Id)> branch)
     {
         IfScope chain = default!;
         foreach (var item in Items)
         {
             var condition = TypeOf(T("TItem")).Binary(Equal, TypeOf(T(item.Type)));
+
             chain = chain == default
                 ? body.If(condition, then => branch(then, item))
                 : chain.ElseIf(condition, then => branch(then, item));
@@ -289,7 +290,7 @@ public sealed class InventoryTests
             .EndIfDirective());
     }
 
-    private static void TypeIdMembers(TypeScope type)
+    private static void WriteTypeIdMembers(TypeScope type)
     {
         var privateTypeId = Id("_privateTypeId");
 

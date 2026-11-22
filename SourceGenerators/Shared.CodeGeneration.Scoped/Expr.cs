@@ -19,26 +19,29 @@ internal sealed class Expr
 
     public Expr Dot(string name, bool when = true)
     {
-        return Postfix(when, node => node is MemberBindingExpressionSyntax or ElementBindingExpressionSyntax
-            ? MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, node, Member(name))
-            : MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, Primary(node), Member(name)));
+        return ApplyPostfix(when, node => node is MemberBindingExpressionSyntax or ElementBindingExpressionSyntax
+            ? MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, node, BuildMemberName(name))
+            : MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, ParenthesizeForPostfix(node),
+                BuildMemberName(name)));
     }
 
     public Expr NullDot(string name, bool when = true)
     {
-        return Postfix(when, node => ConditionalAccessExpression(Primary(node), MemberBindingExpression(Member(name))));
+        return ApplyPostfix(when, node => ConditionalAccessExpression(ParenthesizeForPostfix(node),
+            MemberBindingExpression(BuildMemberName(name))));
     }
 
     public Expr Call(IReadOnlyList<Arg>? arguments = null, bool when = true)
     {
-        return Postfix(when, node => InvocationExpression(Receiver(node), ArgumentList(Arguments(arguments))));
+        return ApplyPostfix(when,
+            node => InvocationExpression(PrepareReceiver(node), ArgumentList(BuildArguments(arguments))));
     }
 
     public Expr TypeArgs(IReadOnlyList<TypeRef> arguments, bool when = true)
     {
         var list = TypeArgumentList(SeparatedList(arguments.Where(static argument => argument.IsEmpty is false)
             .Select(static argument => argument.Node!)));
-        return Postfix(when && list.Arguments.Count > 0, node => node switch
+        return ApplyPostfix(when && list.Arguments.Count > 0, node => node switch
         {
             IdentifierNameSyntax identifier => GenericName(identifier.Identifier, list),
             MemberAccessExpressionSyntax { Name: IdentifierNameSyntax name } access
@@ -51,8 +54,8 @@ internal sealed class Expr
 
     public Expr Index(IReadOnlyList<Arg> arguments, bool when = true)
     {
-        return Postfix(when,
-            node => ElementAccessExpression(Receiver(node), BracketedArgumentList(Arguments(arguments))));
+        return ApplyPostfix(when,
+            node => ElementAccessExpression(PrepareReceiver(node), BracketedArgumentList(BuildArguments(arguments))));
     }
 
     public Expr Init(IReadOnlyList<Expr> items, bool when = true)
@@ -60,6 +63,7 @@ internal sealed class Expr
         if (when is false || Node is not BaseObjectCreationExpressionSyntax creation) return this;
 
         var nodes = items.Where(static item => item.IsEmpty is false).Select(static item => item.Node!).ToArray();
+
         var kind = nodes.All(static node => node is AssignmentExpressionSyntax)
             ? SyntaxKind.ObjectInitializerExpression
             : SyntaxKind.CollectionInitializerExpression;
@@ -70,29 +74,30 @@ internal sealed class Expr
     {
         if (when is false || Node is null || value.Node is null) return this;
         return new(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
-            Precedence.AtLeast(Node, Precedence.Unary), value.Node));
+            Precedence.Parenthesize(Node, Precedence.Unary), value.Node));
     }
 
     public Expr Binary(BinaryOperator @operator, Expr right, bool when = true)
     {
         if (when is false || Node is null || right.Node is null) return this;
 
-        var kind = KindOf(@operator);
-        var precedence = Precedence.Of(kind);
-        return new(BinaryExpression(kind, Precedence.AtLeast(Node, precedence),
-            Precedence.AtLeast(right.Node, precedence + 1)));
+        var kind = MapOperator(@operator);
+        var precedence = Precedence.Rank(kind);
+        return new(BinaryExpression(kind, Precedence.Parenthesize(Node, precedence),
+            Precedence.Parenthesize(right.Node, precedence + 1)));
     }
 
     public Expr NullForgiving(bool when = true)
     {
-        return Postfix(when,
-            node => PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, Receiver(node)));
+        return ApplyPostfix(when,
+            node => PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, PrepareReceiver(node)));
     }
 
     public Expr Is(Expr pattern, bool when = true)
     {
         if (when is false || Node is null || pattern.Node is null) return this;
-        return new(IsPatternExpression(Precedence.AtLeast(Node, Precedence.Relational), Pattern(pattern.Node)));
+        return new(IsPatternExpression(Precedence.Parenthesize(Node, Precedence.Relational),
+            BuildPattern(pattern.Node)));
     }
 
     public Expr Switch(Action<ArmScope> arms, bool when = true)
@@ -101,64 +106,73 @@ internal sealed class Expr
 
         var scope = new ArmScope();
         arms(scope);
-        return new(scope.Complete(SwitchExpression(Precedence.AtLeast(Node, Precedence.Unary))));
+        return new(scope.Complete(SwitchExpression(Precedence.Parenthesize(Node, Precedence.Unary))));
     }
 
-    internal static PatternSyntax Pattern(ExpressionSyntax node)
+    internal static PatternSyntax BuildPattern(ExpressionSyntax node)
     {
         return node is IdentifierNameSyntax { Identifier.Text: "_" }
             ? DiscardPattern()
-            : ConstantPattern(Precedence.AtLeast(node, Precedence.Shift));
+            : ConstantPattern(Precedence.Parenthesize(node, Precedence.Shift));
     }
 
-    internal static SeparatedSyntaxList<ArgumentSyntax> Arguments(IReadOnlyList<Arg>? arguments)
+    internal static SeparatedSyntaxList<ArgumentSyntax> BuildArguments(IReadOnlyList<Arg>? arguments)
     {
         return SeparatedList(arguments?.Where(static argument => argument.IsEmpty is false)
             .Select(static argument => argument.ToArgument()) ?? []);
     }
 
-    private static IdentifierNameSyntax Member(string name) => IdentifierName(Names.Identifier(name));
-    private static ExpressionSyntax Primary(ExpressionSyntax node) => Precedence.AtLeast(node, Precedence.Primary);
+    private static IdentifierNameSyntax BuildMemberName(string name) => IdentifierName(Names.CreateIdentifier(name));
 
-    private static ExpressionSyntax Receiver(ExpressionSyntax node)
+    private static ExpressionSyntax ParenthesizeForPostfix(ExpressionSyntax node)
     {
-        return node is MemberBindingExpressionSyntax or ElementBindingExpressionSyntax ? node : Primary(node);
+        return Precedence.Parenthesize(node, Precedence.Primary);
     }
 
-    private Expr Postfix(bool when, Func<ExpressionSyntax, ExpressionSyntax> apply)
+    private static ExpressionSyntax PrepareReceiver(ExpressionSyntax node)
+    {
+        return node is MemberBindingExpressionSyntax or ElementBindingExpressionSyntax
+            ? node
+            : ParenthesizeForPostfix(node);
+    }
+
+    private Expr ApplyPostfix(bool when, Func<ExpressionSyntax, ExpressionSyntax> apply)
     {
         if (when is false || Node is null) return this;
-        return new(Node is ConditionalAccessExpressionSyntax access ? Inside(access, apply) : apply(Node));
+        return new(Node is ConditionalAccessExpressionSyntax access ? ApplyInside(access, apply) : apply(Node));
     }
 
-    private static ConditionalAccessExpressionSyntax Inside(ConditionalAccessExpressionSyntax access,
+    private static ConditionalAccessExpressionSyntax ApplyInside(ConditionalAccessExpressionSyntax access,
         Func<ExpressionSyntax, ExpressionSyntax> apply)
     {
         return access.WhenNotNull is ConditionalAccessExpressionSyntax inner
-            ? access.WithWhenNotNull(Inside(inner, apply))
+            ? access.WithWhenNotNull(ApplyInside(inner, apply))
             : access.WithWhenNotNull(apply(access.WhenNotNull));
     }
 
-    private static SyntaxKind KindOf(BinaryOperator @operator) => @operator switch
+    private static SyntaxKind MapOperator(BinaryOperator @operator)
     {
-        BinaryOperator.Add => SyntaxKind.AddExpression,
-        BinaryOperator.Subtract => SyntaxKind.SubtractExpression,
-        BinaryOperator.Multiply => SyntaxKind.MultiplyExpression,
-        BinaryOperator.Divide => SyntaxKind.DivideExpression,
-        BinaryOperator.Modulo => SyntaxKind.ModuloExpression,
-        BinaryOperator.LeftShift => SyntaxKind.LeftShiftExpression,
-        BinaryOperator.RightShift => SyntaxKind.RightShiftExpression,
-        BinaryOperator.Less => SyntaxKind.LessThanExpression,
-        BinaryOperator.LessOrEqual => SyntaxKind.LessThanOrEqualExpression,
-        BinaryOperator.Greater => SyntaxKind.GreaterThanExpression,
-        BinaryOperator.GreaterOrEqual => SyntaxKind.GreaterThanOrEqualExpression,
-        BinaryOperator.Equal => SyntaxKind.EqualsExpression,
-        BinaryOperator.NotEqual => SyntaxKind.NotEqualsExpression,
-        BinaryOperator.BitwiseAnd => SyntaxKind.BitwiseAndExpression,
-        BinaryOperator.BitwiseOr => SyntaxKind.BitwiseOrExpression,
-        BinaryOperator.ExclusiveOr => SyntaxKind.ExclusiveOrExpression,
-        BinaryOperator.And => SyntaxKind.LogicalAndExpression,
-        BinaryOperator.Or => SyntaxKind.LogicalOrExpression,
-        _ => throw new ArgumentOutOfRangeException(nameof(@operator), @operator, null)
-    };
+        return @operator switch
+        {
+            BinaryOperator.Add => SyntaxKind.AddExpression,
+            BinaryOperator.Subtract => SyntaxKind.SubtractExpression,
+            BinaryOperator.Multiply => SyntaxKind.MultiplyExpression,
+            BinaryOperator.Divide => SyntaxKind.DivideExpression,
+            BinaryOperator.Modulo => SyntaxKind.ModuloExpression,
+            BinaryOperator.LeftShift => SyntaxKind.LeftShiftExpression,
+            BinaryOperator.RightShift => SyntaxKind.RightShiftExpression,
+            BinaryOperator.Less => SyntaxKind.LessThanExpression,
+            BinaryOperator.LessOrEqual => SyntaxKind.LessThanOrEqualExpression,
+            BinaryOperator.Greater => SyntaxKind.GreaterThanExpression,
+            BinaryOperator.GreaterOrEqual => SyntaxKind.GreaterThanOrEqualExpression,
+            BinaryOperator.Equal => SyntaxKind.EqualsExpression,
+            BinaryOperator.NotEqual => SyntaxKind.NotEqualsExpression,
+            BinaryOperator.BitwiseAnd => SyntaxKind.BitwiseAndExpression,
+            BinaryOperator.BitwiseOr => SyntaxKind.BitwiseOrExpression,
+            BinaryOperator.ExclusiveOr => SyntaxKind.ExclusiveOrExpression,
+            BinaryOperator.And => SyntaxKind.LogicalAndExpression,
+            BinaryOperator.Or => SyntaxKind.LogicalOrExpression,
+            _ => throw new ArgumentOutOfRangeException(nameof(@operator), @operator, null)
+        };
+    }
 }

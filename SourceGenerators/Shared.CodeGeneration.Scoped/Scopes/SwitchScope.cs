@@ -21,12 +21,12 @@ internal sealed class SwitchScope : Scope<SwitchScope>
 
     public SwitchScope Case(Expr label, Action<BodyScope> body, bool when = true)
     {
-        return when && label.Node is { } node ? Section(CaseSwitchLabel(node), body) : this;
+        return when && label.Node is { } node ? AddSection(CaseSwitchLabel(node), body) : this;
     }
 
     public SwitchScope Default(Action<BodyScope> body, bool when = true)
     {
-        return when ? Section(DefaultSwitchLabel(), body) : this;
+        return when ? AddSection(DefaultSwitchLabel(), body) : this;
     }
 
     internal SwitchStatementSyntax Complete(SwitchStatementSyntax statement)
@@ -36,9 +36,9 @@ internal sealed class SwitchScope : Scope<SwitchScope>
             .WithCloseBraceToken(Lead.Close(Token(SyntaxKind.CloseBraceToken)));
     }
 
-    private SwitchScope Section(SwitchLabelSyntax label, Action<BodyScope> body)
+    private SwitchScope AddSection(SwitchLabelSyntax label, Action<BodyScope> body)
     {
-        _sections.Add(SwitchSection(SingletonList(Lead.Attach(label)), List(BodyScope.Section(Lead, body))));
+        _sections.Add(SwitchSection(SingletonList(Lead.Attach(label)), List(BodyScope.BuildSection(Lead, body))));
         return this;
     }
 }
@@ -57,7 +57,7 @@ internal sealed class ArmScope : Scope<ArmScope>
     {
         if (when && pattern.Node is { } patternNode && result.Node is { } resultNode)
         {
-            _arms.Add(Lead.Attach(SwitchExpressionArm(Expr.Pattern(patternNode), resultNode)));
+            _arms.Add(Lead.Attach(SwitchExpressionArm(Expr.BuildPattern(patternNode), resultNode)));
         }
 
         return this;
@@ -66,14 +66,15 @@ internal sealed class ArmScope : Scope<ArmScope>
     internal SwitchExpressionSyntax Complete(SwitchExpressionSyntax expression)
     {
         return expression
-            .WithArms(SeparatedList(_arms, Enumerable.Range(1, Math.Max(_arms.Count - 1, 0)).Select(Separator)))
+            .WithArms(SeparatedList(_arms, Enumerable.Range(1, Math.Max(_arms.Count - 1, 0)).Select(ChooseSeparator)))
             .WithCloseBraceToken(Lead.Close(Token(SyntaxKind.CloseBraceToken)));
     }
 
-    private SyntaxToken Separator(int nextArm)
+    private SyntaxToken ChooseSeparator(int nextArm)
     {
         var opensAlternative =
             HasDirective(_arms[nextArm], SyntaxKind.ElseDirectiveTrivia, SyntaxKind.ElifDirectiveTrivia);
+
         var closesBeforeEnd = _arms.Skip(nextArm + 1)
             .Any(static arm => HasDirective(arm, SyntaxKind.EndIfDirectiveTrivia));
         return opensAlternative && closesBeforeEnd is false

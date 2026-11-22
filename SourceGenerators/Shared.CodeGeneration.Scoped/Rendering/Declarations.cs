@@ -27,9 +27,9 @@ internal static class Declarations
         return (TokenList(modifiers.Take(index).Concat(rest)), refType);
     }
 
-    public static TypeParameterSyntax TypeParameter(string name, Variance variance)
+    public static TypeParameterSyntax BuildTypeParameter(string name, Variance variance)
     {
-        var parameter = SyntaxFactory.TypeParameter(Names.Identifier(name));
+        var parameter = SyntaxFactory.TypeParameter(Names.CreateIdentifier(name));
         return variance switch
         {
             Variance.In => parameter.WithVarianceKeyword(Token(SyntaxKind.InKeyword)),
@@ -38,23 +38,24 @@ internal static class Declarations
         };
     }
 
-    public static TypeParameterConstraintClauseSyntax? Constraints(string name, IReadOnlyList<Constraint> constraints)
+    public static TypeParameterConstraintClauseSyntax? BuildConstraints(string name,
+        IReadOnlyList<Constraint> constraints)
     {
         var nodes = constraints.Where(static constraint => constraint.Node is not null)
             .Select(static constraint => constraint.Node!)
             .ToArray();
         return nodes.Length == 0
             ? null
-            : TypeParameterConstraintClause(IdentifierName(Names.Identifier(name)), SeparatedList(nodes));
+            : TypeParameterConstraintClause(IdentifierName(Names.CreateIdentifier(name)), SeparatedList(nodes));
     }
 
-    public static AttributeSyntax Attribute(string name, IReadOnlyList<Arg>? arguments)
+    public static AttributeSyntax BuildAttribute(string name, IReadOnlyList<Arg>? arguments)
     {
         var nodes = arguments?.Where(static argument => argument.IsEmpty is false)
             .Select(static argument => argument.ToAttributeArgument())
             .ToArray() ?? [];
 
-        var attribute = SyntaxFactory.Attribute(Names.Qualified(name));
+        var attribute = SyntaxFactory.Attribute(Names.Qualify(name));
         return nodes.Length == 0 ? attribute : attribute.WithArgumentList(AttributeArgumentList(SeparatedList(nodes)));
     }
 }

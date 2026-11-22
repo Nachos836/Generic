@@ -5,7 +5,7 @@ namespace Generator.InspectorAttributesEditor.Tests;
 
 internal static class CompileCheck
 {
-    public static IReadOnlyList<string> ErrorsOf(string source)
+    public static IReadOnlyList<string> CollectErrors(string source)
     {
         var platformAssemblies = (string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!;
         var references = platformAssemblies
@@ -19,7 +19,6 @@ internal static class CompileCheck
             syntaxTrees: [CSharpSyntaxTree.ParseText(source)],
             references: references,
             options: new(OutputKind.DynamicallyLinkedLibrary));
-
         return compilation.GetDiagnostics()
             .Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
             .Select(static diagnostic => diagnostic.Id)

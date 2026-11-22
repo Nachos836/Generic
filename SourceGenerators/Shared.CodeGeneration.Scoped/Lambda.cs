@@ -10,7 +10,7 @@ namespace Shared.CodeGeneration.Scoped;
 
 internal sealed class Lambda
 {
-    private readonly IReadOnlyList<string> _parameters;
+    private readonly IReadOnlyList<string> _parameters = default!;
     private readonly bool _isStatic;
     private readonly bool _when;
 
@@ -24,20 +24,21 @@ internal sealed class Lambda
     public Expr Arrow(Expr value, bool when = true)
     {
         if (_when is false || when is false || value.Node is null) return Expr.Empty;
-        return new(Head().WithExpressionBody(value.Node));
+        return new(BuildHead().WithExpressionBody(value.Node));
     }
 
     public Expr Body(Action<BodyScope> body, bool when = true)
     {
         if (_when is false || when is false) return Expr.Empty;
-        return new(Head().WithBlock(BodyScope.Block(body)));
+        return new(BuildHead().WithBlock(BodyScope.BuildBlock(body)));
     }
 
-    private ParenthesizedLambdaExpressionSyntax Head()
+    private ParenthesizedLambdaExpressionSyntax BuildHead()
     {
         var lambda = ParenthesizedLambdaExpression()
             .WithParameterList(
-                ParameterList(SeparatedList(_parameters.Select(static name => Parameter(Names.Identifier(name))))));
+                ParameterList(
+                    SeparatedList(_parameters.Select(static name => Parameter(Names.CreateIdentifier(name))))));
         return _isStatic ? lambda.WithModifiers(TokenList(Token(SyntaxKind.StaticKeyword))) : lambda;
     }
 }

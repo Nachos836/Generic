@@ -11,7 +11,7 @@ internal static class InventorySample
 
     public static string Read(string fileName)
     {
-        var repositoryRoot = Path.GetFullPath(Path.Combine(SourceDirectory(), "..", ".."));
+        var repositoryRoot = Path.GetFullPath(Path.Combine(FindSourceDirectory(), "..", ".."));
         var path = Path.Combine(repositoryRoot, "Assets", "Samples", "GameplayInventory", "Generated", fileName);
         return File.ReadAllText(path).TrimStart(ByteOrderMark);
     }
@@ -27,7 +27,7 @@ internal static class InventorySample
         Assert.That(generatedTree.GetRoot().IsEquivalentTo(sampleTree.GetRoot(), topLevel: false), Is.True, generated);
     }
 
-    private static string SourceDirectory([CallerFilePath] string path = "") => Path.GetDirectoryName(path)!;
+    private static string FindSourceDirectory([CallerFilePath] string path = "") => Path.GetDirectoryName(path)!;
 
     private static string Squeeze(string text)
     {

@@ -16,27 +16,27 @@ internal static class Precedence
     public const int Unary = 14;
     public const int Primary = 15;
 
-    public static int Of(ExpressionSyntax expression)
+    public static int Rank(ExpressionSyntax expression)
     {
-        return IsSigned(expression) ? Unary : OfKind(expression);
+        return IsSigned(expression) ? Unary : RankKind(expression);
     }
 
-    public static int Of(SyntaxKind binaryKind)
+    public static int Rank(SyntaxKind binaryKind)
     {
-        return Of(SyntaxFactory.BinaryExpression(binaryKind, SyntaxFactory.IdentifierName("a"),
+        return Rank(SyntaxFactory.BinaryExpression(binaryKind, SyntaxFactory.IdentifierName("a"),
             SyntaxFactory.IdentifierName("b")));
     }
 
-    public static ExpressionSyntax AtLeast(ExpressionSyntax expression, int precedence)
+    public static ExpressionSyntax Parenthesize(ExpressionSyntax expression, int precedence)
     {
-        return Of(expression) >= precedence ? expression : SyntaxFactory.ParenthesizedExpression(expression);
+        return Rank(expression) >= precedence ? expression : SyntaxFactory.ParenthesizedExpression(expression);
     }
 
-    public static ExpressionSyntax CastOperand(ExpressionSyntax operand)
+    public static ExpressionSyntax ParenthesizeCastOperand(ExpressionSyntax operand)
     {
         var ambiguous = IsSigned(operand) || operand.Kind() is UnaryMinusExpression or UnaryPlusExpression
             or AddressOfExpression or PointerIndirectionExpression or PreIncrementExpression or PreDecrementExpression;
-        return ambiguous ? SyntaxFactory.ParenthesizedExpression(operand) : AtLeast(operand, Unary);
+        return ambiguous ? SyntaxFactory.ParenthesizedExpression(operand) : Parenthesize(operand, Unary);
     }
 
     private static bool IsSigned(ExpressionSyntax expression)
@@ -45,7 +45,7 @@ internal static class Precedence
                literal.Token.Text.StartsWith("-", StringComparison.Ordinal);
     }
 
-    private static int OfKind(ExpressionSyntax expression)
+    private static int RankKind(ExpressionSyntax expression)
     {
         return expression.Kind() switch
         {

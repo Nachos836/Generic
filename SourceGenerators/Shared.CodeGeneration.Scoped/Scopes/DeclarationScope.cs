@@ -15,7 +15,7 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
 
     public TNext Attribute(string name, IReadOnlyList<Arg>? arguments = null, bool when = true)
     {
-        if (when) Lead.AddAttribute(Declarations.Attribute(name, arguments));
+        if (when) Lead.AddAttribute(Declarations.BuildAttribute(name, arguments));
         return Next;
     }
 
@@ -25,37 +25,37 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
         return Next;
     }
 
-    public TNext Public(bool when = true) => Modifier(SyntaxKind.PublicKeyword, when);
-    public TNext Internal(bool when = true) => Modifier(SyntaxKind.InternalKeyword, when);
-    public TNext Private(bool when = true) => Modifier(SyntaxKind.PrivateKeyword, when);
-    public TNext Static(bool when = true) => Modifier(SyntaxKind.StaticKeyword, when);
-    public TNext Readonly(bool when = true) => Modifier(SyntaxKind.ReadOnlyKeyword, when);
-    public TNext Sealed(bool when = true) => Modifier(SyntaxKind.SealedKeyword, when);
-    public TNext Override(bool when = true) => Modifier(SyntaxKind.OverrideKeyword, when);
-    public TNext Partial(bool when = true) => Modifier(SyntaxKind.PartialKeyword, when);
-    public TNext Unsafe(bool when = true) => Modifier(SyntaxKind.UnsafeKeyword, when);
-    public TNext Ref(bool when = true) => Modifier(SyntaxKind.RefKeyword, when);
+    public TNext Public(bool when = true) => AddModifier(SyntaxKind.PublicKeyword, when);
+    public TNext Internal(bool when = true) => AddModifier(SyntaxKind.InternalKeyword, when);
+    public TNext Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
+    public TNext Static(bool when = true) => AddModifier(SyntaxKind.StaticKeyword, when);
+    public TNext Readonly(bool when = true) => AddModifier(SyntaxKind.ReadOnlyKeyword, when);
+    public TNext Sealed(bool when = true) => AddModifier(SyntaxKind.SealedKeyword, when);
+    public TNext Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TNext Partial(bool when = true) => AddModifier(SyntaxKind.PartialKeyword, when);
+    public TNext Unsafe(bool when = true) => AddModifier(SyntaxKind.UnsafeKeyword, when);
+    public TNext Ref(bool when = true) => AddModifier(SyntaxKind.RefKeyword, when);
 
     public TNext Class(string name, Action<TypeScope> body, bool when = true)
     {
-        return Type(ClassDeclaration(Names.Identifier(name)), new TypeScope(name), body, when);
+        return AddType(ClassDeclaration(Names.CreateIdentifier(name)), new TypeScope(name), body, when);
     }
 
     public TNext Struct(string name, Action<TypeScope> body, bool when = true)
     {
-        return Type(StructDeclaration(Names.Identifier(name)), new TypeScope(name), body, when);
+        return AddType(StructDeclaration(Names.CreateIdentifier(name)), new TypeScope(name), body, when);
     }
 
     public TNext Interface(string name, Action<InterfaceScope> body, bool when = true)
     {
-        return Type(InterfaceDeclaration(Names.Identifier(name)), new InterfaceScope(), body, when);
+        return AddType(InterfaceDeclaration(Names.CreateIdentifier(name)), new InterfaceScope(), body, when);
     }
 
     public TNext Enum(string name, Action<EnumScope> body, bool when = true)
     {
         if (when is false) return Skip();
 
-        var declaration = EnumDeclaration(Names.Identifier(name))
+        var declaration = EnumDeclaration(Names.CreateIdentifier(name))
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(Lead.TakeModifiers());
 
@@ -72,7 +72,7 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
         return Skip();
     }
 
-    private protected TNext Modifier(SyntaxKind keyword, bool when)
+    private protected TNext AddModifier(SyntaxKind keyword, bool when)
     {
         if (when) Lead.AddModifier(keyword);
         return Next;
@@ -84,7 +84,7 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
         return Next;
     }
 
-    private TNext Type<TScope>(TypeDeclarationSyntax declaration, TScope scope, Action<TScope> body, bool when)
+    private TNext AddType<TScope>(TypeDeclarationSyntax declaration, TScope scope, Action<TScope> body, bool when)
         where TScope : MemberScope<TScope>
     {
         if (when is false) return Skip();

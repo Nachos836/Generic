@@ -20,7 +20,8 @@ public sealed class RenderingTests
     [Test]
     public void DefineAfterUsingIsRejected()
     {
-        Assert.Throws<InvalidOperationException>(static () => Code.File(static file => file.Using("System").Define("X")));
+        Assert.Throws<InvalidOperationException>(static () =>
+            Code.File(static file => file.Using("System").Define("X")));
     }
 
     [Test]
@@ -58,7 +59,7 @@ public sealed class RenderingTests
         yield return Case("GapAfterOpenBrace", static () => InType(static type => type.Gap().Field(T("int"), "a")),
             Expected.InType("int a;"));
         yield return Case("ExplicitForStaysOnItsMember", static () => InType(static type => type
-            .ExplicitFor(T("I")).Field(T("int"), "f").Method(T("void"), "M", static _ => { })),
+                .ExplicitFor(T("I")).Field(T("int"), "f").Method(T("void"), "M", static _ => { })),
             Expected.InType("int f;\nvoid M();"));
         yield return Case("PrefixesStayBeforeNamespace", static () => Code.File(static file => file
             .Public().Attribute("A").Namespace("N", static scope => scope.Class("Inner", static _ => { }))
@@ -71,6 +72,6 @@ public sealed class RenderingTests
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)
     {
-        return new TestCaseData(actual, Expected.Tabs(expected)).SetArgDisplayNames(name);
+        return new TestCaseData(actual, Expected.ConvertToTabs(expected)).SetArgDisplayNames(name);
     }
 }

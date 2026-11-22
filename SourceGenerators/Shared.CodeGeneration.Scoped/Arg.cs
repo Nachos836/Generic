@@ -7,9 +7,9 @@ namespace Shared.CodeGeneration.Scoped;
 
 internal sealed class Arg
 {
-    private readonly Expr _value;
+    private readonly Expr _value = default!;
     private readonly SyntaxKind _refKind;
-    private readonly string? _name;
+    private readonly string? _name = default;
 
     internal Arg(Expr value, SyntaxKind refKind = SyntaxKind.None, string? name = null)
     {
@@ -29,14 +29,16 @@ internal sealed class Arg
     {
         var argument = Argument(_value.Node!);
         if (_refKind != SyntaxKind.None) argument = argument.WithRefKindKeyword(Token(_refKind));
-        return _name == default ? argument : argument.WithNameColon(NameColon(IdentifierName(Names.Identifier(_name))));
+        return _name == default
+            ? argument
+            : argument.WithNameColon(NameColon(IdentifierName(Names.CreateIdentifier(_name))));
     }
 
     internal AttributeArgumentSyntax ToAttributeArgument()
     {
         if (_name != default)
         {
-            return AttributeArgument(null, NameColon(IdentifierName(Names.Identifier(_name))), _value.Node!);
+            return AttributeArgument(null, NameColon(IdentifierName(Names.CreateIdentifier(_name))), _value.Node!);
         }
 
         return _value.Node is AssignmentExpressionSyntax { Left: IdentifierNameSyntax property } assignment

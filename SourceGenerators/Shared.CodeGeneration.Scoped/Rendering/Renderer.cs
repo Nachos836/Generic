@@ -37,10 +37,11 @@ internal static class Renderer
 
         var tokens = root.DescendantTokens()
             .Where(token => gapTokens.Contains(token) || token.LeadingTrivia.Any(IsGap));
-        return root.ReplaceTokens(tokens, (original, _) => original.WithLeadingTrivia(WithGaps(original, gapTokens)));
+        return root.ReplaceTokens(tokens,
+            (original, _) => original.WithLeadingTrivia(BuildGappedTrivia(original, gapTokens)));
     }
 
-    private static List<SyntaxTrivia> WithGaps(SyntaxToken token, HashSet<SyntaxToken> gapTokens)
+    private static List<SyntaxTrivia> BuildGappedTrivia(SyntaxToken token, HashSet<SyntaxToken> gapTokens)
     {
         var previous = token.GetPreviousToken(includeZeroWidth: true);
         var opensScope = previous == default || previous.IsKind(SyntaxKind.OpenBraceToken);

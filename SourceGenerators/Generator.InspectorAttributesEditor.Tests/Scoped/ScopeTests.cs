@@ -10,7 +10,7 @@ public sealed class ScopeTests
     [TestCase("scope.Event(T(\"Action\"), \"E\")")]
     public void InterfaceOffersItsMembers(string block)
     {
-        Assert.That(CompileCheck.ErrorsOf(InInterface(block)), Is.Empty);
+        Assert.That(CompileCheck.CollectErrors(DescribeInterface(block)), Is.Empty);
     }
 
     [TestCase("scope.Constructor(static _ => { })")]
@@ -18,19 +18,20 @@ public sealed class ScopeTests
     [TestCase("scope.Inherits(T(\"B\"))")]
     public void InterfaceRejectsClassMembers(string block)
     {
-        Assert.That(CompileCheck.ErrorsOf(InInterface(block)), Is.EqualTo(new[] { MemberMissing }));
+        Assert.That(CompileCheck.CollectErrors(DescribeInterface(block)), Is.EqualTo(new[] { MemberMissing }));
     }
 
-    private static string InInterface(string block)
+    private static string DescribeInterface(string block)
     {
         return $$"""
-            using Shared.CodeGeneration.Scoped;
-            using static Shared.CodeGeneration.Scoped.Blocks;
+                 using Shared.CodeGeneration.Scoped;
+                 using static Shared.CodeGeneration.Scoped.Blocks;
 
-            internal static class Probe
-            {
-                public static string Run() => Code.File(static file => file.Interface("I", static scope => {{block}}));
-            }
-            """;
+                 internal static class Probe
+                 {
+                     public static string Run() => Code.File(static file => file
+                         .Interface("I", static scope => {{block}}));
+                 }
+                 """;
     }
 }

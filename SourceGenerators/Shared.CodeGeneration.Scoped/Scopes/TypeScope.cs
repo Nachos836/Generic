@@ -20,15 +20,15 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
 
     public TSelf TypeParam(string name, Variance variance = Variance.None, bool when = true)
     {
-        if (when) _typeParameters.Add(Declarations.TypeParameter(name, variance));
+        if (when) _typeParameters.Add(Declarations.BuildTypeParameter(name, variance));
         return Next;
     }
 
-    public TSelf Implements(TypeRef type, bool when = true) => BaseType(type, when);
+    public TSelf Implements(TypeRef type, bool when = true) => AddBaseType(type, when);
 
     public TSelf Where(string name, IReadOnlyList<Constraint> constraints, bool when = true)
     {
-        if (when && Declarations.Constraints(name, constraints) is { } clause) _constraints.Add(clause);
+        if (when && Declarations.BuildConstraints(name, constraints) is { } clause) _constraints.Add(clause);
         return Next;
     }
 
@@ -42,7 +42,7 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
     {
         if (when is false || type.Node is null) return Skip();
         return AddMember(
-            EventFieldDeclaration(VariableDeclaration(type.Node, SingletonSeparatedList(Variable(name, null))))
+            EventFieldDeclaration(VariableDeclaration(type.Node, SingletonSeparatedList(BuildVariable(name, null))))
                 .WithAttributeLists(Lead.TakeAttributes())
                 .WithModifiers(Lead.TakeModifiers()));
     }
@@ -52,7 +52,7 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
         if (when is false || returnType.Node is null) return Skip();
 
         var (modifiers, type) = Declarations.SplitRef(Lead.TakeModifiers(), returnType.Node);
-        var declaration = MethodDeclaration(type, Names.Identifier(name))
+        var declaration = MethodDeclaration(type, Names.CreateIdentifier(name))
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(modifiers);
 
@@ -82,15 +82,15 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
 
     private protected override void Add(MemberDeclarationSyntax member) => _members.Add(member);
 
-    private protected TSelf BaseType(TypeRef type, bool when)
+    private protected TSelf AddBaseType(TypeRef type, bool when)
     {
         if (when && type.Node is { } node) _baseTypes.Add(SimpleBaseType(node));
         return Next;
     }
 
-    private protected static VariableDeclaratorSyntax Variable(string name, Expr? value)
+    private protected static VariableDeclaratorSyntax BuildVariable(string name, Expr? value)
     {
-        var declarator = VariableDeclarator(Names.Identifier(name));
+        var declarator = VariableDeclarator(Names.CreateIdentifier(name));
         return value?.Node is { } node ? declarator.WithInitializer(EqualsValueClause(node)) : declarator;
     }
 }
@@ -103,14 +103,15 @@ internal sealed class TypeScope : MemberScope<TypeScope>
 
     private protected override TypeScope Next => this;
 
-    public TypeScope Inherits(TypeRef type, bool when = true) => BaseType(type, when);
+    public TypeScope Inherits(TypeRef type, bool when = true) => AddBaseType(type, when);
 
     public TypeScope Field(TypeRef type, string name, Expr? value = null, bool when = true)
     {
         if (when is false || type.Node is null) return Skip();
 
         var (modifiers, fieldType) = Declarations.SplitRef(Lead.TakeModifiers(), type.Node);
-        return AddMember(FieldDeclaration(VariableDeclaration(fieldType, SingletonSeparatedList(Variable(name, value))))
+        var variable = SingletonSeparatedList(BuildVariable(name, value));
+        return AddMember(FieldDeclaration(VariableDeclaration(fieldType, variable))
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(modifiers));
     }
@@ -119,7 +120,7 @@ internal sealed class TypeScope : MemberScope<TypeScope>
     {
         if (when is false) return Skip();
 
-        var declaration = ConstructorDeclaration(Names.Identifier(_name))
+        var declaration = ConstructorDeclaration(Names.CreateIdentifier(_name))
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(Lead.TakeModifiers());
 
@@ -159,7 +160,7 @@ internal sealed class EnumScope : Scope<EnumScope>
     {
         if (when is false) return this;
 
-        var member = EnumMemberDeclaration(Names.Identifier(name));
+        var member = EnumMemberDeclaration(Names.CreateIdentifier(name));
         if (value?.Node is { } node) member = member.WithEqualsValue(EqualsValueClause(node));
 
         _members.Add(Lead.Attach(member));

@@ -17,15 +17,15 @@ internal sealed class TypeRef
     public TypeRef Nested(string name, IReadOnlyList<TypeRef>? arguments = null, bool when = true)
     {
         if (when is false || Node is not NameSyntax outer) return this;
-        return new(QualifiedName(outer, Simple(name, arguments)));
+        return new(QualifiedName(outer, BuildSimpleName(name, arguments)));
     }
 
     public TypeRef Nullable(bool when = true) => when && Node is { } node ? new(NullableType(node)) : this;
     public TypeRef Pointer(bool when = true) => when && Node is { } node ? new(PointerType(node)) : this;
 
-    internal static SimpleNameSyntax Simple(string name, IReadOnlyList<TypeRef>? arguments)
+    internal static SimpleNameSyntax BuildSimpleName(string name, IReadOnlyList<TypeRef>? arguments)
     {
-        var identifier = Names.Identifier(name);
+        var identifier = Names.CreateIdentifier(name);
         var nodes = arguments?.Where(static argument => argument.IsEmpty is false)
             .Select(static argument => argument.Node!).ToArray();
         return nodes is { Length: > 0 }

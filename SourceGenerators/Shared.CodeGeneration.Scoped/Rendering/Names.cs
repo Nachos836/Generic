@@ -10,7 +10,7 @@ internal static class Names
 {
     private const string Verbatim = "@";
 
-    public static SyntaxToken Identifier(string name)
+    public static SyntaxToken CreateIdentifier(string name)
     {
         if (name.StartsWith(Verbatim, StringComparison.Ordinal))
         {
@@ -22,14 +22,14 @@ internal static class Names
             : SyntaxFactory.Identifier(default, SyntaxKind.IdentifierToken, Verbatim + name, name, default);
     }
 
-    public static NameSyntax Qualified(string dottedName)
+    public static NameSyntax Qualify(string dottedName)
     {
         var segments = dottedName.Split('.');
-        NameSyntax name = IdentifierName(Identifier(segments[0]));
+        NameSyntax name = IdentifierName(CreateIdentifier(segments[0]));
 
         for (var index = 1; index < segments.Length; index++)
         {
-            name = QualifiedName(name, IdentifierName(Identifier(segments[index])));
+            name = QualifiedName(name, IdentifierName(CreateIdentifier(segments[index])));
         }
 
         return name;

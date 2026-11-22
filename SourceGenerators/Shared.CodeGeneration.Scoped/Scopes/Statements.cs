@@ -13,15 +13,15 @@ internal abstract class Statements : Scope<BodyScope>
 
     private protected List<StatementSyntax> Sink { get; }
 
-    public BodyScope Ref(bool when = true) => Modifier(SyntaxKind.RefKeyword, when);
-    public BodyScope Readonly(bool when = true) => Modifier(SyntaxKind.ReadOnlyKeyword, when);
+    public BodyScope Ref(bool when = true) => AddModifier(SyntaxKind.RefKeyword, when);
+    public BodyScope Readonly(bool when = true) => AddModifier(SyntaxKind.ReadOnlyKeyword, when);
 
     public BodyScope Var(string name, Expr? value = null, bool when = true)
     {
         if (when is false) return Skip();
 
         var (modifiers, type) = Declarations.SplitRef(Lead.TakeModifiers(), IdentifierName("var"));
-        var declarator = VariableDeclarator(Names.Identifier(name));
+        var declarator = VariableDeclarator(Names.CreateIdentifier(name));
         if (value?.Node is { } node) declarator = declarator.WithInitializer(EqualsValueClause(node));
         return Add(LocalDeclarationStatement(VariableDeclaration(type, SingletonSeparatedList(declarator)))
             .WithModifiers(modifiers));
@@ -40,15 +40,15 @@ internal abstract class Statements : Scope<BodyScope>
             return new(Next, Lead, Sink, -1);
         }
 
-        Add(IfStatement(condition.Node, BodyScope.Statement(then, braced)));
+        Add(IfStatement(condition.Node, BodyScope.BuildStatement(then, braced)));
         return new(Next, Lead, Sink, Sink.Count - 1);
     }
 
     public BodyScope Foreach(string name, Expr collection, Action<BodyScope> body, bool when = true)
     {
         if (when is false || collection.Node is null) return Skip();
-        return Add(ForEachStatement(IdentifierName("var"), Names.Identifier(name), collection.Node,
-            BodyScope.Block(body)));
+        return Add(ForEachStatement(IdentifierName("var"), Names.CreateIdentifier(name), collection.Node,
+            BodyScope.BuildBlock(body)));
     }
 
     public BodyScope Switch(Expr value, Action<SwitchScope> sections, bool when = true)
@@ -72,9 +72,10 @@ internal abstract class Statements : Scope<BodyScope>
     {
         if (when is false || type.Node is null || value.Node is null) return Skip();
 
-        var declarator = VariableDeclarator(Names.Identifier(name)).WithInitializer(EqualsValueClause(value.Node));
+        var declarator = VariableDeclarator(Names.CreateIdentifier(name))
+            .WithInitializer(EqualsValueClause(value.Node));
         return Add(FixedStatement(VariableDeclaration(type.Node, SingletonSeparatedList(declarator)),
-            BodyScope.Block(body)));
+            BodyScope.BuildBlock(body)));
     }
 
     private protected BodyScope Add(StatementSyntax statement)
@@ -83,7 +84,7 @@ internal abstract class Statements : Scope<BodyScope>
         return Skip();
     }
 
-    private BodyScope Modifier(SyntaxKind keyword, bool when)
+    private BodyScope AddModifier(SyntaxKind keyword, bool when)
     {
         if (when) Lead.AddModifier(keyword);
         return Next;
@@ -104,16 +105,16 @@ internal sealed class BodyScope : Statements
 
     private protected override BodyScope Next => this;
 
-    internal static BlockSyntax Block(Action<BodyScope> body) => Build(body).Block;
+    internal static BlockSyntax BuildBlock(Action<BodyScope> body) => Build(body).Block;
 
-    internal static StatementSyntax Statement(Action<BodyScope> body, bool braced)
+    internal static StatementSyntax BuildStatement(Action<BodyScope> body, bool braced)
     {
         var (block, closed) = Build(body);
         var keepsBraces = braced || closed || block.Statements.Count != 1 || block.Statements[0] is IfStatementSyntax;
         return keepsBraces ? block : block.Statements[0];
     }
 
-    internal static List<StatementSyntax> Section(Lead lead, Action<BodyScope> body)
+    internal static List<StatementSyntax> BuildSection(Lead lead, Action<BodyScope> body)
     {
         var sink = new List<StatementSyntax>();
         body(new(lead, sink));
@@ -133,7 +134,7 @@ internal sealed class BodyScope : Statements
 
 internal sealed class IfScope : Statements
 {
-    private readonly BodyScope _parent;
+    private readonly BodyScope _parent = default!;
     private readonly int _index;
 
     internal IfScope(BodyScope parent, Lead lead, List<StatementSyntax> sink, int index) : base(lead, sink)
@@ -148,13 +149,13 @@ internal sealed class IfScope : Statements
     {
         if (_index < 0 || when is false || condition.Node is null) return this;
 
-        Append(IfStatement(condition.Node, BodyScope.Statement(then, braced)));
+        Append(IfStatement(condition.Node, BodyScope.BuildStatement(then, braced)));
         return this;
     }
 
     public BodyScope Else(Action<BodyScope> body, bool braced = true, bool when = true)
     {
-        if (_index >= 0 && when) Append(BodyScope.Statement(body, braced));
+        if (_index >= 0 && when) Append(BodyScope.BuildStatement(body, braced));
         return _parent;
     }
 

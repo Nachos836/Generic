@@ -60,10 +60,19 @@
 
 > **Purpose:** to keep the history a release log of the packages.
 
-- Write a package commit's subject as `[UPDATE] [<Package>] <old> -> <new>` of its version.
+- Pick a commit subject's area tag by where the commit's change is made:
+  - `[<Package>]` — a package, named as its folder in `Assets`: `[Generic]`;
+  - `[Source Generator]` — `SourceGenerators/`, with its published DLL and version bump;
+  - `[UnityProject]` — files outside both: `Packages/`, `ProjectSettings/`, root files.
+- Commit an edit a change requires outside its area, e.g. in Samples, with that change.
+- Tag a commit by its change's area alone, never by the edits that change requires.
+- Write a release commit's subject as `[UPDATE] [<Area>] <old> -> <new>` of its version.
+- Take a `[Source Generator]` release's versions from the InspectorAttributes package.
+- Write the subject of a commit that bumps no version as `[UPDATE] [<Area>] <What>`.
 - Write an editor upgrade commit's subject as `[UPDATE] Editor: <old> -> <new>`.
-- Write the subject of a project change outside packages as `[UPDATE] [UnityProject] <What>`.
+- Write each area's tag in the subject of a commit that changes several areas.
 - Write the body as one line per change: `[<TAG>] <Description>`.
+- Group a several-area commit's body by area, each group under the area's own subject.
 - Pick each body line's tag by its change:
   - `[ADD]` — a new feature, API, file or dependency;
   - `[UPDATE]` — an improved or extended feature, or a bumped version;

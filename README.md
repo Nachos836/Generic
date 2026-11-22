@@ -1,4 +1,8 @@
 # Generic
+
+**Sub-Volumes**
+- [Source generators](SourceGenerators/README.md) — the Roslyn generators that ship inside the packages.
+
 Collection of Unity code snippets in the form of a package
 
 ### Installation

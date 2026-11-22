@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Shared.CodeGeneration.Chained.Extensions;
 using Shared.CodeGeneration.Chained.Rendering;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Shared.CodeGeneration.Chained;
 
-internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost where TSelf : StatementChain<TSelf>
+internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost, IStatementExtensionHost<TSelf>
+    where TSelf : StatementChain<TSelf>
 {
     private readonly List<StatementSyntax> _statements = [];
 
@@ -124,6 +126,17 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
     }
 
     void IStatementHost.RestoreLeading(Leading leading) => Lead.Restore(leading);
+
+    TSelf IStatementExtensionHost<TSelf>.AddExtension(StatementSyntax statement, bool when)
+    {
+        return when ? Add(statement) : DropPrefixes();
+    }
+
+    StatementBlockChain<TSelf> IStatementExtensionHost<TSelf>.OpenExtension(Func<BlockSyntax, StatementSyntax> wrap,
+        bool when)
+    {
+        return new(Self, Open(when).Leading, wrap, when);
+    }
 
     private protected TSelf Add(StatementSyntax statement)
     {

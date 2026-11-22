@@ -13,8 +13,9 @@ internal static class Precedence
     public const int Relational = 9;
     public const int Shift = 10;
     public const int Switch = 13;
-    public const int Unary = 14;
-    public const int Primary = 15;
+    public const int Range = 14;
+    public const int Unary = 15;
+    public const int Primary = 16;
 
     public static int Rank(ExpressionSyntax expression)
     {
@@ -53,7 +54,8 @@ internal static class Precedence
                 or MultiplyAssignmentExpression or DivideAssignmentExpression or ModuloAssignmentExpression
                 or AndAssignmentExpression or OrAssignmentExpression or ExclusiveOrAssignmentExpression
                 or LeftShiftAssignmentExpression or RightShiftAssignmentExpression or CoalesceAssignmentExpression
-                or ParenthesizedLambdaExpression or SimpleLambdaExpression or ThrowExpression => Assignment,
+                or UnsignedRightShiftAssignmentExpression or ParenthesizedLambdaExpression or SimpleLambdaExpression
+                or AnonymousMethodExpression or ThrowExpression or QueryExpression => Assignment,
             ConditionalExpression => Conditional,
             CoalesceExpression => Coalesce,
             LogicalOrExpression => 3,
@@ -64,13 +66,15 @@ internal static class Precedence
             EqualsExpression or NotEqualsExpression => 8,
             LessThanExpression or LessThanOrEqualExpression or GreaterThanExpression or GreaterThanOrEqualExpression
                 or IsExpression or IsPatternExpression or AsExpression => Relational,
-            LeftShiftExpression or RightShiftExpression => 10,
+            LeftShiftExpression or RightShiftExpression or UnsignedRightShiftExpression => 10,
             AddExpression or SubtractExpression => 11,
             MultiplyExpression or DivideExpression or ModuloExpression => 12,
-            SwitchExpression => Switch,
+            SwitchExpression or WithExpression => Switch,
+            RangeExpression => Range,
             CastExpression or LogicalNotExpression or UnaryMinusExpression or UnaryPlusExpression
                 or BitwiseNotExpression or PreIncrementExpression or PreDecrementExpression
-                or AddressOfExpression or PointerIndirectionExpression or RefExpression => Unary,
+                or AddressOfExpression or PointerIndirectionExpression or RefExpression or AwaitExpression
+                or IndexExpression => Unary,
             _ => Primary
         };
     }

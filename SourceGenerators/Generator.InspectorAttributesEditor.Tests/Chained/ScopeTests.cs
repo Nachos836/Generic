@@ -109,6 +109,15 @@ public sealed class ScopeTests
         Assert.That(CompileCheck.CollectErrors(DescribeProbe(chain)), Is.EqualTo(new[] { MemberMissing }));
     }
 
+    [TestCase("Code.File().Class(\"A\").Member(null!).EndClass().EndFile()")]
+    [TestCase("Code.File().Class(\"A\").Method(T(\"void\"), \"M\").Body().Statement(null!).EndMethod().EndClass()" +
+              ".EndFile()")]
+    [TestCase("Code.File().Class(\"A\").AddExtension(null!, true).EndClass().EndFile()")]
+    public void RoslynBlocksNeedExtensionsNamespace(string chain)
+    {
+        Assert.That(CompileCheck.CollectErrors(DescribeProbe(chain)), Is.EqualTo(new[] { MemberMissing }));
+    }
+
     private static string DescribeProbe(string chain)
     {
         return $$"""

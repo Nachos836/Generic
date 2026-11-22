@@ -100,6 +100,34 @@ public sealed class RenderingTests
         yield return Case("BlankLineFollowsStatementBlock", static () => InBody(static body => body
                 .If(Id("a"), static then => then.Return()).Break()),
             Expected.InBody("if (a)\n{\n    return;\n}\n\nbreak;"));
+        yield return Case("DisabledRecordKeepsComment", static () => InType(static type => type.Comment("Keep")
+            .Public().Record("R", static _ => { }, false).Field(T("int"), "f")), Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledPropertyKeepsGap", static () => InType(static type => type.Field(T("int"), "x")
+                .Gap().Public().Property(T("int"), "P", static accessors => accessors.Get(), when: false)
+                .Field(T("int"), "y")),
+            Expected.InType("int x;\n\nint y;"));
+        yield return Case("DisabledIndexerKeepsComment", static () => InType(static type => type.Comment("Keep")
+                .Public().Indexer(T("int"), static indexer => indexer.Get(), false).Field(T("int"), "f")),
+            Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledOperatorKeepsComment", static () => InType(static type => type.Comment("Keep")
+                .Public().Operator(T("C"), Add, static _ => { }, false).Field(T("int"), "f")),
+            Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledConversionKeepsComment", static () => InType(static type => type.Comment("Keep")
+                .Public().Conversion(ConversionKind.Implicit, T("int"), static _ => { }, false).Field(T("int"), "f")),
+            Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledLoopsKeepComments", static () => InBody(static body => body
+                .Comment("For").Ref().For("i", Lit(0), Id("c"), Id("s"), static _ => { }, false)
+                .Comment("While").While(Id("a"), static _ => { }, false)
+                .Comment("DoWhile").DoWhile(static _ => { }, Id("a"), false)
+                .Var("x", Lit(1))),
+            Expected.InBody("// For\n// While\n// DoWhile\nvar x = 1;"));
+        yield return Case("DisabledBlocksKeepComments", static () => InBody(static body => body
+                .Comment("Using").Using("s", Id("x"), static _ => { }, false)
+                .Comment("Lock").Lock(Id("x"), static _ => { }, false)
+                .Comment("Unsafe").Unsafe(static _ => { }, false)
+                .Comment("Try").Ref().Try(static _ => { }, false).Finally(static _ => { })
+                .Var("x", Lit(1))),
+            Expected.InBody("// Using\n// Lock\n// Unsafe\n// Try\nvar x = 1;"));
         yield return Case("IndexerParamDropsPrefixes", static () => InType(static type => type.Indexer(T("int"),
                 static indexer => indexer.Private().Param(T("int"), "i", false).Private().Param(T("int"), "j")
                     .Get(Id("j")).Set())),

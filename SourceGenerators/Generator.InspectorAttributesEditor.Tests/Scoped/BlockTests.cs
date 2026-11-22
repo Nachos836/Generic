@@ -161,6 +161,21 @@ public sealed class BlockTests
             Expected.InType("int P { get; private set => p = value; }"));
         yield return Case("Init", static () => InType(static type => type.Property(T("int"), "P",
             static accessors => accessors.Get().Init())), Expected.InType("int P { get; init; }"));
+        yield return Case("SetBody", static () => InType(static type => type.Property(T("int"), "P",
+                static accessors => accessors.Set(static body => body.Do(Id("p").Assign(Id("value")))))),
+            Expected.InType("int P\n{\n    set\n    {\n        p = value;\n    }\n}"));
+        yield return Case("InitArrow", static () => InType(static type => type.Property(T("int"), "P",
+                static accessors => accessors.Init(Id("p").Assign(Id("value"))))),
+            Expected.InType("int P { init => p = value; }"));
+        yield return Case("InitBody", static () => InType(static type => type.Property(T("int"), "P",
+                static accessors => accessors.Init(static body => body.Do(Id("p").Assign(Id("value")))))),
+            Expected.InType("int P\n{\n    init\n    {\n        p = value;\n    }\n}"));
+        yield return Case("AccessorProtected", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Get().Protected().Set())), Expected.InType("int P { get; protected set; }"));
+        yield return Case("AccessorInternal", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Get().Internal().Set())), Expected.InType("int P { get; internal set; }"));
+        yield return Case("AccessorReadonly", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Readonly().Get(Id("p")))), Expected.InType("int P { readonly get => p; }"));
         yield return Case("Indexer", static () => InType(static type => type.Public().Indexer(T("int"),
                 static indexer => indexer.Param(T("int"), "i").Get(Id("i")))),
             Expected.InType("public int this[int i] { get => i; }"));
@@ -481,6 +496,18 @@ public sealed class BlockTests
             static accessors => accessors.Get().Init(false))), Expected.InType("int P { get; }"));
         yield return Case("AccessorModifier", static () => InType(static type => type.Property(T("int"), "P",
             static accessors => accessors.Get().Private(false).Set())), Expected.InType("int P { get; set; }"));
+        yield return Case("SetBody", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Get().Set(static _ => { }, false))), Expected.InType("int P { get; }"));
+        yield return Case("InitArrow", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Get().Init(Id("p"), false))), Expected.InType("int P { get; }"));
+        yield return Case("InitBody", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Get().Init(static _ => { }, false))), Expected.InType("int P { get; }"));
+        yield return Case("AccessorProtected", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Get().Protected(false).Set())), Expected.InType("int P { get; set; }"));
+        yield return Case("AccessorInternal", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Get().Internal(false).Set())), Expected.InType("int P { get; set; }"));
+        yield return Case("AccessorReadonly", static () => InType(static type => type.Property(T("int"), "P",
+            static accessors => accessors.Readonly(false).Get(Id("p")))), Expected.InType("int P { get => p; }"));
         yield return Case("Indexer", static () => InType(static type => type.Public().Indexer(T("int"),
             static indexer => indexer.Get(), false).Field(T("int"), "f")), Expected.InType("int f;"));
         yield return Case("IndexerParam", static () => InType(static type => type.Indexer(T("int"),

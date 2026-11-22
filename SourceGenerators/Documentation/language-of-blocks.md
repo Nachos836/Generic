@@ -59,9 +59,9 @@ In the chained style the generator's own code runs between segments of a chain: 
 
 ## Extensions
 
-The block chain shows no Roslyn type. When a generator needs a construct the language lacks, it adds a block of its own through the extensions namespace of the style it uses. That namespace is the only place where blocks meet Roslyn: it turns any of Roslyn's four base node kinds — type, expression, statement and member — into a block. An extension block reads in the chain exactly like a built-in one.
+The block chain shows no Roslyn type. When a generator needs a construct the language lacks, it adds a block of its own through the extensions namespace of the style it uses. That namespace is the only place where blocks meet Roslyn: it turns any of Roslyn's four base node kinds — type, expression, statement and member — into a block. An extension block reads in the chain exactly like a built-in one: it takes a condition, and an extension statement or member takes the comments, blank lines, attributes and modifiers written before it. Scopes offer no Roslyn node blocks until the generator imports the extensions namespace.
 
-The language offers fine-grained blocks only. A generator declares its domain vocabulary as custom blocks, and a custom block may be a meta-block: one call that chains several other blocks.
+The language offers fine-grained blocks only. A generator declares its domain vocabulary as custom blocks, and a custom block may be a meta-block: one call that chains several other blocks. A custom block extends a scope of the language, so the description calls it the same way as a built-in block.
 
 ## Sessions and Submit
 

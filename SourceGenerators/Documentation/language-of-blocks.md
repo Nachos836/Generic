@@ -67,4 +67,4 @@ The language offers fine-grained blocks only. A generator declares its domain vo
 
 A generation session covers one owner: all the files a generator writes for one type of the user's code. The session ends with Submit.
 
-Submit compiles the session's files together with the user's code before they reach Roslyn. A session that passes the check replaces the owner's previous files. A session that fails the check reports the failure and leaves the previous version of its files in place; when no previous version exists, it emits no files.
+Submit compiles the session's files together with the user's code before they reach Roslyn. Only errors inside the session's files fail the check; errors in the user's own code do not. A session that passes the check replaces the owner's previous files. A session that fails the check reports the failure and leaves the previous version of its files in place, as a warning, since the build can go on; when no previous version exists, it emits no files and reports an error. The previous version is remembered while the generator stays loaded, so the first run after the compiler starts has none.

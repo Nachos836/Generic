@@ -27,18 +27,35 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
 
     public TNext Public(bool when = true) => AddModifier(SyntaxKind.PublicKeyword, when);
     public TNext Internal(bool when = true) => AddModifier(SyntaxKind.InternalKeyword, when);
+    public TNext Protected(bool when = true) => AddModifier(SyntaxKind.ProtectedKeyword, when);
     public TNext Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
+    public TNext FileLocal(bool when = true) => AddModifier(SyntaxKind.FileKeyword, when);
     public TNext Static(bool when = true) => AddModifier(SyntaxKind.StaticKeyword, when);
     public TNext Readonly(bool when = true) => AddModifier(SyntaxKind.ReadOnlyKeyword, when);
+    public TNext Const(bool when = true) => AddModifier(SyntaxKind.ConstKeyword, when);
     public TNext Sealed(bool when = true) => AddModifier(SyntaxKind.SealedKeyword, when);
+    public TNext Abstract(bool when = true) => AddModifier(SyntaxKind.AbstractKeyword, when);
+    public TNext Virtual(bool when = true) => AddModifier(SyntaxKind.VirtualKeyword, when);
     public TNext Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TNext New(bool when = true) => AddModifier(SyntaxKind.NewKeyword, when);
     public TNext Partial(bool when = true) => AddModifier(SyntaxKind.PartialKeyword, when);
     public TNext Unsafe(bool when = true) => AddModifier(SyntaxKind.UnsafeKeyword, when);
+    public TNext Extern(bool when = true) => AddModifier(SyntaxKind.ExternKeyword, when);
+    public TNext Async(bool when = true) => AddModifier(SyntaxKind.AsyncKeyword, when);
+    public TNext Required(bool when = true) => AddModifier(SyntaxKind.RequiredKeyword, when);
+    public TNext Volatile(bool when = true) => AddModifier(SyntaxKind.VolatileKeyword, when);
     public TNext Ref(bool when = true) => AddModifier(SyntaxKind.RefKeyword, when);
 
     public TNext Class(string name, Action<TypeScope> body, bool when = true)
     {
         return AddType(ClassDeclaration(Names.CreateIdentifier(name)), new TypeScope(name), body, when);
+    }
+
+    public TNext Record(string name, Action<TypeScope> body, bool when = true)
+    {
+        var declaration = RecordDeclaration(Token(SyntaxKind.RecordKeyword), Names.CreateIdentifier(name))
+            .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken));
+        return AddType(declaration, new TypeScope(name), body, when);
     }
 
     public TNext Struct(string name, Action<TypeScope> body, bool when = true)

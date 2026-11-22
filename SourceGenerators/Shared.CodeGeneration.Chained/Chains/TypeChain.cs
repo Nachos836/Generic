@@ -94,7 +94,6 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
             .WithAttributeLists(opening.Attributes)
             .WithModifiers(modifiers)
             .WithExplicitInterfaceSpecifier(BuildExplicitInterface(opening));
-
         return new(Self, opening.Leading, declaration, value, active);
     }
 
@@ -108,7 +107,6 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
             .WithAttributeLists(opening.Attributes)
             .WithModifiers(modifiers)
             .WithExplicitInterfaceSpecifier(BuildExplicitInterface(opening));
-
         return new(Self, opening.Leading, declaration, active);
     }
 

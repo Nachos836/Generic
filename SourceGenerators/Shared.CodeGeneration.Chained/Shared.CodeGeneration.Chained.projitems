@@ -3,10 +3,10 @@
   <PropertyGroup>
     <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
-    <SharedGUID>62a29bca-5ba6-4157-a7db-20b168a7b187</SharedGUID>
+    <SharedGUID>78d89f0b-b3ff-4d98-9017-b64bc20fbc87</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>Shared.AST</Import_RootNamespace>
+    <Import_RootNamespace>Shared.CodeGeneration.Chained</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)**\*.cs" />

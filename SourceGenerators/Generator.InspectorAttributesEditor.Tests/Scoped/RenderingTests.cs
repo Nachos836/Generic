@@ -68,6 +68,10 @@ public sealed class RenderingTests
             .Public().Using("System").Class("A", static _ => { })), "using System;\n\nclass A\n{\n}");
         yield return Case("StatementPrefixesStayBeforeStatement", static () => InBody(static body => body
             .Ref().Do(Id("a").Call()).Var("y", Id("z"))), Expected.InBody("a();\nvar y = z;"));
+        yield return Case("CasePrefixesStayInCase", static () => InBody(static body => body.Switch(Id("x"),
+                static sections => sections.Case(Lit(1), static section => section.Break().Ref())
+                    .Case(Lit(2), static section => section.Var("y", Lit(1))))),
+            Expected.InBody("switch (x)\n{\n    case 1:\n        break;\n    case 2:\n        var y = 1;\n}"));
     }
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)

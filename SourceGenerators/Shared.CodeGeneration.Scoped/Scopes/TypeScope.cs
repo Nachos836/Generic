@@ -52,6 +52,7 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
         if (when is false || returnType.Node is null) return Skip();
 
         var (modifiers, type) = Declarations.SplitRef(Lead.TakeModifiers(), returnType.Node);
+
         var declaration = MethodDeclaration(type, Names.CreateIdentifier(name))
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(modifiers);

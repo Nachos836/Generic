@@ -40,8 +40,10 @@ internal static class ScopedDrawer
         {
             WriteHeader(file, defines, OwnerUsings);
             WriteOwner(file, model, version, model.NamespaceName.Length == 0);
+
             file.Namespace(model.NamespaceName, scope => WriteOwner(scope, model, version),
                 model.NamespaceName.Length > 0);
+
             file.Gap().EndIfDirective();
         });
     }
@@ -73,6 +75,7 @@ internal static class ScopedDrawer
         scope.Partial().Class(model.OwnerName, owner =>
         {
             WriteGeneratedAttributes(owner, version);
+
             owner.Attribute("CustomEditor", [TypeOf(T(model.OwnerName))])
                 .Internal().Sealed().Partial().Class(DrawerName, drawer => WriteDrawer(drawer, model.RequiresCustomUI));
         }, when);

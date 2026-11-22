@@ -4,12 +4,6 @@ using System;
 using System.Globalization;
 using System.Text;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-
-using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using static Microsoft.CodeAnalysis.CSharp.SyntaxKind;
-
-using Using = Shared.AST.Using;
 
 namespace Generator.InspectorAttributesEditor.Components;
 
@@ -27,110 +21,7 @@ internal static class CodeGenerator
 #if SCOPED_DRAWER
         var (ownerText, buttonsText) = ScopedDrawer.Emit(model, Version.ToString());
 #else
-        var ownerName = model.OwnerName;
-        const string drawerName = "Drawer";
-
-        // These symbols are local to the generated source file.
-        const string buttonDefineKey = "INSPECTOR_BUTTONS_REQUIRED";
-        const string customUIDefineKey = "INSPECTOR_CUSTOM_UI_REQUIRED";
-
-        var inspectorGUI = Method.CreateInspectorGUIMethod();
-        var buttonsDeclaration = Method.CreateWhenButtonAttributeDetectedPartialMethod(buttonDefineKey);
-        var buttonsImplementation = Method.CreateWhenButtonAttributeDetectedMethod(ownerName, model.Buttons);
-
-        var customUI = model.RequiresCustomUI
-            ? Method.CreateWhenCustomAttributeDetectedPartialMethod(customUIDefineKey)
-            : Method.CreateWhenCustomAttributeMissedPartialMethod(customUIDefineKey);
-
-        var drawerClass = Class.CreateClass
-        (
-            drawerName,
-            modifiers: [InternalKeyword, SealedKeyword, PartialKeyword],
-            baseTypes: [nameof(UnityEditor.Editor)],
-            attributes:
-            [
-                ("ExcludeFromCodeCoverage", []),
-                ("DebuggerNonUserCode", []),
-                ("GeneratedCode", Args: ["Generator.InspectorAttributesEditor", Version.ToString()]),
-                ("CustomEditor", Args: [ParseTypeName(ownerName)])
-            ]
-        );
-
-        var shortDrawerClass = Class.CreateClass
-        (
-            drawerName,
-            modifiers: [PartialKeyword],
-            baseTypes: [],
-            attributes: []
-        );
-
-        var ownerClass = Class.CreateClass
-        (
-            ownerName,
-            modifiers: [PartialKeyword],
-            baseTypes: [],
-            attributes:
-            [
-                ("ExcludeFromCodeCoverage", []),
-                ("DebuggerNonUserCode", []),
-                ("GeneratedCode", Args: ["Generator.InspectorAttributesEditor", Version.ToString()])
-            ]
-        );
-
-        var shortOwnerClass = Class.CreateClass
-        (
-            ownerName,
-            modifiers: [PartialKeyword],
-            baseTypes: [],
-            attributes: []
-        );
-
-        var ownerCompilation = CompilationUnit()
-            .AddUsings(
-                Using.System.CodeDom.Compiler.Name,
-                Using.System.Diagnostics.Name,
-                Using.System.Diagnostics.CodeAnalysis.Name,
-                Using.Unity.Editor.Name,
-                Using.Unity.Engine.UIElements.Name)
-            .AddHeaderWithDefinitions(
-                buttonDefineKey,
-                model.RequiresCustomUI ? customUIDefineKey : null)
-            .AddGenericFooter();
-
-        var buttonsCompilation = CompilationUnit()
-            .AddUsings(
-                Using.Unity.Editor.Name,
-                Using.Unity.Engine.UIElements.Name)
-            .AddGenericHeader()
-            .AddGenericFooter();
-
-        var ownerDeclaration = ownerClass.AddClass(drawerClass
-            .AddMethod(inspectorGUI)
-            .AddMethod(buttonsDeclaration)
-            .AddMethod(customUI));
-
-        var buttonsDeclarationContainer = shortOwnerClass.AddClass(shortDrawerClass
-            .AddMethod(buttonsImplementation));
-
-        var ownerSource = AddOwner
-        (
-            ownerCompilation,
-            model.NamespaceName,
-            ownerDeclaration
-        );
-
-        var buttonsSource = AddOwner
-        (
-            buttonsCompilation,
-            model.NamespaceName,
-            buttonsDeclarationContainer
-        );
-
-        var ownerText = ownerSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
-            .ToFullString();
-
-        var buttonsText = buttonsSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
-            .ToFullString();
+        var (ownerText, buttonsText) = ChainedDrawer.Emit(model, Version.ToString());
 #endif
 
         var hintPrefix = CreateHintPrefix(model.Identity);
@@ -139,17 +30,6 @@ internal static class CodeGenerator
 
         productionContext.AddSource(hintName: $"{hintPrefix}.g.cs", ownerText);
         productionContext.AddSource(hintName: $"{hintPrefix}.buttons.g.cs", buttonsText);
-    }
-
-    private static CompilationUnitSyntax AddOwner
-    (
-        CompilationUnitSyntax compilation,
-        string namespaceName,
-        ClassDeclarationSyntax owner
-    ) {
-        return namespaceName.Length == 0
-            ? compilation.AddMembers(owner)
-            : compilation.AddNamespace(Namespace.CreateNamespace(namespaceName).AddClass(owner));
     }
 
     private static string CreateHintPrefix(string identity)

@@ -26,6 +26,7 @@ internal sealed class Lead
             trivia = trivia.GetStructure() is StructuredTriviaSyntax structure
                 ? Trivia(structure.WithAdditionalAnnotations(Gap))
                 : trivia.WithAdditionalAnnotations(Gap);
+
             _gap = false;
         }
 

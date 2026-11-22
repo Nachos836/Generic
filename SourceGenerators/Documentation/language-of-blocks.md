@@ -55,6 +55,8 @@ Every block takes an optional condition and writes nothing when the condition is
 
 The scoped style also accepts the generator's own `foreach` and `if` inside a lambda, since a lambda body is ordinary C#.
 
+In the chained style the generator's own code runs between segments of a chain: a method of the generator takes a chain, continues it and returns it, and the description goes on from the result. A series that the generator assembles in its own loop, such as an `if`–`else if` series over domain data, joins the chain this way.
+
 ## Extensions
 
 The block chain shows no Roslyn type. When a generator needs a construct the language lacks, it adds a block of its own through the extensions namespace of the style it uses. That namespace is the only place where blocks meet Roslyn: it turns any of Roslyn's four base node kinds — type, expression, statement and member — into a block. An extension block reads in the chain exactly like a built-in one.

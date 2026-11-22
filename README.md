@@ -50,3 +50,8 @@ https://github.com/Nachos836/Generic.git?path=Assets/Initializer
 ```
 https://github.com/Nachos836/Generic.git?path=Assets/NativeRefCollections
 ```
+
+### Development
+- Unity 6000.6.10f1
+- .NET SDK 10 to build the generator tests
+- JetBrains Rider to run the generator's `Publish Generator.InspectorAttributesEditor to UnityPackage` configuration

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -32,6 +33,19 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
     }
 
     public TSelf Break(bool when = true) => when ? Add(BreakStatement()) : DropPrefixes();
+    public TSelf Continue(bool when = true) => when ? Add(ContinueStatement()) : DropPrefixes();
+
+    public TSelf YieldReturn(Expr value, bool when = true)
+    {
+        return when && value.Node is { } node
+            ? Add(YieldStatement(SyntaxKind.YieldReturnStatement, node))
+            : DropPrefixes();
+    }
+
+    public TSelf YieldBreak(bool when = true)
+    {
+        return when ? Add(YieldStatement(SyntaxKind.YieldBreakStatement)) : DropPrefixes();
+    }
 
     public TSelf Return(Expr? value = null, bool when = true)
     {
@@ -57,6 +71,39 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
             collection.Node ?? IdentifierName("_"), Block());
         return new(Self, Open(active).Leading, header, active);
     }
+
+    public ForChain<TSelf> For(string name, Expr start, Expr condition, Expr step, bool when = true)
+    {
+        var declaration = start.Node is { } value ? BuildVariable(name, value) : null;
+        var steps = step.Node is { } node ? SingletonSeparatedList(node) : default;
+        var header = ForStatement(declaration, default, condition.Node, steps, Block());
+        return new(Self, Open(when).Leading, header, when);
+    }
+
+    public WhileChain<TSelf> While(Expr condition, bool when = true)
+    {
+        var active = when && condition.Node is not null;
+        var header = WhileStatement(condition.Node ?? IdentifierName("_"), Block());
+        return new(Self, Open(active).Leading, header, active);
+    }
+
+    public DoWhileChain<TSelf> DoWhile(bool when = true) => new(Self, Open(when).Leading, when);
+
+    public UsingChain<TSelf> Using(string name, Expr value, bool when = true)
+    {
+        var active = when && value.Node is not null;
+        var header = UsingStatement(BuildVariable(name, value.Node ?? IdentifierName("_")), null, Block());
+        return new(Self, Open(active).Leading, header, active);
+    }
+
+    public LockChain<TSelf> Lock(Expr value, bool when = true)
+    {
+        var active = when && value.Node is not null;
+        return new(Self, Open(active).Leading, LockStatement(value.Node ?? IdentifierName("_"), Block()), active);
+    }
+
+    public UnsafeChain<TSelf> Unsafe(bool when = true) => new(Self, Open(when).Leading, when);
+    public TryChain<TSelf> Try(bool when = true) => new(Self, Open(when).Leading, when);
 
     public SwitchChain<TSelf> Switch(Expr value, bool when = true)
     {
@@ -97,6 +144,12 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
         var block = BuildBlock();
         var keepsBraces = braced || closed || block.Statements.Count != 1 || block.Statements[0] is IfStatementSyntax;
         return keepsBraces ? block : block.Statements[0];
+    }
+
+    private static VariableDeclarationSyntax BuildVariable(string name, ExpressionSyntax value)
+    {
+        var declarator = VariableDeclarator(Names.CreateIdentifier(name)).WithInitializer(EqualsValueClause(value));
+        return VariableDeclaration(IdentifierName("var"), SingletonSeparatedList(declarator));
     }
 
     private protected List<StatementSyntax> TakeStatements()
@@ -188,46 +241,190 @@ internal sealed class ElseChain<TOuter> : StatementChain<ElseChain<TOuter>> wher
     }
 }
 
-internal sealed class ForeachChain<TOuter> : StatementChain<ForeachChain<TOuter>> where TOuter : class, IStatementHost
+internal abstract class BlockChain<TSelf, TOuter> : StatementChain<TSelf>
+    where TSelf : BlockChain<TSelf, TOuter>
+    where TOuter : class, IStatementHost
 {
     private readonly TOuter _outer = default!;
     private readonly Leading _leading = default!;
-    private readonly ForEachStatementSyntax _header = default!;
     private readonly bool _active;
 
-    internal ForeachChain(TOuter outer, Leading leading, ForEachStatementSyntax header, bool active) : base(new())
+    private protected BlockChain(TOuter outer, Leading leading, bool active) : base(new())
     {
         _outer = outer;
         _leading = leading;
-        _header = header;
         _active = active;
     }
 
-    public TOuter EndForeach()
+    private protected TOuter Close(Func<BlockSyntax, StatementSyntax> build, bool active = true)
     {
-        if (_active) _outer.AddStatement(_leading.Apply(_header.WithStatement(BuildBlock())));
+        var statement = build(BuildBlock());
+        if (_active && active) _outer.AddStatement(_leading.Apply(statement));
         return _outer;
     }
 }
 
-internal sealed class FixedChain<TOuter> : StatementChain<FixedChain<TOuter>> where TOuter : class, IStatementHost
+internal sealed class ForeachChain<TOuter> : BlockChain<ForeachChain<TOuter>, TOuter>
+    where TOuter : class, IStatementHost
 {
+    private readonly ForEachStatementSyntax _header = default!;
+
+    internal ForeachChain(TOuter outer, Leading leading, ForEachStatementSyntax header, bool active)
+        : base(outer, leading, active) => _header = header;
+
+    public TOuter EndForeach() => Close(_header.WithStatement);
+}
+
+internal sealed class FixedChain<TOuter> : BlockChain<FixedChain<TOuter>, TOuter> where TOuter : class, IStatementHost
+{
+    private readonly FixedStatementSyntax _header = default!;
+
+    internal FixedChain(TOuter outer, Leading leading, FixedStatementSyntax header, bool active)
+        : base(outer, leading, active) => _header = header;
+
+    public TOuter EndFixed() => Close(_header.WithStatement);
+}
+
+internal sealed class ForChain<TOuter> : BlockChain<ForChain<TOuter>, TOuter> where TOuter : class, IStatementHost
+{
+    private readonly ForStatementSyntax _header = default!;
+
+    internal ForChain(TOuter outer, Leading leading, ForStatementSyntax header, bool active)
+        : base(outer, leading, active) => _header = header;
+
+    public TOuter EndFor() => Close(_header.WithStatement);
+}
+
+internal sealed class WhileChain<TOuter> : BlockChain<WhileChain<TOuter>, TOuter> where TOuter : class, IStatementHost
+{
+    private readonly WhileStatementSyntax _header = default!;
+
+    internal WhileChain(TOuter outer, Leading leading, WhileStatementSyntax header, bool active)
+        : base(outer, leading, active) => _header = header;
+
+    public TOuter EndWhile() => Close(_header.WithStatement);
+}
+
+internal sealed class DoWhileChain<TOuter> : BlockChain<DoWhileChain<TOuter>, TOuter>
+    where TOuter : class, IStatementHost
+{
+    internal DoWhileChain(TOuter outer, Leading leading, bool active) : base(outer, leading, active)
+    {
+    }
+
+    public TOuter EndDoWhile(Expr condition)
+    {
+        var node = condition.Node ?? IdentifierName("_");
+        return Close(block => DoStatement(block, node), condition.Node is not null);
+    }
+}
+
+internal sealed class UsingChain<TOuter> : BlockChain<UsingChain<TOuter>, TOuter> where TOuter : class, IStatementHost
+{
+    private readonly UsingStatementSyntax _header = default!;
+
+    internal UsingChain(TOuter outer, Leading leading, UsingStatementSyntax header, bool active)
+        : base(outer, leading, active) => _header = header;
+
+    public TOuter EndUsing() => Close(_header.WithStatement);
+}
+
+internal sealed class LockChain<TOuter> : BlockChain<LockChain<TOuter>, TOuter> where TOuter : class, IStatementHost
+{
+    private readonly LockStatementSyntax _header = default!;
+
+    internal LockChain(TOuter outer, Leading leading, LockStatementSyntax header, bool active)
+        : base(outer, leading, active) => _header = header;
+
+    public TOuter EndLock() => Close(_header.WithStatement);
+}
+
+internal sealed class UnsafeChain<TOuter> : BlockChain<UnsafeChain<TOuter>, TOuter> where TOuter : class, IStatementHost
+{
+    internal UnsafeChain(TOuter outer, Leading leading, bool active) : base(outer, leading, active)
+    {
+    }
+
+    public TOuter EndUnsafe() => Close(static block => UnsafeStatement(block));
+}
+
+internal sealed class TryChain<TOuter> : StatementChain<TryChain<TOuter>> where TOuter : class, IStatementHost
+{
+    private readonly List<CatchClauseSyntax> _catches = [];
     private readonly TOuter _outer = default!;
     private readonly Leading _leading = default!;
-    private readonly FixedStatementSyntax _header = default!;
     private readonly bool _active;
+    private BlockSyntax? _block = default;
+    private CatchClauseSyntax? _catch = default;
 
-    internal FixedChain(TOuter outer, Leading leading, FixedStatementSyntax header, bool active) : base(new())
+    internal TryChain(TOuter outer, Leading leading, bool active) : base(new())
     {
         _outer = outer;
         _leading = leading;
-        _header = header;
         _active = active;
     }
 
-    public TOuter EndFixed()
+    public TryChain<TOuter> Catch(TypeRef type, string? name = null, bool when = true)
     {
-        if (_active) _outer.AddStatement(_leading.Apply(_header.WithStatement(BuildBlock())));
+        CloseSection();
+
+        var declaration = CatchDeclaration(type.Node ?? IdentifierName("_"));
+        if (name != default) declaration = declaration.WithIdentifier(Names.CreateIdentifier(name));
+
+        _catch = when && type.Node is not null ? CatchClause().WithDeclaration(declaration) : null;
+        return this;
+    }
+
+    public TryChain<TOuter> Catch(bool when = true)
+    {
+        CloseSection();
+        _catch = when ? CatchClause() : null;
+        return this;
+    }
+
+    public FinallyChain<TOuter> Finally(bool when = true)
+    {
+        CloseSection();
+        return new(this, when);
+    }
+
+    public TOuter EndTry()
+    {
+        CloseSection();
+        return Finish(null);
+    }
+
+    internal TOuter Finish(FinallyClauseSyntax? @finally)
+    {
+        if (_active) _outer.AddStatement(_leading.Apply(TryStatement(_block!, List(_catches), @finally)));
         return _outer;
     }
+
+    private void CloseSection()
+    {
+        var block = BuildBlock();
+
+        if (_block == default)
+        {
+            _block = block;
+            return;
+        }
+
+        if (_catch != default) _catches.Add(_catch.WithBlock(block));
+        _catch = default;
+    }
+}
+
+internal sealed class FinallyChain<TOuter> : StatementChain<FinallyChain<TOuter>> where TOuter : class, IStatementHost
+{
+    private readonly TryChain<TOuter> _try = default!;
+    private readonly bool _active;
+
+    internal FinallyChain(TryChain<TOuter> @try, bool active) : base(new())
+    {
+        _try = @try;
+        _active = active;
+    }
+
+    public TOuter EndTry() => _try.Finish(_active ? FinallyClause(BuildBlock()) : null);
 }

@@ -4,6 +4,7 @@ using System;
 using System.Globalization;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Shared.Generator;
 
 namespace Generator.InspectorAttributesEditor.Components;
 
@@ -12,9 +13,10 @@ internal static class CodeGenerator
     public const string ButtonAttributeFullName = $"{nameof(InspectorAttributes)}." +
                                                   $"{nameof(InspectorAttributes.ButtonAttribute)}";
 
-    private static Version Version => Shared.Generator.Version.Current;
+    private static System.Version Version => Shared.Generator.Version.Current;
 
-    public static void GenerateDrawer(SourceProductionContext productionContext, DrawerModel model)
+    public static void GenerateDrawer(SourceProductionContext productionContext, DrawerModel model,
+        Compilation compilation, SessionMemory memory)
     {
         productionContext.CancellationToken.ThrowIfCancellationRequested();
 
@@ -26,10 +28,17 @@ internal static class CodeGenerator
 
         var hintPrefix = CreateHintPrefix(model.Identity);
 
-        productionContext.CancellationToken.ThrowIfCancellationRequested();
+        var result = new Session(memory, model.Identity)
+            .Add($"{hintPrefix}.g.cs", ownerText)
+            .Add($"{hintPrefix}.buttons.g.cs", buttonsText)
+            .Submit(compilation, productionContext.CancellationToken);
 
-        productionContext.AddSource(hintName: $"{hintPrefix}.g.cs", ownerText);
-        productionContext.AddSource(hintName: $"{hintPrefix}.buttons.g.cs", buttonsText);
+        foreach (var file in result.Files)
+        {
+            productionContext.AddSource(file.HintName, file.Text);
+        }
+
+        if (result.Diagnostic is { } diagnostic) productionContext.ReportDiagnostic(diagnostic);
     }
 
     private static string CreateHintPrefix(string identity)

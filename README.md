@@ -39,6 +39,7 @@ https://github.com/Nachos836/Generic.git?path=Assets/Pooling
 https://github.com/Nachos836/Generic.git?path=Assets/dotNetCompat
 ```
 
+Serializable Value Objects, Inspector Attributes, Async Pool and Root/Initializer depend on .NetCompatibility: add its URL together with theirs.
 
 (OPTIONAL) If you want to install Root/Initializer add the following URL:
 ```

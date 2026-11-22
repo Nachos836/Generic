@@ -71,3 +71,10 @@
   - `[CLEANUP]` — tidied code with its behaviour kept;
   - `[WIP]` — unfinished work.
 - Start each description with a capital letter and end it without a period.
+
+## Scopes
+
+> **Purpose:** to apply each scope's own rules before touching that scope.
+
+- Read a child scope's agents file before any task that reads, reviews or changes its files:
+  - [Source generators agent rules](SourceGenerators/AGENTS.md) — the `SourceGenerators` scope.

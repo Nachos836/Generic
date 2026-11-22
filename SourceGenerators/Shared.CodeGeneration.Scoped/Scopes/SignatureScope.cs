@@ -103,6 +103,7 @@ internal sealed class MethodScope : SignatureScope<MethodScope>
         {
             declaration = declaration.WithTypeParameterList(TypeParameterList(SeparatedList(_typeParameters)));
         }
+
         return Complete<MethodDeclarationSyntax>(declaration.WithConstraintClauses(List(_constraints)));
     }
 }
@@ -120,6 +121,7 @@ internal sealed class ConstructorScope : SignatureScope<ConstructorScope>
             _initializer = ConstructorInitializer(SyntaxKind.ThisConstructorInitializer,
                 ArgumentList(Expr.Arguments(arguments)));
         }
+
         return this;
     }
 

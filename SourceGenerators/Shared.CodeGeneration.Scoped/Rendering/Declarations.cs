@@ -23,6 +23,7 @@ internal static class Declarations
             refType = refType.WithReadOnlyKeyword(modifiers[next]);
             rest = rest.Skip(1);
         }
+
         return (TokenList(modifiers.Take(index).Concat(rest)), refType);
     }
 

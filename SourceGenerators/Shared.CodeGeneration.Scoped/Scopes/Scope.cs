@@ -28,6 +28,7 @@ internal abstract class Scope<TNext> where TNext : class
         {
             Lead.AddTrivia(SyntaxFactory.Comment(line.Length == 0 ? "///" : "/// " + line));
         }
+
         return Next;
     }
 
@@ -45,6 +46,7 @@ internal abstract class Scope<TNext> where TNext : class
         {
             Lead.AddTrivia(Trivia(IfDirectiveTrivia(node, isActive: true, branchTaken: true, conditionValue: true)));
         }
+
         return Next;
     }
 
@@ -68,6 +70,7 @@ internal abstract class Scope<TNext> where TNext : class
         {
             block(Next, item);
         }
+
         return Next;
     }
 }

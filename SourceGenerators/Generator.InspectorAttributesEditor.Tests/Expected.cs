@@ -35,6 +35,7 @@ internal static class Expected
             line = line.Substring(FourSpaces.Length);
             tabs++;
         }
+
         return new string('\t', tabs) + line;
     }
 }

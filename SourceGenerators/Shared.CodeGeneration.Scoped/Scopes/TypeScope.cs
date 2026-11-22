@@ -137,6 +137,7 @@ internal sealed class EnumScope : Scope<EnumScope>
         {
             _baseList = BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(node)));
         }
+
         return this;
     }
 

@@ -38,6 +38,7 @@ internal sealed class Arg
         {
             return AttributeArgument(null, NameColon(IdentifierName(Names.Identifier(_name))), _value.Node!);
         }
+
         return _value.Node is AssignmentExpressionSyntax { Left: IdentifierNameSyntax property } assignment
             ? AttributeArgument(NameEquals(property), null, assignment.Right)
             : AttributeArgument(_value.Node!);

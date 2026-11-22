@@ -59,6 +59,7 @@ internal sealed class ArmScope : Scope<ArmScope>
         {
             _arms.Add(Lead.Attach(SwitchExpressionArm(Expr.Pattern(patternNode), resultNode)));
         }
+
         return this;
     }
 

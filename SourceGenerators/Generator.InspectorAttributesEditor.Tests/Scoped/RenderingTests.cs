@@ -100,6 +100,10 @@ public sealed class RenderingTests
         yield return Case("BlankLineFollowsStatementBlock", static () => InBody(static body => body
                 .If(Id("a"), static then => then.Return()).Break()),
             Expected.InBody("if (a)\n{\n    return;\n}\n\nbreak;"));
+        yield return Case("IndexerParamDropsPrefixes", static () => InType(static type => type.Indexer(T("int"),
+                static indexer => indexer.Private().Param(T("int"), "i", false).Private().Param(T("int"), "j")
+                    .Get(Id("j")).Set())),
+            Expected.InType("int this[int j] { get => j; set; }"));
         yield return Case("OperatorExplicitFor", static () => InType(static type => type.Static()
                 .ExplicitFor(T("I", [T("C")])).Operator(T("C"), Add, static signature => signature
                     .Param(T("C"), "a").Param(T("C"), "b").Arrow(Id("a")))),

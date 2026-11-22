@@ -7,13 +7,12 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Shared.CodeGeneration.Scoped;
 
-internal abstract class AccessorScope<TSelf> : Scope<TSelf> where TSelf : AccessorScope<TSelf>
+internal abstract class AccessorScope<TSelf> where TSelf : AccessorScope<TSelf>
 {
     private readonly List<AccessorDeclarationSyntax> _accessors = [];
 
-    private protected AccessorScope() : base(new())
-    {
-    }
+    private protected Lead Lead { get; } = new();
+    private protected abstract TSelf Next { get; }
 
     public TSelf Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
     public TSelf Protected(bool when = true) => AddModifier(SyntaxKind.ProtectedKeyword, when);
@@ -105,6 +104,8 @@ internal sealed class IndexerScope : AccessorScope<IndexerScope>
     public IndexerScope Param(TypeRef type, string name, bool when = true)
     {
         if (when && type.Node is { } node) _parameters.Add(Parameter(Names.CreateIdentifier(name)).WithType(node));
+
+        Lead.DropPrefixes();
         return this;
     }
 

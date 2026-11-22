@@ -44,6 +44,16 @@ public sealed class ScopeTests
         Assert.That(CompileCheck.CollectErrors(probe), Is.EqualTo(new[] { MemberMissing }));
     }
 
+    [TestCase("Comment(\"c\")")]
+    [TestCase("Gap()")]
+    [TestCase("IfDirective(\"X\")")]
+    public void AccessorsRejectTrivia(string block)
+    {
+        var probe = DescribeProbe("Code.File(static file => file.Class(\"A\", static scope => scope" +
+            $".Property(T(\"int\"), \"P\", static accessors => accessors.{block}.Get())))");
+        Assert.That(CompileCheck.CollectErrors(probe), Is.EqualTo(new[] { MemberMissing }));
+    }
+
     [TestCase("scope.Const()")]
     [TestCase("scope.Volatile()")]
     [TestCase("scope.Required()")]

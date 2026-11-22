@@ -85,8 +85,8 @@ internal sealed class Expr
 
         var kind = MapOperator(@operator);
         var precedence = Precedence.Rank(kind);
-        return new(BinaryExpression(kind, Precedence.Parenthesize(Node, precedence),
-            Precedence.Parenthesize(right.Node, precedence + 1)));
+        var left = EndsWithType(Node) ? ParenthesizedExpression(Node) : Precedence.Parenthesize(Node, precedence);
+        return new(BinaryExpression(kind, left, Precedence.Parenthesize(right.Node, precedence + 1)));
     }
 
     public Expr CompoundAssign(BinaryOperator @operator, Expr value, bool when = true)
@@ -99,9 +99,11 @@ internal sealed class Expr
     public Expr Coalesce(Expr right, bool when = true)
     {
         if (when is false || Node is null || right.Node is null) return this;
+        var rightOperand = right.Node is ThrowExpressionSyntax
+            ? right.Node
+            : Precedence.Parenthesize(right.Node, Precedence.Coalesce);
         return new(BinaryExpression(SyntaxKind.CoalesceExpression,
-            Precedence.Parenthesize(Node, Precedence.Coalesce + 1),
-            Precedence.Parenthesize(right.Node, Precedence.Coalesce)));
+            Precedence.Parenthesize(Node, Precedence.Coalesce + 1), rightOperand));
     }
 
     public Expr Ternary(Expr whenTrue, Expr whenFalse, bool when = true)
@@ -158,6 +160,11 @@ internal sealed class Expr
     }
 
     private static IdentifierNameSyntax BuildMemberName(string name) => IdentifierName(Names.CreateIdentifier(name));
+
+    private static bool EndsWithType(ExpressionSyntax node)
+    {
+        return node.Kind() is SyntaxKind.AsExpression or SyntaxKind.IsExpression;
+    }
 
     private static ExpressionSyntax Unwrap(ExpressionSyntax node)
     {

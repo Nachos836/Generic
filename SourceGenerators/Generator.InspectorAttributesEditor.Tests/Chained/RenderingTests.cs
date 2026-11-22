@@ -9,7 +9,12 @@ namespace Generator.InspectorAttributesEditor.Tests.Chained;
 public sealed class RenderingTests
 {
     [TestCaseSource(nameof(Cases))]
-    public void RendersValidCSharp(Func<string> actual, string expected) => CodeAssert.AreEqual(expected, actual());
+    public void RendersValidCSharp(Func<string> actual, string expected)
+    {
+        var code = actual();
+        CodeAssert.AreEqual(expected, code);
+        CodeAssert.Parses(code);
+    }
 
     [Test]
     public void GapAtFileStartWritesNoBlankLine()

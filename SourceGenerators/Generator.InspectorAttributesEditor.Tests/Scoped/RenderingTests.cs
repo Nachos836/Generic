@@ -9,7 +9,12 @@ namespace Generator.InspectorAttributesEditor.Tests.Scoped;
 public sealed class RenderingTests
 {
     [TestCaseSource(nameof(Cases))]
-    public void RendersValidCSharp(Func<string> actual, string expected) => CodeAssert.AreEqual(expected, actual());
+    public void RendersValidCSharp(Func<string> actual, string expected)
+    {
+        var code = actual();
+        CodeAssert.AreEqual(expected, code);
+        CodeAssert.Parses(code);
+    }
 
     [Test]
     public void GapAtFileStartWritesNoBlankLine()
@@ -93,7 +98,12 @@ public sealed class RenderingTests
                     .Param(T("int"), "x").Arrow(New(T("C"))))),
             Expected.InType("public static explicit operator C(int x) => new C();"));
         yield return Case("BlankLineFollowsStatementBlock", static () => InBody(static body => body
-            .If(Id("a"), static then => then.Return()).Break()), Expected.InBody("if (a)\n{\n    return;\n}\n\nbreak;"));
+                .If(Id("a"), static then => then.Return()).Break()),
+            Expected.InBody("if (a)\n{\n    return;\n}\n\nbreak;"));
+        yield return Case("CoalesceWithThrow", static () => OfExpression(Id("a").Assign(Id("b")
+            .Coalesce(ThrowExpression(New(T("E")))))), Expected.OfExpression("a = b ?? throw new E()"));
+        yield return Case("AsBeforeLess", static () => OfExpression(Id("a").Assign(Id("o").As(T("C"))
+            .Binary(Less, Id("y")))), Expected.OfExpression("a = (o as C) < y"));
         yield return Case("BlankLineFollowsMemberBlock", static () => InType(static type => type
                 .Method(T("void"), "M", static method => method.Body(static _ => { })).Field(T("int"), "f")),
             Expected.InType("void M()\n{\n}\n\nint f;"));

@@ -27,16 +27,10 @@ internal sealed class SwitchChain<TOuter> : Chain<SwitchChain<TOuter>> where TOu
 
     public CaseChain<TOuter> Case(Expr label, bool when = true)
     {
-        var active = when && label.Node is not null;
-        SwitchLabelSyntax caseLabel = CaseSwitchLabel(label.Node ?? IdentifierName("_"));
-        return new(this, active ? Lead.Attach(caseLabel) : caseLabel, active, Lead);
+        return OpenSection(CaseSwitchLabel(label.Node ?? IdentifierName("_")), when && label.Node is not null);
     }
 
-    public CaseChain<TOuter> Default(bool when = true)
-    {
-        SwitchLabelSyntax defaultLabel = DefaultSwitchLabel();
-        return new(this, when ? Lead.Attach(defaultLabel) : defaultLabel, when, Lead);
-    }
+    public CaseChain<TOuter> Default(bool when = true) => OpenSection(DefaultSwitchLabel(), when);
 
     public TOuter EndSwitch()
     {
@@ -52,6 +46,11 @@ internal sealed class SwitchChain<TOuter> : Chain<SwitchChain<TOuter>> where TOu
     {
         if (active) _sections.Add(SwitchSection(SingletonList(label), List(statements)));
         return this;
+    }
+
+    private CaseChain<TOuter> OpenSection(SwitchLabelSyntax label, bool active)
+    {
+        return active ? new(this, Lead.Attach(label), true, Lead) : new(this, label, false, new());
     }
 }
 

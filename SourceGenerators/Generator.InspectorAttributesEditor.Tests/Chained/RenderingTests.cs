@@ -83,6 +83,21 @@ public sealed class RenderingTests
         yield return Case("DisabledFixedKeepsComment", static () => InBody(static body => body.Comment("Keep")
                 .Fixed(T("void").Pointer(), "p", AddressOf(Id("x")), false).EndFixed().Break()),
             Expected.InBody("// Keep\nbreak;"));
+        yield return Case("DisabledCaseKeepsDirective", static () => InBody(static body => body.Switch(Id("x"))
+                .IfDirective("X").Case(Lit(1), false).Break().EndCase().EndIfDirective().Default().Break().EndCase()
+                .EndSwitch()),
+            "class C\n{\n    void M()\n    {\n        switch (x)\n        {\n#if X\n#endif\n            default:\n" +
+            "                break;\n        }\n    }\n}");
+        yield return Case("DisabledDefaultKeepsItsDirectives", static () => InBody(static body => body.Switch(Id("x"))
+                .Case(Lit(1)).Break().EndCase().Default(false).IfDirective("X").Break().EndIfDirective().EndCase()
+                .EndSwitch()),
+            Expected.InBody("switch (x)\n{\n    case 1:\n        break;\n}"));
+        yield return Case("DisabledCaseWritesNoComment", static () => InBody(static body => body.Switch(Id("x"))
+                .Case(Lit(1), false).Break().Comment("Inside").EndCase().Default().Break().EndCase().EndSwitch()),
+            Expected.InBody("switch (x)\n{\n    default:\n        break;\n}"));
+        yield return Case("DisabledCaseWritesNoModifier", static () => InBody(static body => body.Switch(Id("x"))
+                .Case(Lit(1), false).Ref().EndCase().Case(Lit(2)).Var("y", Lit(1)).EndCase().EndSwitch()),
+            Expected.InBody("switch (x)\n{\n    case 2:\n        var y = 1;\n}"));
     }
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)

@@ -24,7 +24,6 @@ internal static class CodeAssert
     private static string Normalize(string text)
     {
         var lines = LineBreak.Split(text).Select(static line => line.TrimEnd());
-
         return string.Join("\n", lines).Trim('\n');
     }
 }

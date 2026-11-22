@@ -76,7 +76,6 @@ internal abstract class Statements : Scope<BodyScope>
     public BodyScope Using(string name, Expr value, Action<BodyScope> body, bool when = true)
     {
         if (when is false || value.Node is null) return Skip();
-
         return Add(UsingStatement(BuildVariable(name, value.Node), null, BodyScope.BuildBlock(body)));
     }
 

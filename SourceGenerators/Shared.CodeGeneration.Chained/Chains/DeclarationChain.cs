@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Shared.CodeGeneration.Chained.Extensions;
 using Shared.CodeGeneration.Chained.Rendering;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Shared.CodeGeneration.Chained;
 
-internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost where TSelf : DeclarationChain<TSelf>
+internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost, IMemberExtensionHost<TSelf>
+    where TSelf : DeclarationChain<TSelf>
 {
     private protected DeclarationChain() : base(new())
     {
@@ -65,6 +67,19 @@ internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost wher
     {
         Collect(member);
         Lead.DropPrefixes();
+    }
+
+    TSelf IMemberExtensionHost<TSelf>.AddExtension(MemberDeclarationSyntax member, bool when)
+    {
+        var opening = Open(when);
+        if (when is false) return Self;
+
+        var prefixed = member
+            .WithAttributeLists(opening.Attributes.AddRange(member.AttributeLists))
+            .WithModifiers(opening.Modifiers.AddRange(member.Modifiers));
+
+        ((IMemberHost)this).AddMember(opening.Leading.Apply(prefixed));
+        return Self;
     }
 
     private protected abstract void Collect(MemberDeclarationSyntax member);

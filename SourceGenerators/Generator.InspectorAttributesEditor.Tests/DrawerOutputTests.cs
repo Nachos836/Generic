@@ -240,6 +240,22 @@ public sealed class DrawerOutputTests
     }
 
     [Test]
+    public void ChainedDrawerWithCustomUIEmitsTodayOutput()
+    {
+        var (owner, buttons) = ChainedDrawer.Emit(WithCustomUIModel, Version);
+        CodeAssert.AreEqual(WithCustomUIOwner, owner);
+        CodeAssert.AreEqual(WithCustomUIButtons, buttons);
+    }
+
+    [Test]
+    public void ChainedGlobalDrawerWithoutCustomUIEmitsTodayOutput()
+    {
+        var (owner, buttons) = ChainedDrawer.Emit(GlobalWithoutCustomUIModel, Version);
+        CodeAssert.AreEqual(GlobalWithoutCustomUIOwner, owner);
+        CodeAssert.AreEqual(GlobalWithoutCustomUIButtons, buttons);
+    }
+
+    [Test]
     public void DrawerWithCustomUIEmitsTodayOutput()
     {
         AssertOutput(WithCustomUI, WithCustomUIOwner, WithCustomUIButtons);

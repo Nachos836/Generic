@@ -106,6 +106,87 @@ public sealed class RenderingTests
         yield return Case("CasePrefixesStayInCase", static () => InBody(static body => body.Switch(Id("x"))
                 .Case(Lit(1)).Break().Ref().EndCase().Case(Lit(2)).Var("y", Lit(1)).EndCase().EndSwitch()),
             Expected.InBody("switch (x)\n{\n    case 1:\n        break;\n    case 2:\n        var y = 1;\n}"));
+        yield return Case("CoalesceGroupsRight", static () => OfExpression(Id("a").Assign(Id("b")
+            .Coalesce(Id("c").Coalesce(Id("d"))))), Expected.OfExpression("a = b ?? c ?? d"));
+        yield return Case("CoalesceOfCoalesce", static () => OfExpression(Id("a").Assign(Id("b").Coalesce(Id("c"))
+            .Coalesce(Id("d")))), Expected.OfExpression("a = (b ?? c) ?? d"));
+        yield return Case("TernaryOfTernary", static () => OfExpression(Id("x").Assign(Id("a").Ternary(Id("b"),
+            Id("c")).Ternary(Id("d"), Id("e")))), Expected.OfExpression("x = (a ? b : c) ? d : e"));
+        yield return Case("AsOfCoalesce", static () => OfExpression(Id("x").Assign(Id("a").Coalesce(Id("b"))
+            .As(T("C")))), Expected.OfExpression("x = (a ?? b) as C"));
+        yield return Case("MinusOfNegative", static () => OfExpression(Id("x").Assign(Unary(UnaryOperator.Minus,
+            Lit(-1)))), Expected.OfExpression("x = -(-1)"));
+        yield return Case("MinusOfMinus", static () => OfExpression(Id("x").Assign(Unary(UnaryOperator.Minus,
+            Unary(UnaryOperator.Minus, Id("a"))))), Expected.OfExpression("x = -(-a)"));
+        yield return Case("NotOfBinary", static () => OfExpression(Id("x").Assign(Not(Id("a").Binary(And, Id("b"))))),
+            Expected.OfExpression("x = !(a && b)"));
+        yield return Case("NotPatternOfBinary", static () => OfExpression(Id("x").Assign(Id("y")
+            .Is(Not(Id("A").Binary(Or, Id("B")))))), Expected.OfExpression("x = y is not (A || B)"));
+        yield return Case("CoalesceWithThrow", static () => OfExpression(Id("a").Assign(Id("b")
+            .Coalesce(ThrowExpression(New(T("E")))))), Expected.OfExpression("a = b ?? throw new E()"));
+        yield return Case("AsBeforeLess", static () => OfExpression(Id("a").Assign(Id("o").As(T("C"))
+            .Binary(Less, Id("y")))), Expected.OfExpression("a = (o as C) < y"));
+        yield return Case("ConversionHasNoSpaceBeforeParameters", static () => InType(static type => type.Public()
+                .Static().Conversion(ConversionKind.Explicit, T("C")).Param(T("int"), "x").Arrow(New(T("C")))
+                .EndOperator()),
+            Expected.InType("public static explicit operator C(int x) => new C();"));
+        yield return Case("OperatorExplicitFor", static () => InType(static type => type.Static()
+                .ExplicitFor(T("I", [T("C")])).Operator(T("C"), Add).Param(T("C"), "a").Param(T("C"), "b")
+                .Arrow(Id("a")).EndOperator()),
+            Expected.InType("static C I<C>.operator +(C a, C b) => a;"));
+        yield return Case("ConversionExplicitFor", static () => InType(static type => type.Static()
+                .ExplicitFor(T("I")).Conversion(ConversionKind.Explicit, T("int")).Param(T("C"), "c").Arrow(Lit(0))
+                .EndOperator()),
+            Expected.InType("static explicit I.operator int(C c) => 0;"));
+        yield return Case("IndexerParamDropsPrefixes", static () => InType(static type => type.Indexer(T("int"))
+                .Private().Param(T("int"), "i", false).Private().Param(T("int"), "j").Get(Id("j")).Set()
+                .EndIndexer()),
+            Expected.InType("int this[int j] { get => j; set; }"));
+        yield return Case("BlankLineFollowsStatementBlock", static () => InBody(static body => body.If(Id("a"))
+            .Return().EndIf().Break()), Expected.InBody("if (a)\n{\n    return;\n}\n\nbreak;"));
+        yield return Case("BlankLineFollowsMemberBlock", static () => InType(static type => type
+                .Method(T("void"), "M").Body().EndMethod().Field(T("int"), "f")),
+            Expected.InType("void M()\n{\n}\n\nint f;"));
+        yield return Case("DisabledRecordKeepsComment", static () => InType(static type => type.Comment("Keep")
+            .Public().Record("R", false).EndRecord().Field(T("int"), "f")), Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledPropertyKeepsGap", static () => InType(static type => type.Field(T("int"), "x")
+                .Gap().Public().Property(T("int"), "P", when: false).Get().EndProperty().Field(T("int"), "y")),
+            Expected.InType("int x;\n\nint y;"));
+        yield return Case("DisabledIndexerKeepsComment", static () => InType(static type => type.Comment("Keep")
+                .Public().Indexer(T("int"), false).Get().EndIndexer().Field(T("int"), "f")),
+            Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledOperatorKeepsComment", static () => InType(static type => type.Comment("Keep")
+                .Public().Operator(T("C"), Add, false).EndOperator().Field(T("int"), "f")),
+            Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledConversionKeepsComment", static () => InType(static type => type.Comment("Keep")
+                .Public().Conversion(ConversionKind.Implicit, T("int"), false).EndOperator().Field(T("int"), "f")),
+            Expected.InType("// Keep\nint f;"));
+        yield return Case("DisabledLoopsKeepComments", static () => InBody(static body => body
+                .Comment("For").Ref().For("i", Lit(0), Id("c"), Id("s"), false).EndFor()
+                .Comment("While").While(Id("a"), false).EndWhile()
+                .Comment("DoWhile").DoWhile(false).EndDoWhile(Id("a"))
+                .Var("x", Lit(1))),
+            Expected.InBody("// For\n// While\n// DoWhile\nvar x = 1;"));
+        yield return Case("DisabledBlocksKeepComments", static () => InBody(static body => body
+                .Comment("Using").Using("s", Id("x"), false).EndUsing()
+                .Comment("Lock").Lock(Id("x"), false).EndLock()
+                .Comment("Unsafe").Unsafe(false).EndUnsafe()
+                .Comment("Try").Ref().Try(false).Finally().EndTry()
+                .Var("x", Lit(1))),
+            Expected.InBody("// Using\n// Lock\n// Unsafe\n// Try\nvar x = 1;"));
+    }
+
+    [Test]
+    public void CompoundAssignWithoutCompoundFormIsRejected()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(static () => Id("a").CompoundAssign(Equal, Id("b")));
+    }
+
+    [Test]
+    public void OperatorThatCannotBeOverloadedIsRejected()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(static () => InType(static type => type.Operator(T("bool"), And)
+            .EndOperator()));
     }
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)

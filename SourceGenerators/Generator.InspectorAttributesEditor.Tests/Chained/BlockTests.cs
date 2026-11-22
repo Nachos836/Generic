@@ -102,6 +102,28 @@ public sealed class BlockTests
             Expected.InType("unsafe int f;"));
         yield return Case("Ref", static () => InType(static type => type.Ref().Readonly().Method(T("int"), "M")
             .Arrow(Ref(Id("x"))).EndMethod()), Expected.InType("ref readonly int M() => ref x;"));
+        yield return Case("Protected", static () => InType(static type => type.Protected().Field(T("int"), "f")),
+            Expected.InType("protected int f;"));
+        yield return Case("FileLocal", static () => Code.File().FileLocal().Class("A").EndClass().EndFile(),
+            "file class A\n{\n}");
+        yield return Case("Const", static () => InType(static type => type.Const().Field(T("int"), "f", Lit(1))),
+            Expected.InType("const int f = 1;"));
+        yield return Case("Abstract", static () => InType(static type => type.Abstract().Class("N").EndClass()),
+            Expected.InType("abstract class N\n{\n}"));
+        yield return Case("Virtual", static () => InType(static type => type.Virtual().Method(T("void"), "M")
+            .EndMethod()), Expected.InType("virtual void M();"));
+        yield return Case("NewModifier", static () => InType(static type => type.New().Field(T("int"), "f")),
+            Expected.InType("new int f;"));
+        yield return Case("Extern", static () => InType(static type => type.Static().Extern().Method(T("void"), "M")
+            .EndMethod()), Expected.InType("static extern void M();"));
+        yield return Case("Async", static () => InType(static type => type.Async().Method(T("Task"), "M").Body()
+            .EndMethod()), Expected.InType("async Task M()\n{\n}"));
+        yield return Case("Required", static () => InType(static type => type.Required().Field(T("int"), "f")),
+            Expected.InType("required int f;"));
+        yield return Case("Volatile", static () => InType(static type => type.Volatile().Field(T("int"), "f")),
+            Expected.InType("volatile int f;"));
+        yield return Case("Record", static () => InType(static type => type.Record("R").Field(T("int"), "f")
+            .EndRecord()), Expected.InType("record R\n{\n    int f;\n}"));
 
         yield return Case("Field", static () => InType(static type => type.Field(T("int"), "f", Lit(1))),
             Expected.InType("int f = 1;"));
@@ -112,6 +134,49 @@ public sealed class BlockTests
             Expected.InType("public C(int x)\n{\n    return;\n}"));
         yield return Case("CallsThis", static () => InType(static type => type.Constructor().CallsThis([Lit(1)])
             .Body().EndConstructor()), Expected.InType("C() : this(1)\n{\n}"));
+        yield return Case("CallsBase", static () => InType(static type => type.Constructor().CallsBase([Lit(1)])
+            .Body().EndConstructor()), Expected.InType("C() : base(1)\n{\n}"));
+        yield return Case("Property", static () => InType(static type => type.Public().Property(T("int"), "P")
+            .Get().Set().EndProperty()), Expected.InType("public int P { get; set; }"));
+        yield return Case("PropertyValue", static () => InType(static type => type.Property(T("int"), "P", Lit(1))
+            .Get().EndProperty()), Expected.InType("int P { get; } = 1;"));
+        yield return Case("PropertyExplicitFor", static () => InType(static type => type.ExplicitFor(T("I"))
+            .Property(T("int"), "P").Get().EndProperty()), Expected.InType("int I.P { get; }"));
+        yield return Case("Get", static () => InType(static type => type.Property(T("int"), "P")
+                .GetBody().Return(Id("p")).EndGet().EndProperty()),
+            Expected.InType("int P\n{\n    get\n    {\n        return p;\n    }\n}"));
+        yield return Case("GetArrow", static () => InType(static type => type.Property(T("int"), "P").Get(Id("p"))
+            .EndProperty()), Expected.InType("int P { get => p; }"));
+        yield return Case("Set", static () => InType(static type => type.Property(T("int"), "P").Get().Private()
+                .Set(Id("p").Assign(Id("value"))).EndProperty()),
+            Expected.InType("int P { get; private set => p = value; }"));
+        yield return Case("SetBody", static () => InType(static type => type.Property(T("int"), "P")
+                .SetBody().Do(Id("p").Assign(Id("value"))).EndSet().EndProperty()),
+            Expected.InType("int P\n{\n    set\n    {\n        p = value;\n    }\n}"));
+        yield return Case("Init", static () => InType(static type => type.Property(T("int"), "P").Get().Init()
+            .EndProperty()), Expected.InType("int P { get; init; }"));
+        yield return Case("InitArrow", static () => InType(static type => type.Property(T("int"), "P")
+            .Init(Id("p").Assign(Id("value"))).EndProperty()), Expected.InType("int P { init => p = value; }"));
+        yield return Case("InitBody", static () => InType(static type => type.Property(T("int"), "P")
+                .InitBody().Do(Id("p").Assign(Id("value"))).EndInit().EndProperty()),
+            Expected.InType("int P\n{\n    init\n    {\n        p = value;\n    }\n}"));
+        yield return Case("AccessorProtected", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .Protected().Set().EndProperty()), Expected.InType("int P { get; protected set; }"));
+        yield return Case("AccessorInternal", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .Internal().Set().EndProperty()), Expected.InType("int P { get; internal set; }"));
+        yield return Case("AccessorReadonly", static () => InType(static type => type.Property(T("int"), "P")
+            .Readonly().Get(Id("p")).EndProperty()), Expected.InType("int P { readonly get => p; }"));
+        yield return Case("Indexer", static () => InType(static type => type.Public().Indexer(T("int"))
+            .Param(T("int"), "i").Get(Id("i")).EndIndexer()), Expected.InType("public int this[int i] { get => i; }"));
+        yield return Case("Operator", static () => InType(static type => type.Public().Static().Operator(T("C"), Add)
+                .Param(T("C"), "a").Param(T("C"), "b").Arrow(Id("a")).EndOperator()),
+            Expected.InType("public static C operator +(C a, C b) => a;"));
+        yield return Case("OperatorBody", static () => InType(static type => type.Public().Static()
+                .Operator(T("C"), UnaryOperator.Minus).Param(T("C"), "a").Body().Return(Id("a")).EndOperator()),
+            Expected.InType("public static C operator -(C a)\n{\n    return a;\n}"));
+        yield return Case("Conversion", static () => InType(static type => type.Public().Static()
+                .Conversion(ConversionKind.Implicit, T("int")).Param(T("C"), "c").Arrow(Lit(0)).EndOperator()),
+            Expected.InType("public static implicit operator int(C c) => 0;"));
         yield return Case("Method", static () => InType(static type => type.Method(T("int"), "M").Arrow(Lit(1))
             .EndMethod()), Expected.InType("int M() => 1;"));
         yield return Case("MethodBody", static () => InType(static type => type.Method(T("void"), "M").Body().Return()
@@ -163,6 +228,34 @@ public sealed class BlockTests
             Expected.InBody("throw new E();"));
         yield return Case("Fixed", static () => InBody(static body => body.Fixed(T("void").Pointer(), "p",
             AddressOf(Id("x"))).Return().EndFixed()), Expected.InBody("fixed (void* p = &x)\n{\n    return;\n}"));
+        yield return Case("For", static () => InBody(static body => body.For("i", Lit(0),
+                Id("i").Binary(Less, Id("n")), Unary(UnaryOperator.Increment, Id("i"))).Continue().EndFor()),
+            Expected.InBody("for (var i = 0; i < n; ++i)\n{\n    continue;\n}"));
+        yield return Case("While", static () => InBody(static body => body.While(Id("a")).Break().EndWhile()),
+            Expected.InBody("while (a)\n{\n    break;\n}"));
+        yield return Case("DoWhile", static () => InBody(static body => body.DoWhile().Break().EndDoWhile(Id("a"))),
+            Expected.InBody("do\n{\n    break;\n}\nwhile (a);"));
+        yield return Case("Continue", static () => InBody(static body => body.Continue()),
+            Expected.InBody("continue;"));
+        yield return Case("YieldReturn", static () => InBody(static body => body.YieldReturn(Lit(1))),
+            Expected.InBody("yield return 1;"));
+        yield return Case("YieldBreak", static () => InBody(static body => body.YieldBreak()),
+            Expected.InBody("yield break;"));
+        yield return Case("UsingStatement", static () => InBody(static body => body.Using("s", Id("open").Call())
+            .Return().EndUsing()), Expected.InBody("using (var s = open())\n{\n    return;\n}"));
+        yield return Case("Lock", static () => InBody(static body => body.Lock(Id("gate")).Return().EndLock()),
+            Expected.InBody("lock (gate)\n{\n    return;\n}"));
+        yield return Case("UnsafeStatement", static () => InBody(static body => body.Unsafe().Return().EndUnsafe()),
+            Expected.InBody("unsafe\n{\n    return;\n}"));
+        yield return Case("Try", static () => InBody(static body => body.Try().Return().Finally().Break().EndTry()),
+            Expected.InBody("try\n{\n    return;\n}\nfinally\n{\n    break;\n}"));
+        yield return Case("Catch", static () => InBody(static body => body.Try().Return().Catch(T("E"), "e")
+                .Throw(Id("e")).Catch().Break().EndTry()),
+            Expected.InBody("try\n{\n    return;\n}\ncatch (E e)\n{\n    throw e;\n}\ncatch\n{\n    break;\n}"));
+        yield return Case("Finally", static () => InBody(static body => body.Try().Return().Catch(T("E")).Break()
+                .Finally().Break().EndTry().Return()),
+            Expected.InBody("try\n{\n    return;\n}\ncatch (E)\n{\n    break;\n}\nfinally\n{\n    break;\n}\n\n" +
+                            "return;"));
 
         yield return Case("Id", static () => OfExpression(Id("a")), Expected.OfExpression("a"));
         yield return Case("IdKeyword", static () => OfExpression(Id("event")), Expected.OfExpression("@event"));
@@ -219,6 +312,24 @@ public sealed class BlockTests
             Expected.OfExpression("f(x: 1)"));
         yield return Case("RefExpression", static () => OfExpression(Id("x").Assign(Ref(Id("a")))),
             Expected.OfExpression("x = ref a"));
+        yield return Case("Null", static () => OfExpression(Id("a").Assign(Null())), Expected.OfExpression("a = null"));
+        yield return Case("Base", static () => OfExpression(Base().Dot("M").Call()), Expected.OfExpression("base.M()"));
+        yield return Case("CompoundAssign", static () => OfExpression(Id("a").CompoundAssign(Add, Lit(1))),
+            Expected.OfExpression("a += 1"));
+        yield return Case("Unary", static () => OfExpression(Id("a").Assign(Unary(UnaryOperator.Minus, Id("b")))),
+            Expected.OfExpression("a = -b"));
+        yield return Case("Not", static () => OfExpression(Id("a").Assign(Not(Id("b").Dot("c")))),
+            Expected.OfExpression("a = !b.c"));
+        yield return Case("NotPattern", static () => OfExpression(Id("a").Assign(Id("b").Is(Not(Null())))),
+            Expected.OfExpression("a = b is not null"));
+        yield return Case("As", static () => OfExpression(Id("a").Assign(Id("b").As(T("C")))),
+            Expected.OfExpression("a = b as C"));
+        yield return Case("Ternary", static () => OfExpression(Id("a").Assign(Id("c").Ternary(Lit(1), Lit(2)))),
+            Expected.OfExpression("a = c ? 1 : 2"));
+        yield return Case("Coalesce", static () => OfExpression(Id("a").Assign(Id("b").Coalesce(Id("c")))),
+            Expected.OfExpression("a = b ?? c"));
+        yield return Case("OutArg", static () => OfExpression(Id("f").Call([OutArg(Id("a"))])),
+            Expected.OfExpression("f(out a)"));
 
         yield return Case("T", static () => OfType(T("List", [T("int")])), Expected.OfType("List<int>"));
         yield return Case("TQualified", static () => OfType(T("System.Collections.Generic.List", [T("int")])),
@@ -227,6 +338,9 @@ public sealed class BlockTests
         yield return Case("Nested", static () => OfType(T("A", [T("int")]).Nested("B")), Expected.OfType("A<int>.B"));
         yield return Case("NullableType", static () => OfType(T("int").Nullable()), Expected.OfType("int?"));
         yield return Case("Pointer", static () => OfType(T("int").Pointer()), Expected.OfType("int*"));
+        yield return Case("Array", static () => OfType(T("int").Array()), Expected.OfType("int[]"));
+        yield return Case("Tuple", static () => OfType(Tuple([T("int"), T("string")])),
+            Expected.OfType("(int, string)"));
 
         yield return Case("ForEach", static () => InType(static type => type.ForEach(["a", "b"],
             static (scope, name) => scope.Field(T("int"), name))), Expected.InType("int a;\nint b;"));
@@ -306,6 +420,28 @@ public sealed class BlockTests
             Expected.InType("int f;"));
         yield return Case("Ref", static () => InType(static type => type.Ref(false).Method(T("int"), "M")
             .Arrow(Id("x")).EndMethod()), Expected.InType("int M() => x;"));
+        yield return Case("Protected", static () => InType(static type => type.Protected(false).Field(T("int"), "f")),
+            Expected.InType("int f;"));
+        yield return Case("FileLocal", static () => Code.File().FileLocal(false).Class("A").EndClass().EndFile(),
+            "class A\n{\n}");
+        yield return Case("Const", static () => InType(static type => type.Const(false).Field(T("int"), "f")),
+            Expected.InType("int f;"));
+        yield return Case("Abstract", static () => InType(static type => type.Abstract(false).Class("N").EndClass()),
+            Expected.InType("class N\n{\n}"));
+        yield return Case("Virtual", static () => InType(static type => type.Virtual(false).Method(T("void"), "M")
+            .EndMethod()), Expected.InType("void M();"));
+        yield return Case("NewModifier", static () => InType(static type => type.New(false).Field(T("int"), "f")),
+            Expected.InType("int f;"));
+        yield return Case("Extern", static () => InType(static type => type.Extern(false).Method(T("void"), "M")
+            .EndMethod()), Expected.InType("void M();"));
+        yield return Case("Async", static () => InType(static type => type.Async(false).Method(T("void"), "M")
+            .EndMethod()), Expected.InType("void M();"));
+        yield return Case("Required", static () => InType(static type => type.Required(false).Field(T("int"), "f")),
+            Expected.InType("int f;"));
+        yield return Case("Volatile", static () => InType(static type => type.Volatile(false).Field(T("int"), "f")),
+            Expected.InType("int f;"));
+        yield return Case("Record", static () => InType(static type => type.Public().Record("R", false).EndRecord()
+            .Field(T("int"), "x")), Expected.InType("int x;"));
 
         yield return Case("Field", static () => InType(static type => type.Private().Field(T("int"), "f", when: false)),
             Expected.InType(""));
@@ -315,6 +451,48 @@ public sealed class BlockTests
             Expected.InType(""));
         yield return Case("CallsThis", static () => InType(static type => type.Constructor().CallsThis(when: false)
             .Body().EndConstructor()), Expected.InType("C()\n{\n}"));
+        yield return Case("CallsBase", static () => InType(static type => type.Constructor().CallsBase(when: false)
+            .Body().EndConstructor()), Expected.InType("C()\n{\n}"));
+        yield return Case("Property", static () => InType(static type => type.Public().Property(T("int"), "P",
+            when: false).Get().EndProperty().Field(T("int"), "f")), Expected.InType("int f;"));
+        yield return Case("PropertyValue", static () => InType(static type => type.Property(T("int"), "P",
+            Lit(1, false)).Get().EndProperty()), Expected.InType("int P { get; }"));
+        yield return Case("Get", static () => InType(static type => type.Property(T("int"), "P").GetBody(false)
+            .Return().EndGet().Set().EndProperty()), Expected.InType("int P { set; }"));
+        yield return Case("GetArrow", static () => InType(static type => type.Property(T("int"), "P")
+            .Get(Id("p"), false).Set().EndProperty()), Expected.InType("int P { set; }"));
+        yield return Case("Set", static () => InType(static type => type.Property(T("int"), "P").Get().Private()
+            .Set(false).Init().EndProperty()), Expected.InType("int P { get; init; }"));
+        yield return Case("SetBody", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .SetBody(false).EndSet().EndProperty()), Expected.InType("int P { get; }"));
+        yield return Case("Init", static () => InType(static type => type.Property(T("int"), "P").Get().Init(false)
+            .EndProperty()), Expected.InType("int P { get; }"));
+        yield return Case("InitArrow", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .Init(Id("p"), false).EndProperty()), Expected.InType("int P { get; }"));
+        yield return Case("InitBody", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .InitBody(false).EndInit().EndProperty()), Expected.InType("int P { get; }"));
+        yield return Case("AccessorModifier", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .Private(false).Set().EndProperty()), Expected.InType("int P { get; set; }"));
+        yield return Case("AccessorProtected", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .Protected(false).Set().EndProperty()), Expected.InType("int P { get; set; }"));
+        yield return Case("AccessorInternal", static () => InType(static type => type.Property(T("int"), "P").Get()
+            .Internal(false).Set().EndProperty()), Expected.InType("int P { get; set; }"));
+        yield return Case("AccessorReadonly", static () => InType(static type => type.Property(T("int"), "P")
+            .Readonly(false).Get(Id("p")).EndProperty()), Expected.InType("int P { get => p; }"));
+        yield return Case("Indexer", static () => InType(static type => type.Public().Indexer(T("int"), false).Get()
+            .EndIndexer().Field(T("int"), "f")), Expected.InType("int f;"));
+        yield return Case("IndexerParam", static () => InType(static type => type.Indexer(T("int"))
+                .Param(T("int"), "i", false).Param(T("int"), "j").Get(Id("j")).EndIndexer()),
+            Expected.InType("int this[int j] { get => j; }"));
+        yield return Case("Operator", static () => InType(static type => type.Public().Static()
+            .Operator(T("C"), Add, false).EndOperator().Field(T("int"), "f")), Expected.InType("int f;"));
+        yield return Case("OperatorBody", static () => InType(static type => type.Operator(T("C"), Add)
+            .Body(false).Return().EndOperator()), Expected.InType("C operator +();"));
+        yield return Case("UnaryOperatorDeclaration", static () => InType(static type => type
+            .Operator(T("C"), UnaryOperator.Minus, false).EndOperator()), Expected.InType(""));
+        yield return Case("Conversion", static () => InType(static type => type.Public()
+                .Conversion(ConversionKind.Explicit, T("int"), false).EndOperator().Field(T("int"), "f")),
+            Expected.InType("int f;"));
         yield return Case("Method", static () => InType(static type => type.Method(T("int"), "M", false).EndMethod()),
             Expected.InType(""));
         yield return Case("ExplicitFor", static () => InType(static type => type.ExplicitFor(T("I"), false)
@@ -368,6 +546,35 @@ public sealed class BlockTests
             Expected.InBody(""));
         yield return Case("Fixed", static () => InBody(static body => body.Fixed(T("void").Pointer(), "p",
             AddressOf(Id("x")), false).EndFixed()), Expected.InBody(""));
+        yield return Case("For", static () => InBody(static body => body.For("i", Lit(0), Id("c"), Id("s"), false)
+            .Break().EndFor()), Expected.InBody(""));
+        yield return Case("ForParts", static () => InBody(static body => body.For("i", Lit(0, false), Id("c", false),
+            Id("s", false)).Break().EndFor()), Expected.InBody("for (;;)\n{\n    break;\n}"));
+        yield return Case("While", static () => InBody(static body => body.While(Id("a"), false).Break().EndWhile()),
+            Expected.InBody(""));
+        yield return Case("DoWhile", static () => InBody(static body => body.DoWhile(false).Break()
+            .EndDoWhile(Id("a"))), Expected.InBody(""));
+        yield return Case("DoWhileCondition", static () => InBody(static body => body.DoWhile().Break()
+            .EndDoWhile(Id("a", false))), Expected.InBody(""));
+        yield return Case("Continue", static () => InBody(static body => body.Continue(false)), Expected.InBody(""));
+        yield return Case("YieldReturn", static () => InBody(static body => body.YieldReturn(Lit(1), false)),
+            Expected.InBody(""));
+        yield return Case("YieldBreak", static () => InBody(static body => body.YieldBreak(false)),
+            Expected.InBody(""));
+        yield return Case("UsingStatement", static () => InBody(static body => body.Using("s", Id("x"), false)
+            .EndUsing()), Expected.InBody(""));
+        yield return Case("Lock", static () => InBody(static body => body.Lock(Id("gate"), false).EndLock()),
+            Expected.InBody(""));
+        yield return Case("UnsafeStatement", static () => InBody(static body => body.Unsafe(false).EndUnsafe()),
+            Expected.InBody(""));
+        yield return Case("Try", static () => InBody(static body => body.Try(false).Return().Catch().Break()
+            .Finally().Break().EndTry()), Expected.InBody(""));
+        yield return Case("Catch", static () => InBody(static body => body.Try().Return().Catch(T("E"), "e", false)
+            .Break().Finally().Break().EndTry()), Expected.InBody("try\n{\n    return;\n}\nfinally\n{\n    break;\n}"));
+        yield return Case("CatchAll", static () => InBody(static body => body.Try().Return().Catch(false).Break()
+            .Finally().Break().EndTry()), Expected.InBody("try\n{\n    return;\n}\nfinally\n{\n    break;\n}"));
+        yield return Case("Finally", static () => InBody(static body => body.Try().Return().Catch().Break()
+            .Finally(false).Return().EndTry()), Expected.InBody("try\n{\n    return;\n}\ncatch\n{\n    break;\n}"));
 
         yield return Case("Id", static () => OfExpression(Id("f").Call([Id("a", false), Id("b")])),
             Expected.OfExpression("f(b)"));
@@ -436,6 +643,23 @@ public sealed class BlockTests
             Expected.OfExpression("f()"));
         yield return Case("RefExpression", static () => OfExpression(Id("f").Call([Ref(Id("a"), false)])),
             Expected.OfExpression("f()"));
+        yield return Case("Null", static () => OfExpression(Id("f").Call([Null(false)])), Expected.OfExpression("f()"));
+        yield return Case("Base", static () => OfExpression(Id("f").Call([Base(false)])), Expected.OfExpression("f()"));
+        yield return Case("CompoundAssign", static () => OfExpression(Id("a").CompoundAssign(Add, Lit(1), false)),
+            Expected.OfExpression("a"));
+        yield return Case("Unary", static () => OfExpression(Id("f").Call([
+            Unary(UnaryOperator.Minus, Id("b"),
+                false)
+        ])), Expected.OfExpression("f()"));
+        yield return Case("Not", static () => OfExpression(Id("f").Call([Not(Id("b"), false)])),
+            Expected.OfExpression("f()"));
+        yield return Case("As", static () => OfExpression(Id("b").As(T("C"), false)), Expected.OfExpression("b"));
+        yield return Case("Ternary", static () => OfExpression(Id("c").Ternary(Lit(1), Lit(2), false)),
+            Expected.OfExpression("c"));
+        yield return Case("Coalesce", static () => OfExpression(Id("b").Coalesce(Id("c"), false)),
+            Expected.OfExpression("b"));
+        yield return Case("OutArg", static () => OfExpression(Id("f").Call([OutArg(Id("a"), false)])),
+            Expected.OfExpression("f()"));
 
         yield return Case("T", static () => OfExpression(Id("f").TypeArgs([T("int", when: false), T("A")]).Call()),
             Expected.OfExpression("f<A>()"));
@@ -444,6 +668,9 @@ public sealed class BlockTests
         yield return Case("Nested", static () => OfType(T("A").Nested("B", when: false)), Expected.OfType("A"));
         yield return Case("NullableType", static () => OfType(T("int").Nullable(false)), Expected.OfType("int"));
         yield return Case("Pointer", static () => OfType(T("int").Pointer(false)), Expected.OfType("int"));
+        yield return Case("Array", static () => OfType(T("int").Array(false)), Expected.OfType("int"));
+        yield return Case("Tuple", static () => InType(static type => type.Field(Tuple([T("int")], false), "f")),
+            Expected.InType(""));
 
         yield return Case("ForEach", static () => InType(static type => type.ForEach(["a"],
             static (scope, name) => scope.Field(T("int"), name), false)), Expected.InType(""));

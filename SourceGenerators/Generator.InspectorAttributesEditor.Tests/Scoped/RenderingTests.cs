@@ -92,6 +92,14 @@ public sealed class RenderingTests
                 .Public().Static().Conversion(ConversionKind.Explicit, T("C"), static signature => signature
                     .Param(T("int"), "x").Arrow(New(T("C"))))),
             Expected.InType("public static explicit operator C(int x) => new C();"));
+        yield return Case("BlankLineFollowsStatementBlock", static () => InBody(static body => body
+            .If(Id("a"), static then => then.Return()).Break()), Expected.InBody("if (a)\n{\n    return;\n}\n\nbreak;"));
+        yield return Case("BlankLineFollowsMemberBlock", static () => InType(static type => type
+                .Method(T("void"), "M", static method => method.Body(static _ => { })).Field(T("int"), "f")),
+            Expected.InType("void M()\n{\n}\n\nint f;"));
+        yield return Case("NoBlankLineBeforeElse", static () => InBody(static body => body
+                .If(Id("a"), static then => then.Return()).Else(static otherwise => otherwise.Break())),
+            Expected.InBody("if (a)\n{\n    return;\n}\nelse\n{\n    break;\n}"));
     }
 
     [Test]

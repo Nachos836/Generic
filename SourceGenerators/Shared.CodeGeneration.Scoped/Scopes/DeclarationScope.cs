@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Shared.CodeGeneration.Scoped.Extensions;
@@ -74,9 +75,11 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext>, IMemberExtension
     TNext IMemberExtensionHost<TNext>.AddExtension(MemberDeclarationSyntax member, bool when)
     {
         if (when is false) return Skip();
-        return AddMember(member
+
+        var prefixed = member.WithoutLeadingTrivia()
             .WithAttributeLists(Lead.TakeAttributes().AddRange(member.AttributeLists))
-            .WithModifiers(Lead.TakeModifiers().AddRange(member.Modifiers)));
+            .WithModifiers(Lead.TakeModifiers().AddRange(member.Modifiers));
+        return AddMember(prefixed.WithLeadingTrivia(member.GetLeadingTrivia()));
     }
 
     private protected abstract void Add(MemberDeclarationSyntax member);

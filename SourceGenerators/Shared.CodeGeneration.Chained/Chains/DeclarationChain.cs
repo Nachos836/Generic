@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Shared.CodeGeneration.Chained.Extensions;
@@ -71,12 +72,14 @@ internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost, IMe
 
     TSelf IMemberExtensionHost<TSelf>.AddExtension(MemberDeclarationSyntax member, bool when)
     {
-        var opening = Open(when);
-        if (when is false) return Self;
+        if (when is false) return DropPrefixes();
 
-        var prefixed = member
+        var opening = Open(true);
+
+        var prefixed = member.WithoutLeadingTrivia()
             .WithAttributeLists(opening.Attributes.AddRange(member.AttributeLists))
-            .WithModifiers(opening.Modifiers.AddRange(member.Modifiers));
+            .WithModifiers(opening.Modifiers.AddRange(member.Modifiers))
+            .WithLeadingTrivia(member.GetLeadingTrivia());
 
         ((IMemberHost)this).AddMember(opening.Leading.Apply(prefixed));
         return Self;

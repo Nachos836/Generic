@@ -52,6 +52,9 @@ https://github.com/Nachos836/Generic.git?path=Assets/NativeRefCollections
 ```
 
 ### Development
-- Unity 6000.6.10f1
-- .NET SDK 10 to build the generator tests
+- Unity 6000.6.10f1 with an active license; no extra modules
+- Unity CLI (`unity`) to compile and run the Unity tests from a terminal
+- .NET SDK 10 to build and run the generator tests
 - JetBrains Rider to run the generator's `Publish Generator.InspectorAttributesEditor to UnityPackage` configuration
+- Git
+- Network access to the package sources: `packages.unity.com`, `package.openupm.com`, `unitynuget-registry.openupm.com`, `github.com`, `gitlab.com`, `api.nuget.org`

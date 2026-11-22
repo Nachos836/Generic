@@ -15,6 +15,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared.Generator", "..\Shar
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared.CodeGeneration.Scoped", "..\Shared.CodeGeneration.Scoped\Shared.CodeGeneration.Scoped.shproj", "{8890B0DF-7527-4942-A91B-8063F189AC68}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared.CodeGeneration.Chained", "..\Shared.CodeGeneration.Chained\Shared.CodeGeneration.Chained.shproj", "{78D89F0B-B3FF-4D98-9017-B64BC20FBC87}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Generator.InspectorAttributes", "Generator.InspectorAttributes", "{2794A6AE-FA02-499C-95CC-22C618763A32}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generator.InspectorAttributesEditor", "..\Generator.InspectorAttributesEditor\Generator.InspectorAttributesEditor.csproj", "{E88924FE-38AA-4237-97DE-CDC332C0021F}"
@@ -47,6 +49,7 @@ Global
 		{62A29BCA-5BA6-4157-A7DB-20B168A7B187} = {A1FE0DF2-D899-4DC6-A926-BE1782292A80}
 		{7590A803-BEB4-49D2-8545-F6BCCB585AD0} = {A1FE0DF2-D899-4DC6-A926-BE1782292A80}
 		{8890B0DF-7527-4942-A91B-8063F189AC68} = {A1FE0DF2-D899-4DC6-A926-BE1782292A80}
+		{78D89F0B-B3FF-4D98-9017-B64BC20FBC87} = {A1FE0DF2-D899-4DC6-A926-BE1782292A80}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9AFDEBDD-D893-4EAD-98EC-67EB384C1EC0}
@@ -58,6 +61,8 @@ Global
 		..\Shared.UnityBridge\Shared.UnityBridge.projitems*{de4f506b-6c05-4669-9278-7e9b0d0830a1}*SharedItemsImports = 13
 		..\Shared.CodeGeneration.Scoped\Shared.CodeGeneration.Scoped.projitems*{8890b0df-7527-4942-a91b-8063f189ac68}*SharedItemsImports = 13
 		..\Shared.CodeGeneration.Scoped\Shared.CodeGeneration.Scoped.projitems*{e88924fe-38aa-4237-97de-cdc332c0021f}*SharedItemsImports = 5
+		..\Shared.CodeGeneration.Chained\Shared.CodeGeneration.Chained.projitems*{78d89f0b-b3ff-4d98-9017-b64bc20fbc87}*SharedItemsImports = 13
+		..\Shared.CodeGeneration.Chained\Shared.CodeGeneration.Chained.projitems*{e88924fe-38aa-4237-97de-cdc332c0021f}*SharedItemsImports = 5
 		..\Shared.AST\Shared.AST.projitems*{e88924fe-38aa-4237-97de-cdc332c0021f}*SharedItemsImports = 5
 		..\Shared.DotNetCompatibility\Shared.DotNetCompatibility.projitems*{e88924fe-38aa-4237-97de-cdc332c0021f}*SharedItemsImports = 5
 		..\Shared.UnityBridge\Shared.UnityBridge.projitems*{e88924fe-38aa-4237-97de-cdc332c0021f}*SharedItemsImports = 5

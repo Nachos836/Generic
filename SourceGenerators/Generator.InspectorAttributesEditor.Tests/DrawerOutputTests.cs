@@ -1,3 +1,4 @@
+using Generator.InspectorAttributesEditor.Components;
 using NUnit.Framework;
 
 namespace Generator.InspectorAttributesEditor.Tests;
@@ -199,6 +200,44 @@ public sealed class DrawerOutputTests
 
         #endif
         """;
+
+    private static readonly DrawerModel WithCustomUIModel = new()
+    {
+        Identity = "Generic.Samples.BehaviourWithButtonAttribute",
+        NamespaceName = "Generic.Samples",
+        OwnerName = "BehaviourWithButtonAttribute",
+        RequiresCustomUI = true,
+        Buttons = [new ButtonModel { Name = "Test", Label = "Cyka!" }]
+    };
+
+    private static readonly DrawerModel GlobalWithoutCustomUIModel = new()
+    {
+        Identity = "Spawner",
+        NamespaceName = "",
+        OwnerName = "Spawner",
+        RequiresCustomUI = false,
+        Buttons =
+        [
+            new ButtonModel { Name = "@event", Label = "Clear" },
+            new ButtonModel { Name = "Spawn", Label = "Spawn \"all\"" }
+        ]
+    };
+
+    [Test]
+    public void ScopedDrawerWithCustomUIEmitsTodayOutput()
+    {
+        var (owner, buttons) = ScopedDrawer.Emit(WithCustomUIModel, Version);
+        CodeAssert.AreEqual(WithCustomUIOwner, owner);
+        CodeAssert.AreEqual(WithCustomUIButtons, buttons);
+    }
+
+    [Test]
+    public void ScopedGlobalDrawerWithoutCustomUIEmitsTodayOutput()
+    {
+        var (owner, buttons) = ScopedDrawer.Emit(GlobalWithoutCustomUIModel, Version);
+        CodeAssert.AreEqual(GlobalWithoutCustomUIOwner, owner);
+        CodeAssert.AreEqual(GlobalWithoutCustomUIButtons, buttons);
+    }
 
     [Test]
     public void DrawerWithCustomUIEmitsTodayOutput()

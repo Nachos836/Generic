@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define SCOPED_DRAWER
+
+using System;
 using System.Globalization;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -22,6 +24,9 @@ internal static class CodeGenerator
     {
         productionContext.CancellationToken.ThrowIfCancellationRequested();
 
+#if SCOPED_DRAWER
+        var (ownerText, buttonsText) = ScopedDrawer.Emit(model, Version.ToString());
+#else
         var ownerName = model.OwnerName;
         const string drawerName = "Drawer";
 
@@ -121,23 +126,19 @@ internal static class CodeGenerator
             buttonsDeclarationContainer
         );
 
+        var ownerText = ownerSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
+            .ToFullString();
+
+        var buttonsText = buttonsSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
+            .ToFullString();
+#endif
+
         var hintPrefix = CreateHintPrefix(model.Identity);
 
         productionContext.CancellationToken.ThrowIfCancellationRequested();
 
-        productionContext.AddSource
-        (
-            hintName: $"{hintPrefix}.g.cs",
-            ownerSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
-                .ToFullString()
-        );
-
-        productionContext.AddSource
-        (
-            hintName: $"{hintPrefix}.buttons.g.cs",
-            buttonsSource.NormalizeWhitespace(indentation: "\t", eol: "\n", elasticTrivia: true)
-                .ToFullString()
-        );
+        productionContext.AddSource(hintName: $"{hintPrefix}.g.cs", ownerText);
+        productionContext.AddSource(hintName: $"{hintPrefix}.buttons.g.cs", buttonsText);
     }
 
     private static CompilationUnitSyntax AddOwner

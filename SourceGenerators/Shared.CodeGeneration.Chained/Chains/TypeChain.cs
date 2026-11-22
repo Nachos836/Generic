@@ -24,6 +24,14 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
 
     private protected bool Active { get; }
 
+    public TSelf Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
+    public TSelf Protected(bool when = true) => AddModifier(SyntaxKind.ProtectedKeyword, when);
+    public TSelf Virtual(bool when = true) => AddModifier(SyntaxKind.VirtualKeyword, when);
+    public TSelf Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TSelf New(bool when = true) => AddModifier(SyntaxKind.NewKeyword, when);
+    public TSelf Extern(bool when = true) => AddModifier(SyntaxKind.ExternKeyword, when);
+    public TSelf Async(bool when = true) => AddModifier(SyntaxKind.AsyncKeyword, when);
+
     public TSelf TypeParam(string name, Variance variance = Variance.None, bool when = true)
     {
         if (when) _typeParameters.Add(Declarations.BuildTypeParameter(name, variance));
@@ -76,6 +84,53 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
         return new(Self, opening.Leading, declaration, active);
     }
 
+    public PropertyChain<TSelf> Property(TypeRef type, string name, Expr? value = null, bool when = true)
+    {
+        var active = when && type.Node is not null;
+        var opening = Open(active);
+        var (modifiers, propertyType) = Declarations.SplitRef(opening.Modifiers, type.Node ?? IdentifierName("_"));
+
+        var declaration = PropertyDeclaration(propertyType, Names.CreateIdentifier(name))
+            .WithAttributeLists(opening.Attributes)
+            .WithModifiers(modifiers)
+            .WithExplicitInterfaceSpecifier(BuildExplicitInterface(opening));
+        return new(Self, opening.Leading, declaration, value, active);
+    }
+
+    public IndexerChain<TSelf> Indexer(TypeRef type, bool when = true)
+    {
+        var active = when && type.Node is not null;
+        var opening = Open(active);
+        var (modifiers, indexerType) = Declarations.SplitRef(opening.Modifiers, type.Node ?? IdentifierName("_"));
+
+        var declaration = IndexerDeclaration(indexerType)
+            .WithAttributeLists(opening.Attributes)
+            .WithModifiers(modifiers)
+            .WithExplicitInterfaceSpecifier(BuildExplicitInterface(opening));
+        return new(Self, opening.Leading, declaration, active);
+    }
+
+    public OperatorChain<TSelf> Operator(TypeRef returnType, BinaryOperator @operator, bool when = true)
+    {
+        var active = when && returnType.Node is not null;
+        var token = active ? Declarations.MapOperatorToken(@operator) : SyntaxKind.PlusToken;
+        return OpenOperator(OperatorDeclaration(returnType.Node ?? IdentifierName("_"), Token(token)), active);
+    }
+
+    public OperatorChain<TSelf> Operator(TypeRef returnType, UnaryOperator @operator, bool when = true)
+    {
+        var active = when && returnType.Node is not null;
+        var token = active ? Declarations.MapOperatorToken(@operator) : SyntaxKind.PlusToken;
+        return OpenOperator(OperatorDeclaration(returnType.Node ?? IdentifierName("_"), Token(token)), active);
+    }
+
+    public OperatorChain<TSelf> Conversion(ConversionKind kind, TypeRef type, bool when = true)
+    {
+        var keyword = kind == ConversionKind.Implicit ? SyntaxKind.ImplicitKeyword : SyntaxKind.ExplicitKeyword;
+        var declaration = ConversionOperatorDeclaration(Token(keyword), type.Node ?? IdentifierName("_"));
+        return OpenOperator(declaration, when && type.Node is not null);
+    }
+
     private protected TSelf AddBaseType(TypeRef type, bool when)
     {
         if (when && type.Node is { } node) _baseTypes.Add(SimpleBaseType(node));
@@ -102,6 +157,29 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
     }
 
     private protected override void Collect(MemberDeclarationSyntax member) => _members.Add(member);
+
+    private OperatorChain<TSelf> OpenOperator(OperatorDeclarationSyntax declaration, bool active)
+    {
+        var opening = Open(active);
+        return new(Self, opening.Leading, declaration
+            .WithAttributeLists(opening.Attributes)
+            .WithModifiers(opening.Modifiers)
+            .WithExplicitInterfaceSpecifier(BuildExplicitInterface(opening)), active);
+    }
+
+    private OperatorChain<TSelf> OpenOperator(ConversionOperatorDeclarationSyntax declaration, bool active)
+    {
+        var opening = Open(active);
+        return new(Self, opening.Leading, declaration
+            .WithAttributeLists(opening.Attributes)
+            .WithModifiers(opening.Modifiers)
+            .WithExplicitInterfaceSpecifier(BuildExplicitInterface(opening)), active);
+    }
+
+    private static ExplicitInterfaceSpecifierSyntax? BuildExplicitInterface(Opening opening)
+    {
+        return opening.ExplicitInterface is { } name ? ExplicitInterfaceSpecifier(name) : null;
+    }
 }
 
 internal abstract class TypeChain<TSelf> : MemberChain<TSelf> where TSelf : TypeChain<TSelf>
@@ -113,6 +191,10 @@ internal abstract class TypeChain<TSelf> : MemberChain<TSelf> where TSelf : Type
     {
         _name = name;
     }
+
+    public TSelf Const(bool when = true) => AddModifier(SyntaxKind.ConstKeyword, when);
+    public TSelf Volatile(bool when = true) => AddModifier(SyntaxKind.VolatileKeyword, when);
+    public TSelf Required(bool when = true) => AddModifier(SyntaxKind.RequiredKeyword, when);
 
     public TSelf Inherits(TypeRef type, bool when = true) => AddBaseType(type, when);
 
@@ -170,6 +252,23 @@ internal sealed class StructChain<TOuter> : TypeChain<StructChain<TOuter>> where
     }
 
     public TOuter EndStruct()
+    {
+        Complete(_outer);
+        return _outer;
+    }
+}
+
+internal sealed class RecordChain<TOuter> : TypeChain<RecordChain<TOuter>> where TOuter : class, IMemberHost
+{
+    private readonly TOuter _outer = default!;
+
+    internal RecordChain(TOuter outer, Opening opening, TypeDeclarationSyntax declaration, string name, bool active)
+        : base(opening, declaration, name, active)
+    {
+        _outer = outer;
+    }
+
+    public TOuter EndRecord()
     {
         Complete(_outer);
         return _outer;

@@ -26,11 +26,10 @@ internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost wher
 
     public TSelf Public(bool when = true) => AddModifier(SyntaxKind.PublicKeyword, when);
     public TSelf Internal(bool when = true) => AddModifier(SyntaxKind.InternalKeyword, when);
-    public TSelf Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
     public TSelf Static(bool when = true) => AddModifier(SyntaxKind.StaticKeyword, when);
     public TSelf Readonly(bool when = true) => AddModifier(SyntaxKind.ReadOnlyKeyword, when);
     public TSelf Sealed(bool when = true) => AddModifier(SyntaxKind.SealedKeyword, when);
-    public TSelf Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TSelf Abstract(bool when = true) => AddModifier(SyntaxKind.AbstractKeyword, when);
     public TSelf Partial(bool when = true) => AddModifier(SyntaxKind.PartialKeyword, when);
     public TSelf Unsafe(bool when = true) => AddModifier(SyntaxKind.UnsafeKeyword, when);
     public TSelf Ref(bool when = true) => AddModifier(SyntaxKind.RefKeyword, when);
@@ -38,6 +37,13 @@ internal abstract class DeclarationChain<TSelf> : Chain<TSelf>, IMemberHost wher
     public ClassChain<TSelf> Class(string name, bool when = true)
     {
         return new(Self, Open(when), ClassDeclaration(Names.CreateIdentifier(name)), name, when);
+    }
+
+    public RecordChain<TSelf> Record(string name, bool when = true)
+    {
+        var declaration = RecordDeclaration(Token(SyntaxKind.RecordKeyword), Names.CreateIdentifier(name))
+            .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken));
+        return new(Self, Open(when), declaration, name, when);
     }
 
     public StructChain<TSelf> Struct(string name, bool when = true)

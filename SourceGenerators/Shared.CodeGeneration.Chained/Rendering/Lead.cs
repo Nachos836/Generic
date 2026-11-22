@@ -77,6 +77,12 @@ internal sealed class Lead
         return leading;
     }
 
+    public void Restore(Leading leading)
+    {
+        _trivia.InsertRange(0, leading.Trivia);
+        _gap |= leading.HasGap;
+    }
+
     public void DropPrefixes()
     {
         _attributes.Clear();
@@ -101,18 +107,18 @@ internal sealed class Lead
 
 internal sealed class Leading
 {
-    private readonly IReadOnlyList<SyntaxTrivia> _trivia = default!;
-    private readonly bool _gap;
-
     internal Leading(IReadOnlyList<SyntaxTrivia> trivia, bool gap)
     {
-        _trivia = trivia;
-        _gap = gap;
+        Trivia = trivia;
+        HasGap = gap;
     }
+
+    public IReadOnlyList<SyntaxTrivia> Trivia { get; }
+    public bool HasGap { get; }
 
     public TNode Apply<TNode>(TNode node) where TNode : SyntaxNode
     {
-        if (_trivia.Count > 0) node = node.WithLeadingTrivia(_trivia.Concat(node.GetLeadingTrivia()));
-        return _gap ? node.WithAdditionalAnnotations(Lead.Gap) : node;
+        if (Trivia.Count > 0) node = node.WithLeadingTrivia(Trivia.Concat(node.GetLeadingTrivia()));
+        return HasGap ? node.WithAdditionalAnnotations(Lead.Gap) : node;
     }
 }

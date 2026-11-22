@@ -142,13 +142,12 @@ internal sealed class ConstructorChain<TOuter> : SignatureChain<ConstructorChain
 
     public ConstructorChain<TOuter> CallsThis(IReadOnlyList<Arg>? arguments = null, bool when = true)
     {
-        if (when)
-        {
-            _initializer = ConstructorInitializer(SyntaxKind.ThisConstructorInitializer,
-                ArgumentList(Expr.BuildArguments(arguments)));
-        }
+        return SetInitializer(SyntaxKind.ThisConstructorInitializer, arguments, when);
+    }
 
-        return this;
+    public ConstructorChain<TOuter> CallsBase(IReadOnlyList<Arg>? arguments = null, bool when = true)
+    {
+        return SetInitializer(SyntaxKind.BaseConstructorInitializer, arguments, when);
     }
 
     public ConstructorBodyChain<TOuter> Body(bool when = true) => new(this, when);
@@ -160,6 +159,12 @@ internal sealed class ConstructorChain<TOuter> : SignatureChain<ConstructorChain
         var completed = Complete(_declaration.WithInitializer(_initializer), body);
         if (_active) _outer.AddMember(_leading.Apply(completed));
         return _outer;
+    }
+
+    private ConstructorChain<TOuter> SetInitializer(SyntaxKind kind, IReadOnlyList<Arg>? arguments, bool when)
+    {
+        if (when) _initializer = ConstructorInitializer(kind, ArgumentList(Expr.BuildArguments(arguments)));
+        return this;
     }
 }
 
@@ -176,4 +181,46 @@ internal sealed class ConstructorBodyChain<TOuter> : StatementChain<ConstructorB
     }
 
     public TOuter EndConstructor() => _constructor.CompleteWith(_active ? BuildBlock() : null);
+}
+
+internal sealed class OperatorChain<TOuter> : SignatureChain<OperatorChain<TOuter>> where TOuter : class, IMemberHost
+{
+    private readonly TOuter _outer = default!;
+    private readonly Leading _leading = default!;
+    private readonly BaseMethodDeclarationSyntax _declaration = default!;
+    private readonly bool _active;
+
+    internal OperatorChain(TOuter outer, Leading leading, BaseMethodDeclarationSyntax declaration, bool active)
+    {
+        _outer = outer;
+        _leading = leading;
+        _declaration = declaration;
+        _active = active;
+    }
+
+    public OperatorBodyChain<TOuter> Body(bool when = true) => new(this, when);
+
+    public TOuter EndOperator() => CompleteWith(null);
+
+    internal TOuter CompleteWith(BlockSyntax? body)
+    {
+        var completed = Complete(_declaration, body);
+        if (_active) _outer.AddMember(_leading.Apply(completed));
+        return _outer;
+    }
+}
+
+internal sealed class OperatorBodyChain<TOuter> : StatementChain<OperatorBodyChain<TOuter>>
+    where TOuter : class, IMemberHost
+{
+    private readonly OperatorChain<TOuter> _operator = default!;
+    private readonly bool _active;
+
+    internal OperatorBodyChain(OperatorChain<TOuter> @operator, bool active) : base(new())
+    {
+        _operator = @operator;
+        _active = active;
+    }
+
+    public TOuter EndOperator() => _operator.CompleteWith(_active ? BuildBlock() : null);
 }

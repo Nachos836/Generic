@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using NUnit.Framework;
 
 namespace Generator.InspectorAttributesEditor.Tests;
 
@@ -26,6 +27,12 @@ internal static class GeneratorRun
             syntaxTrees: [CSharpSyntaxTree.ParseText(source)],
             references: references,
             options: new(OutputKind.DynamicallyLinkedLibrary));
+
+        var sourceErrors = compilation.GetDiagnostics()
+            .Where(static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+            .ToArray();
+
+        Assert.That(sourceErrors, Is.Empty, string.Join(Environment.NewLine, sourceErrors.AsEnumerable()));
 
         var result = CSharpGeneratorDriver.Create(new ButtonDrawerGenerator())
             .RunGenerators(compilation)

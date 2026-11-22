@@ -125,6 +125,10 @@ public sealed class BlockTests
             Expected.InMethod("in int x"));
         yield return Case("ParamThis", () => InMethod(method => method.This().Param(T("int"), "x")),
             Expected.InMethod("this int x"));
+        yield return Case("ParamReadonly", static () => InMethod(static method => method.Ref().Readonly()
+            .Param(T("int"), "x")), Expected.InMethod("ref readonly int x"));
+        yield return Case("ParamAttribute", static () => InMethod(static method => method.Attribute("A")
+            .Param(T("int"), "x")), Expected.InMethod("[A] int x"));
 
         yield return Case("Var", () => InBody(body => body.Var("x", Lit(1))), Expected.InBody("var x = 1;"));
         yield return Case("VarRef", () => InBody(body => body.Ref().Readonly().Var("x", Ref(Id("y")))),
@@ -321,9 +325,25 @@ public sealed class BlockTests
             Expected.InMethod("int x"));
         yield return Case("ParamThis", () => InMethod(method => method.This(false).Param(T("int"), "x")),
             Expected.InMethod("int x"));
+        yield return Case("ParamReadonly", static () => InMethod(static method => method.Ref().Readonly(false)
+            .Param(T("int"), "x")), Expected.InMethod("ref int x"));
+        yield return Case("ParamAttribute", static () => InMethod(static method => method.Attribute("A", when: false)
+            .Param(T("int"), "x")), Expected.InMethod("int x"));
+        yield return Case("MethodTypeParam", static () => InMethod(static method => method.TypeParam("T", when: false)),
+            Expected.InMethod(""));
+        yield return Case("MethodWhere", static () => InType(static type => type.Method(T("void"), "M", static method =>
+            method.TypeParam("T").Where("T", [Constraint.Struct], false))), Expected.InType("void M<T>();"));
+        yield return Case("MethodBody", static () => InType(static type => type.Method(T("void"), "M", static method =>
+            method.Body(static body => body.Return(), false))), Expected.InType("void M();"));
+        yield return Case("MethodArrow", static () => InType(static type => type.Method(T("void"), "M", static method =>
+            method.Arrow(Id("a").Call(), false))), Expected.InType("void M();"));
 
         yield return Case("Var", () => InBody(body => body.Ref().Var("x", Lit(1), false).Break()),
             Expected.InBody("break;"));
+        yield return Case("VarRef", static () => InBody(static body => body.Ref(false).Var("x", Lit(1))),
+            Expected.InBody("var x = 1;"));
+        yield return Case("VarReadonly", static () => InBody(static body => body.Ref().Readonly(false)
+            .Var("x", Ref(Id("y")))), Expected.InBody("ref var x = ref y;"));
         yield return Case("Do", () => InBody(body => body.Do(Id("a").Call(), false)), Expected.InBody(""));
         yield return Case("If", () => InBody(body => body.If(Id("a"), then => then.Return(), when: false)
             .Else(other => other.Break())), Expected.InBody(""));
@@ -380,6 +400,14 @@ public sealed class BlockTests
             Expected.OfExpression("f()"));
         yield return Case("Lambda", () => OfExpression(Id("f").Call([Lambda(when: false).Arrow(Id("a"))])),
             Expected.OfExpression("f()"));
+        yield return Case("StaticLambda", static () => OfExpression(Id("f").Call([StaticLambda(when: false)
+            .Arrow(Id("a"))])), Expected.OfExpression("f()"));
+        yield return Case("LambdaArrow", static () => OfExpression(Id("f").Call([Lambda().Arrow(Id("a"), false)])),
+            Expected.OfExpression("f()"));
+        yield return Case("LambdaBody", static () => OfExpression(Id("f").Call([Lambda()
+            .Body(static body => body.Return(), false)])), Expected.OfExpression("f()"));
+        yield return Case("NewTargetTyped", static () => OfExpression(Id("f").Call([New([Lit(1)], false)])),
+            Expected.OfExpression("f()"));
         yield return Case("SwitchExpression",
             () => OfExpression(Id("x").Switch(arms => arms.Arm(Lit(1), Id("a")), false)),
             Expected.OfExpression("x"));
@@ -399,6 +427,8 @@ public sealed class BlockTests
 
         yield return Case("T", () => OfExpression(Id("f").TypeArgs([T("int", when: false), T("A")]).Call()),
             Expected.OfExpression("f<A>()"));
+        yield return Case("Predefined", static () => InType(static type => type.Field(T("ulong", when: false), "f")),
+            Expected.InType(""));
         yield return Case("Nested", () => OfType(T("A").Nested("B", when: false)), Expected.OfType("A"));
         yield return Case("NullableType", () => OfType(T("int").Nullable(false)), Expected.OfType("int"));
         yield return Case("Pointer", () => OfType(T("int").Pointer(false)), Expected.OfType("int"));

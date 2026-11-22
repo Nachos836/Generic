@@ -132,6 +132,12 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost, IS
         return when ? Add(statement) : DropPrefixes();
     }
 
+    StatementBlockChain<TSelf> IStatementExtensionHost<TSelf>.OpenExtension(Func<BlockSyntax, StatementSyntax> wrap,
+        bool when)
+    {
+        return new(Self, Open(when).Leading, wrap, when);
+    }
+
     private protected TSelf Add(StatementSyntax statement)
     {
         _statements.Add(Lead.Attach(statement));

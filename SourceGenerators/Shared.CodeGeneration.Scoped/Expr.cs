@@ -99,7 +99,8 @@ internal sealed class Expr
     public Expr Coalesce(Expr right, bool when = true)
     {
         if (when is false || Node is null || right.Node is null) return this;
-        return new(BinaryExpression(SyntaxKind.CoalesceExpression, Precedence.Parenthesize(Node, Precedence.Coalesce + 1),
+        return new(BinaryExpression(SyntaxKind.CoalesceExpression,
+            Precedence.Parenthesize(Node, Precedence.Coalesce + 1),
             Precedence.Parenthesize(right.Node, Precedence.Coalesce)));
     }
 

@@ -17,7 +17,6 @@ internal sealed class Lead
     private bool _gap = false;
 
     public static SyntaxAnnotation Gap { get; } = new("Shared.CodeGeneration.Scoped.Gap");
-
     public bool HasPending => _trivia.Count > 0 || _gap;
 
     public void AddTrivia(SyntaxTrivia trivia)
@@ -34,7 +33,6 @@ internal sealed class Lead
     }
 
     public void MarkGap() => _gap = true;
-
     public void AddAttribute(AttributeSyntax attribute) => _attributes.Add(attribute);
 
     public void SplitAttributes()
@@ -46,7 +44,6 @@ internal sealed class Lead
     }
 
     public void AddModifier(SyntaxKind keyword) => _modifiers.Add(Token(keyword));
-
     public void SetExplicitInterface(NameSyntax name) => _explicitInterface = name;
 
     public SyntaxList<AttributeListSyntax> TakeAttributes()

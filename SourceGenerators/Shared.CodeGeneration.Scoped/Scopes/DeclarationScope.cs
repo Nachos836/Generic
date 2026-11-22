@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Shared.CodeGeneration.Scoped.Extensions;
 using Shared.CodeGeneration.Scoped.Rendering;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Shared.CodeGeneration.Scoped;
 
-internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : class
+internal abstract class DeclarationScope<TNext> : Scope<TNext>, IMemberExtensionHost<TNext> where TNext : class
 {
     private protected DeclarationScope(Lead lead) : base(lead)
     {
@@ -68,6 +69,14 @@ internal abstract class DeclarationScope<TNext> : Scope<TNext> where TNext : cla
         var scope = new EnumScope();
         body(scope);
         return AddMember(scope.Complete(declaration));
+    }
+
+    TNext IMemberExtensionHost<TNext>.AddExtension(MemberDeclarationSyntax member, bool when)
+    {
+        if (when is false) return Skip();
+        return AddMember(member
+            .WithAttributeLists(Lead.TakeAttributes().AddRange(member.AttributeLists))
+            .WithModifiers(Lead.TakeModifiers().AddRange(member.Modifiers)));
     }
 
     private protected abstract void Add(MemberDeclarationSyntax member);

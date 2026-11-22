@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Shared.CodeGeneration.Scoped.Extensions;
 using Shared.CodeGeneration.Scoped.Rendering;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Shared.CodeGeneration.Scoped;
 
-internal abstract class Statements : Scope<BodyScope>
+internal abstract class Statements : Scope<BodyScope>, IStatementExtensionHost
 {
     private protected Statements(Lead lead, List<StatementSyntax> sink) : base(lead) => Sink = sink;
 
@@ -139,6 +140,11 @@ internal abstract class Statements : Scope<BodyScope>
             .WithInitializer(EqualsValueClause(value.Node));
         return Add(FixedStatement(VariableDeclaration(type.Node, SingletonSeparatedList(declarator)),
             BodyScope.BuildBlock(body)));
+    }
+
+    BodyScope IStatementExtensionHost.AddExtension(StatementSyntax statement, bool when)
+    {
+        return when ? Add(statement) : Skip();
     }
 
     private protected BodyScope Add(StatementSyntax statement)

@@ -49,6 +49,7 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
         if (when is false || type.Node is null) return DropPrefixes();
 
         var variable = SingletonSeparatedList(Declarations.BuildVariable(name, null));
+
         var member = EventFieldDeclaration(VariableDeclaration(type.Node, variable))
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(Lead.TakeModifiers());
@@ -62,6 +63,7 @@ internal abstract class MemberChain<TSelf> : DeclarationChain<TSelf> where TSelf
         var active = when && returnType.Node is not null;
         var opening = Open(active);
         var (modifiers, type) = Declarations.SplitRef(opening.Modifiers, returnType.Node ?? IdentifierName("void"));
+
         var declaration = MethodDeclaration(type, Names.CreateIdentifier(name))
             .WithAttributeLists(opening.Attributes)
             .WithModifiers(modifiers);
@@ -120,6 +122,7 @@ internal abstract class TypeChain<TSelf> : MemberChain<TSelf> where TSelf : Type
 
         var (modifiers, fieldType) = Declarations.SplitRef(Lead.TakeModifiers(), type.Node);
         var variable = SingletonSeparatedList(Declarations.BuildVariable(name, value));
+
         var member = FieldDeclaration(VariableDeclaration(fieldType, variable))
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(modifiers);
@@ -131,6 +134,7 @@ internal abstract class TypeChain<TSelf> : MemberChain<TSelf> where TSelf : Type
     public ConstructorChain<TSelf> Constructor(bool when = true)
     {
         var opening = Open(when);
+
         var declaration = ConstructorDeclaration(Names.CreateIdentifier(_name))
             .WithAttributeLists(opening.Attributes)
             .WithModifiers(opening.Modifiers);

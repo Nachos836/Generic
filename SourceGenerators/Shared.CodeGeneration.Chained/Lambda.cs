@@ -50,7 +50,6 @@ internal sealed class LambdaBodyChain : StatementChain<LambdaBodyChain>
 
     public Expr EndLambda()
     {
-        var block = BuildBlock();
-        return _active ? new(_lambda.BuildHead().WithBlock(block)) : Expr.Empty;
+        return _active ? new(_lambda.BuildHead().WithBlock(BuildBlock())) : Expr.Empty;
     }
 }

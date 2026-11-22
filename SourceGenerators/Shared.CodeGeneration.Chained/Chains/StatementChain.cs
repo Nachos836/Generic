@@ -52,6 +52,7 @@ internal abstract class StatementChain<TSelf> : Chain<TSelf>, IStatementHost whe
     public ForeachChain<TSelf> Foreach(string name, Expr collection, bool when = true)
     {
         var active = when && collection.Node is not null;
+
         var header = ForEachStatement(IdentifierName("var"), Names.CreateIdentifier(name),
             collection.Node ?? IdentifierName("_"), Block());
         return new(Self, Open(active).Leading, header, active);
@@ -183,8 +184,7 @@ internal sealed class ElseChain<TOuter> : StatementChain<ElseChain<TOuter>> wher
 
     public TOuter EndIf()
     {
-        var body = BuildStatement(_braced);
-        return _if.Finish(_active ? body : null);
+        return _if.Finish(_active ? BuildStatement(_braced) : null);
     }
 }
 
@@ -205,8 +205,7 @@ internal sealed class ForeachChain<TOuter> : StatementChain<ForeachChain<TOuter>
 
     public TOuter EndForeach()
     {
-        var statement = _header.WithStatement(BuildBlock());
-        if (_active) _outer.AddStatement(_leading.Apply(statement));
+        if (_active) _outer.AddStatement(_leading.Apply(_header.WithStatement(BuildBlock())));
         return _outer;
     }
 }
@@ -228,8 +227,7 @@ internal sealed class FixedChain<TOuter> : StatementChain<FixedChain<TOuter>> wh
 
     public TOuter EndFixed()
     {
-        var statement = _header.WithStatement(BuildBlock());
-        if (_active) _outer.AddStatement(_leading.Apply(statement));
+        if (_active) _outer.AddStatement(_leading.Apply(_header.WithStatement(BuildBlock())));
         return _outer;
     }
 }

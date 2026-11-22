@@ -26,6 +26,7 @@ internal sealed class TypeRef
     internal static SimpleNameSyntax BuildSimpleName(string name, IReadOnlyList<TypeRef>? arguments)
     {
         var identifier = Names.CreateIdentifier(name);
+
         var nodes = arguments?.Where(static argument => argument.IsEmpty is false)
             .Select(static argument => argument.Node!).ToArray();
         return nodes is { Length: > 0 }

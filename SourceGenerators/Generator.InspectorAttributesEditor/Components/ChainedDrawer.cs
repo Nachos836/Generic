@@ -67,6 +67,7 @@ internal static class ChainedDrawer
         where TScope : DeclarationChain<TScope>
     {
         var owner = WriteGeneratedAttributes(scope, version).Partial().Class(model.OwnerName, when);
+
         var drawer = WriteGeneratedAttributes(owner, version)
             .Attribute("CustomEditor", [TypeOf(T(model.OwnerName))])
             .Internal().Sealed().Partial().Class(DrawerName);

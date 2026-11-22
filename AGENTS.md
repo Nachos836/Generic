@@ -34,11 +34,13 @@
 > **Purpose:** to keep the generator DLL in step with its attributes and the editor's compiler.
 
 - Change the generator in `SourceGenerators/`, then publish the generator DLL; never edit it.
-- Build the generator only with this Rider run configuration of its solution:
+- Build the generator only by publishing it into the Unity project, with one of:
+  - the Rider run configuration `Publish Generator.InspectorAttributesEditor to UnityPackage`;
+  - this command, which runs the same publish from a terminal:
 
-  ```
-  Publish Generator.InspectorAttributesEditor to UnityPackage
-  ```
+    ```bash
+    dotnet publish SourceGenerators/Generator.InspectorAttributesEditor/Generator.InspectorAttributesEditor.csproj -c Release -f netstandard2.0 -o Assets/InspectorAttributes/Runtime/Roslyn/
+    ```
 
 - Bump the InspectorAttributes package version before you publish the generator DLL.
 - Change an attribute in the generator's `InspectorAttributes` folder with its runtime twin.

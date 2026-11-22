@@ -18,6 +18,14 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
     {
     }
 
+    public TSelf Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
+    public TSelf Protected(bool when = true) => AddModifier(SyntaxKind.ProtectedKeyword, when);
+    public TSelf Virtual(bool when = true) => AddModifier(SyntaxKind.VirtualKeyword, when);
+    public TSelf Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TSelf New(bool when = true) => AddModifier(SyntaxKind.NewKeyword, when);
+    public TSelf Extern(bool when = true) => AddModifier(SyntaxKind.ExternKeyword, when);
+    public TSelf Async(bool when = true) => AddModifier(SyntaxKind.AsyncKeyword, when);
+
     public TSelf TypeParam(string name, Variance variance = Variance.None, bool when = true)
     {
         if (when) _typeParameters.Add(Declarations.BuildTypeParameter(name, variance));
@@ -184,6 +192,10 @@ internal sealed class TypeScope : MemberScope<TypeScope>
     internal TypeScope(string name) => _name = name;
 
     private protected override TypeScope Next => this;
+
+    public TypeScope Const(bool when = true) => AddModifier(SyntaxKind.ConstKeyword, when);
+    public TypeScope Volatile(bool when = true) => AddModifier(SyntaxKind.VolatileKeyword, when);
+    public TypeScope Required(bool when = true) => AddModifier(SyntaxKind.RequiredKeyword, when);
 
     public TypeScope Inherits(TypeRef type, bool when = true) => AddBaseType(type, when);
 

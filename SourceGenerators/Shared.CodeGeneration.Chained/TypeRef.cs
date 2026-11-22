@@ -23,6 +23,13 @@ internal sealed class TypeRef
     public TypeRef Nullable(bool when = true) => when && Node is { } node ? new(NullableType(node)) : this;
     public TypeRef Pointer(bool when = true) => when && Node is { } node ? new(PointerType(node)) : this;
 
+    public TypeRef Array(bool when = true)
+    {
+        if (when is false || Node is null) return this;
+        return new(ArrayType(Node, SingletonList(ArrayRankSpecifier(
+            SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression())))));
+    }
+
     internal static SimpleNameSyntax BuildSimpleName(string name, IReadOnlyList<TypeRef>? arguments)
     {
         var identifier = Names.CreateIdentifier(name);

@@ -11,6 +11,8 @@ namespace Shared.CodeGeneration.Chained;
 
 internal sealed class Expr
 {
+    private const string NoCompoundForm = "The operator has no compound assignment form.";
+
     internal Expr(ExpressionSyntax? node) => Node = node;
 
     internal static Expr Empty { get; } = new(null);
@@ -83,8 +85,39 @@ internal sealed class Expr
 
         var kind = MapOperator(@operator);
         var precedence = Precedence.Rank(kind);
-        return new(BinaryExpression(kind, Precedence.Parenthesize(Node, precedence),
-            Precedence.Parenthesize(right.Node, precedence + 1)));
+        var left = EndsWithType(Node) ? ParenthesizedExpression(Node) : Precedence.Parenthesize(Node, precedence);
+        return new(BinaryExpression(kind, left, Precedence.Parenthesize(right.Node, precedence + 1)));
+    }
+
+    public Expr CompoundAssign(BinaryOperator @operator, Expr value, bool when = true)
+    {
+        if (when is false || Node is null || value.Node is null) return this;
+        return new(AssignmentExpression(MapCompound(@operator), Precedence.Parenthesize(Node, Precedence.Unary),
+            value.Node));
+    }
+
+    public Expr Coalesce(Expr right, bool when = true)
+    {
+        if (when is false || Node is null || right.Node is null) return this;
+        var rightOperand = right.Node is ThrowExpressionSyntax
+            ? right.Node
+            : Precedence.Parenthesize(right.Node, Precedence.Coalesce);
+        return new(BinaryExpression(SyntaxKind.CoalesceExpression,
+            Precedence.Parenthesize(Node, Precedence.Coalesce + 1), rightOperand));
+    }
+
+    public Expr Ternary(Expr whenTrue, Expr whenFalse, bool when = true)
+    {
+        if (when is false || Node is null || whenTrue.Node is null || whenFalse.Node is null) return this;
+        return new(ConditionalExpression(Precedence.Parenthesize(Node, Precedence.Coalesce), whenTrue.Node,
+            whenFalse.Node));
+    }
+
+    public Expr As(TypeRef type, bool when = true)
+    {
+        if (when is false || Node is null || type.Node is null) return this;
+        return new(BinaryExpression(SyntaxKind.AsExpression, Precedence.Parenthesize(Node, Precedence.Relational),
+            type.Node));
     }
 
     public Expr NullForgiving(bool when = true)
@@ -104,9 +137,13 @@ internal sealed class Expr
 
     internal static PatternSyntax BuildPattern(ExpressionSyntax node)
     {
-        return node is IdentifierNameSyntax { Identifier.Text: "_" }
-            ? DiscardPattern()
-            : ConstantPattern(Precedence.Parenthesize(node, Precedence.Shift));
+        return node switch
+        {
+            IdentifierNameSyntax { Identifier.Text: "_" } => DiscardPattern(),
+            PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.LogicalNotExpression } negation
+                => UnaryPattern(Token(SyntaxKind.NotKeyword), BuildPattern(Unwrap(negation.Operand))),
+            _ => ConstantPattern(Precedence.Parenthesize(node, Precedence.Shift))
+        };
     }
 
     internal static SeparatedSyntaxList<ArgumentSyntax> BuildArguments(IReadOnlyList<Arg>? arguments)
@@ -116,6 +153,16 @@ internal sealed class Expr
     }
 
     private static IdentifierNameSyntax BuildMemberName(string name) => IdentifierName(Names.CreateIdentifier(name));
+
+    private static bool EndsWithType(ExpressionSyntax node)
+    {
+        return node.Kind() is SyntaxKind.AsExpression or SyntaxKind.IsExpression;
+    }
+
+    private static ExpressionSyntax Unwrap(ExpressionSyntax node)
+    {
+        return node is ParenthesizedExpressionSyntax parenthesized ? parenthesized.Expression : node;
+    }
 
     private static ExpressionSyntax ParenthesizeForPostfix(ExpressionSyntax node)
     {
@@ -141,6 +188,24 @@ internal sealed class Expr
         return access.WhenNotNull is ConditionalAccessExpressionSyntax inner
             ? access.WithWhenNotNull(ApplyInside(inner, apply))
             : access.WithWhenNotNull(apply(access.WhenNotNull));
+    }
+
+    private static SyntaxKind MapCompound(BinaryOperator @operator)
+    {
+        return @operator switch
+        {
+            BinaryOperator.Add => SyntaxKind.AddAssignmentExpression,
+            BinaryOperator.Subtract => SyntaxKind.SubtractAssignmentExpression,
+            BinaryOperator.Multiply => SyntaxKind.MultiplyAssignmentExpression,
+            BinaryOperator.Divide => SyntaxKind.DivideAssignmentExpression,
+            BinaryOperator.Modulo => SyntaxKind.ModuloAssignmentExpression,
+            BinaryOperator.LeftShift => SyntaxKind.LeftShiftAssignmentExpression,
+            BinaryOperator.RightShift => SyntaxKind.RightShiftAssignmentExpression,
+            BinaryOperator.BitwiseAnd => SyntaxKind.AndAssignmentExpression,
+            BinaryOperator.BitwiseOr => SyntaxKind.OrAssignmentExpression,
+            BinaryOperator.ExclusiveOr => SyntaxKind.ExclusiveOrAssignmentExpression,
+            _ => throw new ArgumentOutOfRangeException(nameof(@operator), @operator, NoCompoundForm)
+        };
     }
 
     private static SyntaxKind MapOperator(BinaryOperator @operator)

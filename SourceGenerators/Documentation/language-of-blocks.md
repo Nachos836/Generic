@@ -43,7 +43,7 @@ In the chained style each closing verb exists only in the scope it closes, so a 
 
 ## Prefixes
 
-Modifiers and attributes are blocks written before the declaration they belong to, in C# order: `.Private().Readonly().Field(...)`. They attach to the nearest declaration that follows them.
+Modifiers and attributes are blocks written before the declaration they belong to, in C# order: `.Private().Readonly().Field(...)`. They attach to the nearest declaration that follows them. Consecutive attributes share one pair of brackets, and a split block starts a new pair.
 
 ## Conditions
 

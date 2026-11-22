@@ -26,10 +26,9 @@
 
 > **Purpose:** to keep generated code compiling in the editor and absent from player builds.
 
-- Build generated code as Roslyn syntax trees with `SyntaxFactory`, never as raw strings.
-- Take each `using` directive of generated code from `Shared.AST.Using`.
-- Add blank lines to generated code only as trivia from `Shared.Components.Custom`.
-- Wrap each generated file in `#if UNITY_EDITOR` with the `Header` and `Footer` helpers.
+- Describe every part of a generator's output with the language of blocks, never as raw text.
+- Call `SyntaxFactory` only inside `Shared.CodeGeneration.*`, never in a generator's own code.
+- Wrap each generated editor file in `#if UNITY_EDITOR` with `IfDirective` and `EndIfDirective`.
 - Give each pipeline model value equality over all of its fields.
 
 ## Version

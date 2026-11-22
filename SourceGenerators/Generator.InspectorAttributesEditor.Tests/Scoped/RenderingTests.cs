@@ -72,6 +72,39 @@ public sealed class RenderingTests
                 static sections => sections.Case(Lit(1), static section => section.Break().Ref())
                     .Case(Lit(2), static section => section.Var("y", Lit(1))))),
             Expected.InBody("switch (x)\n{\n    case 1:\n        break;\n    case 2:\n        var y = 1;\n}"));
+        yield return Case("CoalesceGroupsRight", static () => OfExpression(Id("a").Coalesce(Id("b").Coalesce(Id("c")))),
+            Expected.OfExpression("a ?? b ?? c"));
+        yield return Case("CoalesceOfCoalesce", static () => OfExpression(Id("a").Coalesce(Id("b")).Coalesce(Id("c"))),
+            Expected.OfExpression("(a ?? b) ?? c"));
+        yield return Case("TernaryOfTernary", static () => OfExpression(Id("a").Ternary(Id("b"), Id("c"))
+            .Ternary(Id("d"), Id("e"))), Expected.OfExpression("(a ? b : c) ? d : e"));
+        yield return Case("AsOfCoalesce", static () => OfExpression(Id("a").Coalesce(Id("b")).As(T("C"))),
+            Expected.OfExpression("(a ?? b) as C"));
+        yield return Case("MinusOfNegative", static () => OfExpression(Unary(UnaryOperator.Minus, Lit(-1))),
+            Expected.OfExpression("-(-1)"));
+        yield return Case("MinusOfMinus", static () => OfExpression(Unary(UnaryOperator.Minus,
+            Unary(UnaryOperator.Minus, Id("a")))), Expected.OfExpression("-(-a)"));
+        yield return Case("NotOfBinary", static () => OfExpression(Not(Id("a").Binary(And, Id("b")))),
+            Expected.OfExpression("!(a && b)"));
+        yield return Case("NotPatternOfBinary", static () => OfExpression(Id("x").Is(Not(Id("A").Binary(Or, Id("B"))))),
+            Expected.OfExpression("x is not (A || B)"));
+        yield return Case("ConversionHasNoSpaceBeforeParameters", static () => InType(static type => type
+                .Public().Static().Conversion(ConversionKind.Explicit, T("C"), static signature => signature
+                    .Param(T("int"), "x").Arrow(New(T("C"))))),
+            Expected.InType("public static explicit operator C(int x) => new C();"));
+    }
+
+    [Test]
+    public void CompoundAssignWithoutCompoundFormIsRejected()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(static () => Id("a").CompoundAssign(Equal, Id("b")));
+    }
+
+    [Test]
+    public void OperatorThatCannotBeOverloadedIsRejected()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(static () => InType(static type => type
+            .Operator(T("bool"), And, static _ => { })));
     }
 
     private static TestCaseData Case(string name, Func<string> actual, string expected)

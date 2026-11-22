@@ -9,7 +9,12 @@ namespace Generator.InspectorAttributesEditor.Tests.Chained;
 public sealed class BlockTests
 {
     [TestCaseSource(nameof(Positive))]
-    public void BlockWritesItsCode(Func<string> actual, string expected) => CodeAssert.AreEqual(expected, actual());
+    public void BlockWritesItsCode(Func<string> actual, string expected)
+    {
+        var code = actual();
+        CodeAssert.AreEqual(expected, code);
+        CodeAssert.Parses(code);
+    }
 
     [TestCaseSource(nameof(FalseCondition))]
     public void FalseConditionWritesNothing(Func<string> actual, string expected)
@@ -212,7 +217,8 @@ public sealed class BlockTests
             Expected.OfExpression("f(in a)"));
         yield return Case("Named", static () => OfExpression(Id("f").Call([Named("x", Lit(1))])),
             Expected.OfExpression("f(x: 1)"));
-        yield return Case("RefExpression", static () => OfExpression(Ref(Id("a"))), Expected.OfExpression("ref a"));
+        yield return Case("RefExpression", static () => OfExpression(Id("x").Assign(Ref(Id("a")))),
+            Expected.OfExpression("x = ref a"));
 
         yield return Case("T", static () => OfType(T("List", [T("int")])), Expected.OfType("List<int>"));
         yield return Case("TQualified", static () => OfType(T("System.Collections.Generic.List", [T("int")])),

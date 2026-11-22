@@ -18,6 +18,14 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
     {
     }
 
+    public TSelf Private(bool when = true) => AddModifier(SyntaxKind.PrivateKeyword, when);
+    public TSelf Protected(bool when = true) => AddModifier(SyntaxKind.ProtectedKeyword, when);
+    public TSelf Virtual(bool when = true) => AddModifier(SyntaxKind.VirtualKeyword, when);
+    public TSelf Override(bool when = true) => AddModifier(SyntaxKind.OverrideKeyword, when);
+    public TSelf New(bool when = true) => AddModifier(SyntaxKind.NewKeyword, when);
+    public TSelf Extern(bool when = true) => AddModifier(SyntaxKind.ExternKeyword, when);
+    public TSelf Async(bool when = true) => AddModifier(SyntaxKind.AsyncKeyword, when);
+
     public TSelf TypeParam(string name, Variance variance = Variance.None, bool when = true)
     {
         if (when) _typeParameters.Add(Declarations.BuildTypeParameter(name, variance));
@@ -67,6 +75,73 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
         return AddMember(scope.Complete(declaration));
     }
 
+    public TSelf Property(TypeRef type, string name, Action<PropertyScope> accessors, Expr? value = null,
+        bool when = true)
+    {
+        if (when is false || type.Node is null) return Skip();
+
+        var (modifiers, propertyType) = Declarations.SplitRef(Lead.TakeModifiers(), type.Node);
+
+        var declaration = PropertyDeclaration(propertyType, Names.CreateIdentifier(name))
+            .WithAttributeLists(Lead.TakeAttributes())
+            .WithModifiers(modifiers)
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface());
+
+        var scope = new PropertyScope();
+        accessors(scope);
+        declaration = declaration.WithAccessorList(scope.BuildAccessors());
+
+        if (value?.Node is { } node)
+        {
+            declaration = declaration.WithInitializer(EqualsValueClause(node))
+                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
+        }
+
+        return AddMember(declaration);
+    }
+
+    public TSelf Indexer(TypeRef type, Action<IndexerScope> signature, bool when = true)
+    {
+        if (when is false || type.Node is null) return Skip();
+
+        var (modifiers, indexerType) = Declarations.SplitRef(Lead.TakeModifiers(), type.Node);
+
+        var declaration = IndexerDeclaration(indexerType)
+            .WithAttributeLists(Lead.TakeAttributes())
+            .WithModifiers(modifiers)
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface());
+
+        var scope = new IndexerScope();
+        signature(scope);
+        return AddMember(declaration.WithParameterList(scope.BuildParameters())
+            .WithAccessorList(scope.BuildAccessors()));
+    }
+
+    public TSelf Operator(TypeRef returnType, BinaryOperator @operator, Action<OperatorScope> signature,
+        bool when = true)
+    {
+        if (when is false || returnType.Node is null) return Skip();
+        return AddOperator(OperatorDeclaration(returnType.Node, Token(Declarations.MapOperatorToken(@operator)))
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface()), signature);
+    }
+
+    public TSelf Operator(TypeRef returnType, UnaryOperator @operator, Action<OperatorScope> signature,
+        bool when = true)
+    {
+        if (when is false || returnType.Node is null) return Skip();
+        return AddOperator(OperatorDeclaration(returnType.Node, Token(Declarations.MapOperatorToken(@operator)))
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface()), signature);
+    }
+
+    public TSelf Conversion(ConversionKind kind, TypeRef type, Action<OperatorScope> signature, bool when = true)
+    {
+        if (when is false || type.Node is null) return Skip();
+
+        var keyword = kind == ConversionKind.Implicit ? SyntaxKind.ImplicitKeyword : SyntaxKind.ExplicitKeyword;
+        return AddOperator(ConversionOperatorDeclaration(Token(keyword), type.Node)
+            .WithExplicitInterfaceSpecifier(TakeExplicitInterface()), signature);
+    }
+
     internal TypeDeclarationSyntax Complete(TypeDeclarationSyntax declaration)
     {
         if (_typeParameters.Count > 0)
@@ -89,6 +164,21 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
         return Next;
     }
 
+    private TSelf AddOperator<TDeclaration>(TDeclaration declaration, Action<OperatorScope> signature)
+        where TDeclaration : BaseMethodDeclarationSyntax
+    {
+        var scope = new OperatorScope();
+        signature(scope);
+        return AddMember(scope.CompleteOperator(declaration
+            .WithAttributeLists(Lead.TakeAttributes())
+            .WithModifiers(Lead.TakeModifiers())));
+    }
+
+    private ExplicitInterfaceSpecifierSyntax? TakeExplicitInterface()
+    {
+        return Lead.TakeExplicitInterface() is { } name ? ExplicitInterfaceSpecifier(name) : null;
+    }
+
     private protected static VariableDeclaratorSyntax BuildVariable(string name, Expr? value)
     {
         var declarator = VariableDeclarator(Names.CreateIdentifier(name));
@@ -103,6 +193,10 @@ internal sealed class TypeScope : MemberScope<TypeScope>
     internal TypeScope(string name) => _name = name;
 
     private protected override TypeScope Next => this;
+
+    public TypeScope Const(bool when = true) => AddModifier(SyntaxKind.ConstKeyword, when);
+    public TypeScope Volatile(bool when = true) => AddModifier(SyntaxKind.VolatileKeyword, when);
+    public TypeScope Required(bool when = true) => AddModifier(SyntaxKind.RequiredKeyword, when);
 
     public TypeScope Inherits(TypeRef type, bool when = true) => AddBaseType(type, when);
 

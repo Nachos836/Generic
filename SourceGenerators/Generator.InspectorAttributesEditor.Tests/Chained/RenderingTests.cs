@@ -9,7 +9,12 @@ namespace Generator.InspectorAttributesEditor.Tests.Chained;
 public sealed class RenderingTests
 {
     [TestCaseSource(nameof(Cases))]
-    public void RendersValidCSharp(Func<string> actual, string expected) => CodeAssert.AreEqual(expected, actual());
+    public void RendersValidCSharp(Func<string> actual, string expected)
+    {
+        var code = actual();
+        CodeAssert.AreEqual(expected, code);
+        CodeAssert.Parses(code);
+    }
 
     [Test]
     public void GapAtFileStartWritesNoBlankLine()
@@ -57,10 +62,10 @@ public sealed class RenderingTests
         yield return Case("GapAfterOpenBrace", static () => InType(static type => type.Gap().Field(T("int"), "a")),
             Expected.InType("int a;"));
         yield return Case("ExplicitForStaysOnItsMember", static () => InType(static type => type
-            .ExplicitFor(T("I")).Field(T("int"), "f").Method(T("void"), "M").EndMethod()),
+                .ExplicitFor(T("I")).Field(T("int"), "f").Method(T("void"), "M").EndMethod()),
             Expected.InType("int f;\nvoid M();"));
         yield return Case("PrefixesStayBeforeNamespace", static () => Code.File().Public().Attribute("A")
-            .Namespace("N").Class("Inner").EndClass().EndNamespace().Class("Outer").EndClass().EndFile(),
+                .Namespace("N").Class("Inner").EndClass().EndNamespace().Class("Outer").EndClass().EndFile(),
             "namespace N\n{\n    class Inner\n    {\n    }\n}\n\nclass Outer\n{\n}");
         yield return Case("PrefixesStayBeforeUsing", static () => Code.File().Public().Using("System").Class("A")
             .EndClass().EndFile(), "using System;\n\nclass A\n{\n}");

@@ -17,6 +17,8 @@ internal abstract class ContainerScope<TNext> : DeclarationScope<TNext> where TN
 
     private protected List<MemberDeclarationSyntax> Members { get; } = [];
 
+    public TNext FileLocal(bool when = true) => AddModifier(SyntaxKind.FileKeyword, when);
+
     public TNext Using(string name, bool when = true)
     {
         if (when) Usings.Add(Lead.Attach(UsingDirective(Names.Qualify(name))));

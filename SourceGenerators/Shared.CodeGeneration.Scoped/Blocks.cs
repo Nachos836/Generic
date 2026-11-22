@@ -22,6 +22,13 @@ internal static class Blocks
         return new(lastDot < 0 ? simple : QualifiedName(Names.Qualify(name.Substring(0, lastDot)), simple));
     }
 
+    public static TypeRef Tuple(IReadOnlyList<TypeRef> elements, bool when = true)
+    {
+        var nodes = elements.Where(static element => element.IsEmpty is false)
+            .Select(static element => TupleElement(element.Node!)).ToArray();
+        return when && nodes.Length > 0 ? new(TupleType(SeparatedList(nodes))) : TypeRef.Empty;
+    }
+
     public static Expr Id(string name, bool when = true)
     {
         return BuildIf(when, () => IdentifierName(Names.CreateIdentifier(name)));
@@ -73,7 +80,25 @@ internal static class Blocks
             : LiteralExpression(SyntaxKind.DefaultLiteralExpression));
     }
 
+    public static Expr Null(bool when = true)
+    {
+        return BuildIf(when, static () => LiteralExpression(SyntaxKind.NullLiteralExpression));
+    }
+
     public static Expr This(bool when = true) => BuildIf(when, static () => ThisExpression());
+    public static Expr Base(bool when = true) => BuildIf(when, static () => BaseExpression());
+
+    public static Expr Unary(UnaryOperator @operator, Expr value, bool when = true)
+    {
+        return BuildIf(when && value.Node is not null,
+            () => PrefixUnaryExpression(MapUnary(@operator), Precedence.ParenthesizeCastOperand(value.Node!)));
+    }
+
+    public static Expr Not(Expr value, bool when = true)
+    {
+        return BuildIf(when && value.Node is not null, () => PrefixUnaryExpression(SyntaxKind.LogicalNotExpression,
+            Precedence.Parenthesize(value.Node!, Precedence.Unary)));
+    }
 
     public static Expr New(TypeRef type, IReadOnlyList<Arg>? arguments = null, bool when = true)
     {
@@ -139,6 +164,7 @@ internal static class Blocks
 
     public static Arg RefArg(Expr value, bool when = true) => when ? new(value, SyntaxKind.RefKeyword) : Arg.Empty;
     public static Arg InArg(Expr value, bool when = true) => when ? new(value, SyntaxKind.InKeyword) : Arg.Empty;
+    public static Arg OutArg(Expr value, bool when = true) => when ? new(value, SyntaxKind.OutKeyword) : Arg.Empty;
     public static Arg Named(string name, Arg value, bool when = true) => when ? value.Named(name) : Arg.Empty;
     public static IReadOnlyList<string> Lines(params string[] lines) => lines;
 
@@ -152,6 +178,20 @@ internal static class Blocks
         var member = double.IsNaN(value) ? "NaN" : value > 0 ? "PositiveInfinity" : "NegativeInfinity";
         return BuildIf(when, () => MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
             PredefinedType(Token(keyword)), IdentifierName(member)));
+    }
+
+    private static SyntaxKind MapUnary(UnaryOperator @operator)
+    {
+        return @operator switch
+        {
+            UnaryOperator.Plus => SyntaxKind.UnaryPlusExpression,
+            UnaryOperator.Minus => SyntaxKind.UnaryMinusExpression,
+            UnaryOperator.Not => SyntaxKind.LogicalNotExpression,
+            UnaryOperator.BitwiseNot => SyntaxKind.BitwiseNotExpression,
+            UnaryOperator.Increment => SyntaxKind.PreIncrementExpression,
+            UnaryOperator.Decrement => SyntaxKind.PreDecrementExpression,
+            _ => throw new System.ArgumentOutOfRangeException(nameof(@operator), @operator, null)
+        };
     }
 
     private static Expr BuildIf(bool when, System.Func<ExpressionSyntax> create)

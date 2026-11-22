@@ -22,7 +22,7 @@ file.Namespace("Generic.Samples", ns => ns
 
 Expressions and types are values built the same way, left to right: `Id("root").Dot("Add").Call([Id("defaultRoot")])` writes `root.Add(defaultRoot)`.
 
-Comments, blank lines and preprocessor directives are blocks too. The author places them where they appear in the output.
+Comments, blank lines and preprocessor directives are blocks too. The author places them where they appear in the output. The layout itself follows one fixed style: besides the blank lines the author places, a blank line follows every member or statement that ends with a closing brace, unless the same statement goes on after the brace, as with `else` or `catch`, or the enclosing scope closes right after it.
 
 ## Styles
 

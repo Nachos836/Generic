@@ -9,11 +9,11 @@ public sealed class ScopeTests
     [TestCase("Code.File().Class(\"A\").Method(T(\"void\"), \"M\").Body().EndMethod().EndClass().EndFile()")]
     [TestCase("Code.File().Namespace(\"N\").Class(\"A\").EndClass().EndNamespace().EndFile()")]
     [TestCase("Code.File().Class(\"A\").Method(T(\"void\"), \"M\").Body().If(Id(\"x\")).Return().Else().Break()" +
-        ".EndIf().EndMethod().EndClass().EndFile()")]
+              ".EndIf().EndMethod().EndClass().EndFile()")]
     [TestCase("Code.File().Class(\"A\").Method(T(\"void\"), \"M\").Body().Switch(Id(\"x\")).Case(Lit(1)).Break()" +
-        ".EndCase().EndSwitch().EndMethod().EndClass().EndFile()")]
+              ".EndCase().EndSwitch().EndMethod().EndClass().EndFile()")]
     [TestCase("Code.File().Interface(\"I\").Method(T(\"void\"), \"M\").EndMethod().Event(T(\"Action\"), \"E\")" +
-        ".EndInterface().EndFile()")]
+              ".EndInterface().EndFile()")]
     public void MatchingClosingVerbsCompile(string chain)
     {
         Assert.That(CompileCheck.CollectErrors(DescribeProbe(chain)), Is.Empty);
@@ -24,9 +24,9 @@ public sealed class ScopeTests
     [TestCase("Code.File().Class(\"A\").EndNamespace().EndFile()")]
     [TestCase("Code.File().Class(\"A\").Struct(\"S\").EndClass().EndClass().EndFile()")]
     [TestCase("Code.File().Class(\"A\").Method(T(\"void\"), \"M\").Body().If(Id(\"x\")).EndMethod().EndClass()" +
-        ".EndFile()")]
+              ".EndFile()")]
     [TestCase("Code.File().Class(\"A\").Method(T(\"void\"), \"M\").Body().Switch(Id(\"x\")).Case(Lit(1))" +
-        ".EndSwitch().EndMethod().EndClass().EndFile()")]
+              ".EndSwitch().EndMethod().EndClass().EndFile()")]
     public void ForeignClosingVerbFailsToCompile(string chain)
     {
         Assert.That(CompileCheck.CollectErrors(DescribeProbe(chain)), Is.EqualTo(new[] { MemberMissing }));

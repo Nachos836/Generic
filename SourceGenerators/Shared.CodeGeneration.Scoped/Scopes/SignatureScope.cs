@@ -116,17 +116,33 @@ internal sealed class ConstructorScope : SignatureScope<ConstructorScope>
 
     public ConstructorScope CallsThis(IReadOnlyList<Arg>? arguments = null, bool when = true)
     {
-        if (when)
-        {
-            _initializer = ConstructorInitializer(SyntaxKind.ThisConstructorInitializer,
-                ArgumentList(Expr.BuildArguments(arguments)));
-        }
+        return SetInitializer(SyntaxKind.ThisConstructorInitializer, arguments, when);
+    }
 
-        return this;
+    public ConstructorScope CallsBase(IReadOnlyList<Arg>? arguments = null, bool when = true)
+    {
+        return SetInitializer(SyntaxKind.BaseConstructorInitializer, arguments, when);
     }
 
     internal ConstructorDeclarationSyntax Complete(ConstructorDeclarationSyntax declaration)
     {
         return Complete<ConstructorDeclarationSyntax>(declaration.WithInitializer(_initializer));
+    }
+
+    private ConstructorScope SetInitializer(SyntaxKind kind, IReadOnlyList<Arg>? arguments, bool when)
+    {
+        if (when) _initializer = ConstructorInitializer(kind, ArgumentList(Expr.BuildArguments(arguments)));
+        return this;
+    }
+}
+
+internal sealed class OperatorScope : SignatureScope<OperatorScope>
+{
+    private protected override OperatorScope Next => this;
+
+    internal TDeclaration CompleteOperator<TDeclaration>(TDeclaration declaration)
+        where TDeclaration : BaseMethodDeclarationSyntax
+    {
+        return Complete(declaration);
     }
 }

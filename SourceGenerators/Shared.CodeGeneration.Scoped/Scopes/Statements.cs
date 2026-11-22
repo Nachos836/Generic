@@ -51,6 +51,57 @@ internal abstract class Statements : Scope<BodyScope>
             BodyScope.BuildBlock(body)));
     }
 
+    public BodyScope For(string name, Expr start, Expr condition, Expr step, Action<BodyScope> body,
+        bool when = true)
+    {
+        if (when is false) return Skip();
+
+        var declaration = start.Node is { } value ? BuildVariable(name, value) : null;
+        var steps = step.Node is { } node ? SingletonSeparatedList(node) : default;
+        return Add(ForStatement(declaration, default, condition.Node, steps, BodyScope.BuildBlock(body)));
+    }
+
+    public BodyScope While(Expr condition, Action<BodyScope> body, bool when = true)
+    {
+        if (when is false || condition.Node is null) return Skip();
+        return Add(WhileStatement(condition.Node, BodyScope.BuildBlock(body)));
+    }
+
+    public BodyScope DoWhile(Action<BodyScope> body, Expr condition, bool when = true)
+    {
+        if (when is false || condition.Node is null) return Skip();
+        return Add(DoStatement(BodyScope.BuildBlock(body), condition.Node));
+    }
+
+    public BodyScope Using(string name, Expr value, Action<BodyScope> body, bool when = true)
+    {
+        if (when is false || value.Node is null) return Skip();
+        return Add(UsingStatement(BuildVariable(name, value.Node), null, BodyScope.BuildBlock(body)));
+    }
+
+    public BodyScope Lock(Expr value, Action<BodyScope> body, bool when = true)
+    {
+        if (when is false || value.Node is null) return Skip();
+        return Add(LockStatement(value.Node, BodyScope.BuildBlock(body)));
+    }
+
+    public BodyScope Unsafe(Action<BodyScope> body, bool when = true)
+    {
+        return when ? Add(UnsafeStatement(BodyScope.BuildBlock(body))) : Skip();
+    }
+
+    public TryScope Try(Action<BodyScope> body, bool when = true)
+    {
+        if (when is false)
+        {
+            Skip();
+            return new(Next, Lead, Sink, -1);
+        }
+
+        Add(TryStatement().WithBlock(BodyScope.BuildBlock(body)));
+        return new(Next, Lead, Sink, Sink.Count - 1);
+    }
+
     public BodyScope Switch(Expr value, Action<SwitchScope> sections, bool when = true)
     {
         if (when is false || value.Node is null) return Skip();
@@ -61,7 +112,19 @@ internal abstract class Statements : Scope<BodyScope>
     }
 
     public BodyScope Break(bool when = true) => when ? Add(BreakStatement()) : Skip();
+    public BodyScope Continue(bool when = true) => when ? Add(ContinueStatement()) : Skip();
     public BodyScope Return(Expr? value = null, bool when = true) => when ? Add(ReturnStatement(value?.Node)) : Skip();
+
+    public BodyScope YieldReturn(Expr value, bool when = true)
+    {
+        if (when is false || value.Node is null) return Skip();
+        return Add(YieldStatement(SyntaxKind.YieldReturnStatement, value.Node));
+    }
+
+    public BodyScope YieldBreak(bool when = true)
+    {
+        return when ? Add(YieldStatement(SyntaxKind.YieldBreakStatement)) : Skip();
+    }
 
     public BodyScope Throw(Expr exception, bool when = true)
     {
@@ -82,6 +145,12 @@ internal abstract class Statements : Scope<BodyScope>
     {
         Sink.Add(Lead.Attach(statement));
         return Skip();
+    }
+
+    private static VariableDeclarationSyntax BuildVariable(string name, ExpressionSyntax value)
+    {
+        var declarator = VariableDeclarator(Names.CreateIdentifier(name)).WithInitializer(EqualsValueClause(value));
+        return VariableDeclaration(IdentifierName("var"), SingletonSeparatedList(declarator));
     }
 
     private BodyScope AddModifier(SyntaxKind keyword, bool when)
@@ -174,4 +243,44 @@ internal sealed class IfScope : Statements
             _ => statement
         };
     }
+}
+
+internal sealed class TryScope : Statements
+{
+    private readonly BodyScope _parent = default!;
+    private readonly int _index;
+
+    internal TryScope(BodyScope parent, Lead lead, List<StatementSyntax> sink, int index) : base(lead, sink)
+    {
+        _parent = parent;
+        _index = index;
+    }
+
+    private protected override BodyScope Next => _parent;
+    private TryStatementSyntax Statement => (TryStatementSyntax)Sink[_index];
+
+    public TryScope Catch(TypeRef type, string? name, Action<BodyScope> body, bool when = true)
+    {
+        if (_index < 0 || when is false || type.Node is null) return this;
+
+        var declaration = CatchDeclaration(type.Node);
+        if (name != default) declaration = declaration.WithIdentifier(Names.CreateIdentifier(name));
+
+        AddCatch(CatchClause().WithDeclaration(declaration).WithBlock(BodyScope.BuildBlock(body)));
+        return this;
+    }
+
+    public TryScope Catch(Action<BodyScope> body, bool when = true)
+    {
+        if (_index >= 0 && when) AddCatch(CatchClause().WithBlock(BodyScope.BuildBlock(body)));
+        return this;
+    }
+
+    public BodyScope Finally(Action<BodyScope> body, bool when = true)
+    {
+        if (_index >= 0 && when) Sink[_index] = Statement.WithFinally(FinallyClause(BodyScope.BuildBlock(body)));
+        return _parent;
+    }
+
+    private void AddCatch(CatchClauseSyntax clause) => Sink[_index] = Statement.AddCatches(clause);
 }

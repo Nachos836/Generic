@@ -140,9 +140,9 @@ internal sealed class OperatorScope : SignatureScope<OperatorScope>
 {
     private protected override OperatorScope Next => this;
 
-    internal TDeclaration Complete<TDeclaration>(TDeclaration declaration)
+    internal TDeclaration CompleteOperator<TDeclaration>(TDeclaration declaration)
         where TDeclaration : BaseMethodDeclarationSyntax
     {
-        return base.Complete(declaration);
+        return Complete(declaration);
     }
 }

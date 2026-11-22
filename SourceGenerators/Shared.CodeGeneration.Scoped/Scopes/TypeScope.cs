@@ -169,7 +169,7 @@ internal abstract class MemberScope<TSelf> : DeclarationScope<TSelf> where TSelf
     {
         var scope = new OperatorScope();
         signature(scope);
-        return AddMember(scope.Complete(declaration
+        return AddMember(scope.CompleteOperator(declaration
             .WithAttributeLists(Lead.TakeAttributes())
             .WithModifiers(Lead.TakeModifiers())));
     }

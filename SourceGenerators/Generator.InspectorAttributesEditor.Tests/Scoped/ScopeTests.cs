@@ -62,6 +62,15 @@ public sealed class ScopeTests
         Assert.That(CompileCheck.CollectErrors(DescribeInterface(block)), Is.EqualTo(new[] { MemberMissing }));
     }
 
+    [TestCase("Code.File(static file => file.Class(\"A\", static scope => scope.Member(null!)))")]
+    [TestCase("Code.File(static file => file.Class(\"A\", static scope => scope.Method(T(\"void\"), \"M\", " +
+              "static method => method.Body(static body => body.Statement(null!)))))")]
+    [TestCase("Code.File(static file => file.Class(\"A\", static scope => scope.AddExtension(null!, true)))")]
+    public void RoslynBlocksNeedExtensionsNamespace(string description)
+    {
+        Assert.That(CompileCheck.CollectErrors(DescribeProbe(description)), Is.EqualTo(new[] { MemberMissing }));
+    }
+
     private static string DescribeInterface(string block)
     {
         return DescribeProbe($"Code.File(static file => file.Interface(\"I\", static scope => {block}))");

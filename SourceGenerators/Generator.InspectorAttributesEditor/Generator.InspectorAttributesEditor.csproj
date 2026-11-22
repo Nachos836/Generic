@@ -30,7 +30,6 @@
     <Import Project="..\Shared.UnityBridge\Shared.UnityBridge.projitems" Label="Shared" />
     <Import Project="..\Shared.DotNetCompatibility\Shared.DotNetCompatibility.projitems" Label="Shared" />
     <Import Project="..\Shared.Generator\Shared.Generator.projitems" Label="Shared" />
-    <Import Project="..\Shared.AST\Shared.AST.projitems" Label="Shared" />
     <Import Project="..\Shared.CodeGeneration.Scoped\Shared.CodeGeneration.Scoped.projitems" Label="Shared" />
     <Import Project="..\Shared.CodeGeneration.Chained\Shared.CodeGeneration.Chained.projitems" Label="Shared" />
     

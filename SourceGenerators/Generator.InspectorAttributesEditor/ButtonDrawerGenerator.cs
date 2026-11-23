@@ -65,7 +65,9 @@ public sealed class ButtonDrawerGenerator : IIncrementalGenerator
             .WithComparer(EqualityComparer<DrawerModel>.Default)
             .WithTrackingName("DrawerModels");
 
-        context.RegisterSourceOutput(owners.Combine(context.CompilationProvider), (productionContext, session) =>
-            CodeGenerator.GenerateDrawer(productionContext, session.Left, session.Right, _memory));
+        var sessions = owners.Collect().Combine(context.CompilationProvider).Combine(context.ParseOptionsProvider);
+
+        context.RegisterSourceOutput(sessions, (productionContext, input) => CodeGenerator.GenerateDrawers(
+            productionContext, input.Left.Left, input.Left.Right, input.Right, _memory));
     }
 }

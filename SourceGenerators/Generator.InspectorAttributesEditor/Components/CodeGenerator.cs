@@ -1,7 +1,9 @@
 ﻿#define SCOPED_DRAWER
 
 using System;
+using System.Collections.Immutable;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Shared.Generator;
@@ -15,8 +17,19 @@ internal static class CodeGenerator
 
     private static System.Version Version => Shared.Generator.Version.Current;
 
-    public static void GenerateDrawer(SourceProductionContext productionContext, DrawerModel model,
-        Compilation compilation, SessionMemory memory)
+    public static void GenerateDrawers(SourceProductionContext productionContext, ImmutableArray<DrawerModel> models,
+        Compilation compilation, ParseOptions options, SessionMemory memory)
+    {
+        memory.Retain(compilation, models.Select(static model => model.Identity));
+
+        foreach (var model in models)
+        {
+            GenerateDrawer(productionContext, model, compilation, options, memory);
+        }
+    }
+
+    private static void GenerateDrawer(SourceProductionContext productionContext, DrawerModel model,
+        Compilation compilation, ParseOptions options, SessionMemory memory)
     {
         productionContext.CancellationToken.ThrowIfCancellationRequested();
 
@@ -31,7 +44,7 @@ internal static class CodeGenerator
         var result = new Session(memory, model.Identity)
             .Add($"{hintPrefix}.g.cs", ownerText)
             .Add($"{hintPrefix}.buttons.g.cs", buttonsText)
-            .Submit(compilation, productionContext.CancellationToken);
+            .Submit(compilation, options, productionContext.CancellationToken);
 
         foreach (var file in result.Files)
         {

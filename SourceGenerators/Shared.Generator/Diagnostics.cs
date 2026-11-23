@@ -13,4 +13,24 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true
     );
+
+    internal static DiagnosticDescriptor PreviousVersionKeptDescriptor { get; } = new
+    (
+        id: "UCGEN002",
+        title: "Generated code check failed, previous version kept",
+        messageFormat: "Generated code for '{0}' does not compile, so its previous version stays in place: {1}",
+        category: "CodeGeneration",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    internal static DiagnosticDescriptor NothingEmittedDescriptor { get; } = new
+    (
+        id: "UCGEN003",
+        title: "Generated code check failed, nothing emitted",
+        messageFormat: "Generated code for '{0}' does not compile and has no previous version to keep: {1}",
+        category: "CodeGeneration",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
 }

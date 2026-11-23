@@ -10,6 +10,7 @@ public sealed class DrawerOutputTests
         using InspectorAttributes;
         using JetBrains.Annotations;
         using UnityEngine;
+        using UnityEngine.UIElements;
 
         namespace Generic.Samples
         {
@@ -21,6 +22,16 @@ public sealed class DrawerOutputTests
                 {
                     UnityEngine.Debug.Log("Test");
                 }
+
+        #if UNITY_EDITOR
+                internal partial class Drawer
+                {
+                    private partial void ApplyCustomUIProcessing(ref VisualElement defaultRoot,
+                        ref VisualElement customRoot)
+                    {
+                    }
+                }
+        #endif
             }
         }
         """;

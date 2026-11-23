@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Shared.Generator;
 
 namespace Generator.InspectorAttributesEditor;
 
@@ -12,6 +13,8 @@ using Components;
 [Generator(LanguageNames.CSharp)]
 public sealed class ButtonDrawerGenerator : IIncrementalGenerator
 {
+    private readonly SessionMemory _memory = new();
+
     void IIncrementalGenerator.Initialize(IncrementalGeneratorInitializationContext context)
     {
         var analyzedMethods = context.SyntaxProvider.ForAttributeWithMetadataName(
@@ -62,6 +65,9 @@ public sealed class ButtonDrawerGenerator : IIncrementalGenerator
             .WithComparer(EqualityComparer<DrawerModel>.Default)
             .WithTrackingName("DrawerModels");
 
-        context.RegisterSourceOutput(owners, CodeGenerator.GenerateDrawer);
+        var sessions = owners.Collect().Combine(context.CompilationProvider).Combine(context.ParseOptionsProvider);
+
+        context.RegisterSourceOutput(sessions, (productionContext, input) => CodeGenerator.GenerateDrawers(
+            productionContext, input.Left.Left, input.Left.Right, input.Right, _memory));
     }
 }
